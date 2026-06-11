@@ -103,6 +103,7 @@ See [VISUALS.md](VISUALS.md) for pipeline flow diagrams.
 | `/realm-flourish` | Git-diff-based incremental update. Auto-commits minor changes; falls back to staged mode for structural decisions. |
 | `/realm-convey` | Compress the current conversation, extract topics (functions, classes, decisions, discoveries), route to targeted phase. |
 | `/realm-recall` | Query vault by tag, function name, class name, or semantic phrase. Returns compressed context. |
+| `/realm-fathom` | Deep investigation: live code + vault in parallel. Returns consolidated what (code) + why (vault). Flags drift. Zero writes. |
 | `/realm-status` | Read-only health check. Lists node counts, stale docs, pipeline state. |
 
 ---
@@ -171,7 +172,18 @@ After that, query anytime:
 
 ## Querying the Vault
 
-### By entity
+### Deep investigation (code + vault)
+
+```bash
+/realm-fathom function:validateUser       # signature, flow, callers + vault why + drift check
+/realm-fathom class:AuthService           # class responsibility, methods, deps + vault context
+/realm-fathom system:PaymentPipeline      # subsystem boundary, API surface + vault ADRs
+/realm-fathom "how does auth flow work"   # freeform → relevant files/functions mapped end-to-end
+```
+
+Use `realm-fathom` before modifying unfamiliar code. Live code is ground truth; vault adds architectural context. Conflicts are flagged as `VAULT DRIFT` — never silently blended.
+
+### By entity (vault only)
 
 ```bash
 /realm-recall validateUser            # function node (compressed, ~20 tokens)
@@ -362,7 +374,7 @@ Realm depends on two skills from the **caveman** plugin:
 
 | Skill | Used by | Purpose |
 |-------|---------|---------|
-| `cavecrew-investigator` agent | `realm-phase`, `realm-flourish` | Scans repo; outputs caveman-compressed findings |
+| `cavecrew-investigator` agent | `realm-phase`, `realm-flourish`, `realm-fathom` | Scans repo; outputs caveman-compressed findings |
 | `caveman-compress` skill | `realm-phase`, `realm-manifest` | Compresses node body prose before vault writes |
 
 Install caveman first:

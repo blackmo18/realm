@@ -84,11 +84,42 @@ Read-only skills — no pipeline state required:
 
 ```mermaid
 flowchart LR
-    Q1(["/realm-recall &lt;topic&gt;"]):::cmd --> R["compressed context\nfrom vault"]:::out
-    Q2(["/realm-status"]):::cmd            --> S["read-only\nhealth check"]:::out
+    Q1(["/realm-recall &lt;topic&gt;"]):::cmd  --> R["compressed context\nfrom vault"]:::out
+    Q2(["/realm-status"]):::cmd             --> S["read-only\nhealth check"]:::out
+    Q3(["/realm-fathom &lt;entity|question&gt;"]):::cmd --> F["live code ＋ vault\nconsolidated report"]:::out
 
     classDef cmd fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
     classDef out fill:#1e1e2e,stroke:#cba6f7,color:#cdd6f4
+```
+
+### Fathom investigation flow
+
+```mermaid
+flowchart TD
+    FT(["/realm-fathom &lt;query&gt;"]):::cmd --> GV{vault\ninitialized?}
+
+    GV -->|Yes| PAR["spawn parallel"]:::note
+    GV -->|No| CI2(["cavecrew-investigator"]):::agent
+
+    PAR --> CI(["cavecrew-investigator\n(live code — ground truth)"]):::agent
+    PAR --> RQ(["realm-agent-query\n(vault context)"]):::agent
+
+    CI  --> CO["code findings\nsignature · flow · callers"]:::out
+    RQ  --> VO["vault context\nwhy · ADRs · intent"]:::out
+    CI2 --> CO
+
+    CO --> DR{drift\ndetected?}
+    VO --> DR
+
+    DR -->|Yes| DW["VAULT DRIFT flagged\nboth values shown"]:::warn
+    DR -->|No| VD["VERDICT\nwhat + why + caveats"]:::out
+    DW --> VD
+
+    classDef cmd   fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    classDef agent fill:#1e1e2e,stroke:#f9e2af,color:#cdd6f4
+    classDef out   fill:#1e1e2e,stroke:#cba6f7,color:#cdd6f4
+    classDef note  fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+    classDef warn  fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4
 ```
 
 ---
@@ -150,6 +181,10 @@ flowchart LR
     RS2 -->|No| RI2(["/realm-forge"]):::warn
     CV -->|blocks on| USR["user item\nselection"]
 
+    FT(["/realm-fathom"]):::cmd -->|soft guard| RS3["realm-state.json\nexists?"]
+    RS3 -->|No| CO["proceeds code-only\nnote vault unavailable"]:::ok
+
     classDef cmd  fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
     classDef warn fill:#1e1e2e,stroke:#fab387,color:#cdd6f4
+    classDef ok   fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
 ```
