@@ -66,150 +66,26 @@ Ask vault anything. Get compressed context back.
 
 ## Procedure
 
-Read `_shared/realm-conventions.md` before executing.
+This skill parses the query and flags, then delegates all vault reading to `realm-agent-query`.
 
-**ZERO vault writes. Read-only.**
+### Step 1 — Parse query and flags
 
-### Step 0 — Guard checks
+From invocation args:
+- `query`: everything before first `--` flag
+- `flags`: collect any of `--trace`, `--full`, `--deps`, `--count`, `--expand <id>`
 
-1. Read `.realm/realm-state.json`. If missing: `No realm state. Run /realm-forge first.` STOP.
-2. Read `vaultPath`, `projectSlug`, `projectDir`.
-3. Scan `<projectDir>/` for nodes across `decisions/`, `functions/`, `classes/`, `systems/`, `discoveries/`.
-4. No nodes: `No nodes in vault yet. Run /realm-phase then /realm-manifest.` STOP.
+### Step 2 — Spawn query agent
 
-### Step 1 — Parse query + flags
-
-- **topic**: everything before first `--` flag
-- **flags**: `--trace`, `--full`, `--deps`, `--count`, `--expand <id>`
-
-### Step 2 — Resolve topic to nodes (NL → vault)
-
-Try in order, first match wins:
-
-**2a — Direct node ID match**
-Topic exactly matches a node's `id:` frontmatter field → single node.
-
-**2b — Tag match**
-Topic matches tag in any node's `tags: [...]` array.
-- Strip `@`/`#` prefix if present.
-- Multi-tag `auth,security` → union.
-→ tag cluster.
-
-**2c — Title / filename fuzzy match**
-Lowercase-compare topic against node filenames and first heading.
-- `"session refresh"` → matches `session-refresh.md` or node titled "Session Refresh Strategy".
-→ fuzzy cluster.
-
-**2d — Semantic keyword search**
-Search `Compressed:` sections for topic keywords.
-- `"why JWT"` → scan for "JWT", "token format" → matching decision nodes.
-→ keyword cluster.
-
-**2e — No match**
-```
-No nodes found for: "<topic>"
-Available tags: <list top 10>
-Available IDs:  <list first 20>
-Try: /realm-recall @<tag>  or  /realm-status for full node list
-```
-STOP.
-
-### Step 3 — Apply --count (if flag present)
-
-Estimate for matched nodes:
-- Compressed: ~20 tokens/node
-- Full prose: ~120 tokens/node
-- Per dep: +20 tokens
-
-Print:
-```
-/realm-recall <topic> --count
-
-  Matched nodes: <N>  (decisions: X, functions: Y, classes: Z)
-  Deps (--deps): +<N> additional nodes
-
-  Cost if compressed (default): ~<N×20> tokens
-  Cost if --full:               ~<N×120> tokens
-  Cost if --trace:              <10 tokens
-
-Run without --count to pull content.
-```
-STOP.
-
-### Step 4 — Load node content
-
-**Default (compressed):** for each matched node:
-1. Read YAML frontmatter (id, type, status, tags, created, updated).
-2. Read `Compressed:` section.
-3. Extract link arrays: `depends_on`, `called_by`, `implementations`, `dependents`.
-
-**If --full:** read entire file.
-
-**If --deps:** resolve each `depends_on: [[...]]` link → load those nodes (compressed). Include as "Dependencies" subsection.
-
-### Step 5 — Build output (caveman-compressed)
-
-Apply caveman rules to all output: drop articles/filler, use fragments, keep technical data exact. Omit zero/empty fields silently.
-
-**Single-node result:**
-```
-<id> [<type>·<status>] #tag1 #tag2
-<one-liner from Compressed: section>
-sig: <signature if function>
-deps:[[A]][[B]]  calls:[[C]][[D]]
-[Full prose block if --full]
-→ --full | --trace | --deps
-```
-
-**Cluster result:**
-```
-recall:<topic> <N>nodes
-
-1 <type>:<id> #tags
-  <one-liner>
-  deps:[[A]]  calls:[[B]]
-
-2 <type>:<id> #tags
-  <one-liner>
-  impl:[[C]][[D]]
-
-[...rest of nodes...]
-→ <id> --full | <topic> --deps | <topic> --trace
-```
-
-**--trace result:**
-```
-tree:<topic>
-
-<type>:<id>
-├─impl: <type>:<id>
-│  ├─deps:[[A]][[B]]
-│  └─calls:[[C]][[D]]
-└─impl: <type>:<id>
-   └─deps:[[E]]
-
-~<N×20>t compressed. Obsidian graph for visual.
-```
-
-### Step 6 — Footer (caveman-compressed)
-
-Single line per relevant next step only. Omit steps that don't apply to the query.
+Spawn agent `realm-agent-query` with this prompt:
 
 ```
-recall done · <N>nodes · ~<estimated>t · mode:<compressed|full|trace>
-→ most relevant next: /realm-recall <id> --full | --deps | --trace
+projectRoot: <absolute path to project root>
+mode: recall
+query: <parsed query>
+flags: <list of flags, e.g. "--full --deps" or empty>
+
+Retrieve vault nodes matching the query and return compressed output.
+Follow the full procedure in your instructions.
 ```
 
----
-
-## Token Efficiency
-
-| Query | Tokens | vs Full Doc |
-|-------|--------|-------------|
-| Single node (compressed) | ~20 | 85% savings |
-| Single node + deps | ~80 | 92% savings |
-| Tag cluster @auth, 10 nodes | ~200 | 90% savings |
-| Tag cluster --trace | <10 | 99% savings |
-| Single node (full prose) | ~120 | baseline |
-
-Strategy: default compressed → explore in Obsidian → expand selectively with `--full` or `--deps`.
+Wait for completion. Surface the agent's output directly to the user.

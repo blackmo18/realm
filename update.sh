@@ -56,9 +56,29 @@ else
   echo -e "${GREEN}✓ Installed in-place — git pull is the full update${NC}"
 fi
 
+# Step 3: Sync agents to ~/.claude/agents/
+AGENTS_SRC="${SCRIPT_DIR}/agents"
+AGENTS_DST="$HOME/.claude/agents"
+if [ -d "$AGENTS_SRC" ]; then
+  mkdir -p "$AGENTS_DST"
+  echo "Syncing realm agents to $AGENTS_DST..."
+  for agent_file in "$AGENTS_SRC"/*.md; do
+    [ -f "$agent_file" ] || continue
+    cp "$agent_file" "$AGENTS_DST/"
+    echo -e "${GREEN}✓ $(basename "$agent_file")${NC}"
+  done
+  # Remove renamed agents from previous versions
+  for obsolete in realm-manifest-compress realm-manifest-write; do
+    if [ -f "$AGENTS_DST/${obsolete}.md" ]; then
+      rm -f "$AGENTS_DST/${obsolete}.md"
+      echo -e "${YELLOW}  removed obsolete: ${obsolete}.md${NC}"
+    fi
+  done
+fi
+
 echo ""
 
-# Step 3: Check caveman dependency
+# Step 4: Check caveman dependency
 if [ ! -d "$CAVEMAN_PLUGIN_PATH" ]; then
   echo -e "${YELLOW}Warning: caveman plugin not found at $CAVEMAN_PLUGIN_PATH${NC}"
   echo "  realm-recall and realm-status require caveman for compressed output."

@@ -29,6 +29,8 @@ Compress conversation → dissect topics → feed realm-phase. One command to ca
 
 Read `_shared/realm-conventions.md` before executing.
 
+Steps 0–2.5 run inline (require main conversation context and user interaction). Step 3 delegates to `realm-agent-scan`. Steps 4–5 run inline.
+
 ### Step 0 — Guard check
 
 1. Read `.realm/realm-state.json`. If missing: `No realm state. Run /realm-forge first.` STOP.
@@ -49,8 +51,8 @@ Classify each item:
 
 | Type | Signal | Realm destination |
 |------|--------|-------------------|
-| `function` | "wrote X()", "fixed X()", "X does Y" | `realm-phase function:X` |
-| `class` | "class X", "service X", "module X" | `realm-phase class:X` |
+| `function` | "wrote X()", "fixed X()", "X does Y" | `realm-agent-scan targeted function:X` |
+| `class` | "class X", "service X", "module X" | `realm-agent-scan targeted class:X` |
 | `decision` | "decided to", "because", "instead of", "DO NOT" | new ADR candidate |
 | `discovery` | perf finding, bug post-mortem, unexpected behavior | `discoveries/` |
 | `session` | everything else | session log entry |
@@ -83,25 +85,36 @@ Rules:
 - `all` → select every item
 - `none` / empty → `Nothing selected. Vault unchanged.` STOP
 - Invalid numbers → re-prompt once, then STOP if still invalid
-- Selected set becomes the only input for Steps 3-4; discard unselected items
+- Selected set is the only input for Steps 3–4; discard unselected
 
-### Step 3 — Route to realm-phase
+### Step 3 — Spawn scan agent for entities
 
-Build targeted args from Step 2 entity list:
-- functions: `function:X function:Y`
-- classes: `class:A class:B`
+If selected items include functions or classes:
 
-If entities found: invoke `/realm-phase <args>` (targeted mode).
+Spawn agent `realm-agent-scan` with this prompt:
+
+```
+projectRoot: <absolute path to project root>
+mode: targeted
+targets: <list of function:X and class:X specifiers from selected items>
+
+Scan the codebase for these entities and generate a staged manifest draft.
+Follow the full procedure in your instructions.
+```
+
+Wait for completion.
+
 If zero entities but decisions/discoveries present: skip to Step 4.
-If nothing: `Nothing to convey. Vault unchanged.` STOP.
+If nothing selected: `Nothing to convey. Vault unchanged.` STOP.
 
 ### Step 4 — Append decision/discovery candidates to draft
 
-If Step 3 produced a draft (`.realm/manifest-draft.md`):
-- Append ADR candidate stubs for each decision item
-- Append discovery note stubs for each discovery item
+If Step 3 produced a draft (`<projectRoot>/.realm/manifest-draft.md`):
+- Append ADR candidate stubs for each selected decision item
+- Append discovery note stubs for each selected discovery item
 
-If Step 3 skipped (no entities), write `.realm/manifest-draft.md` with only the stubs.
+If Step 3 was skipped (no entities), write `<projectRoot>/.realm/manifest-draft.md` with only the stubs.
+
 Update `realm-state.json`: `phase.draftReady = true`.
 
 ### Step 5 — Print summary
@@ -110,7 +123,7 @@ Update `realm-state.json`: `phase.draftReady = true`.
 realm-convey complete
 
   topics extracted:   <N>
-  realm-phase:        targeted (<entity list> | skipped)
+  realm-agent-scan:   targeted (<entity list> | skipped)
   ADR candidates:     <N>  (staged in manifest-draft.md)
   discoveries:        <N>  (staged)
 

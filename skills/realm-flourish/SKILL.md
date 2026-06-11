@@ -1,7 +1,7 @@
 ---
 name: realm-flourish
 description: >
-  Lightweight update skill for the realm pipeline. Uses git diff since the last manifest run to identify changed files, runs a targeted realm-phase on those files only, and auto-commits the changes via realm-manifest if the diff is minor (no new structural decisions). Falls back to staged-for-review mode when major changes are detected. 10-20x cheaper than a full realm-phase + realm-manifest cycle for incremental work. Maps to the /realm:florish intent from sample_usage.md.
+  Lightweight update skill for the realm pipeline. Uses git diff since the last manifest run to identify changed files, runs a targeted realm-phase on those files only, and auto-commits the changes via realm-agent-write if the diff is minor (no new structural decisions). Falls back to staged-for-review mode when major changes are detected. 10-20x cheaper than a full realm-phase + realm-manifest cycle for incremental work. Maps to the /realm:florish intent from sample_usage.md.
 origin: realm
 ---
 
@@ -31,7 +31,7 @@ Incremental update: git diff → targeted scan → auto-commit minor changes. On
 
 Read `_shared/realm-conventions.md` before executing.
 
-**Auto-commit boundary**: flourish auto-commits ONLY when all changes are `type: function | class | discovery`. Any new `type: decision` or architecture change → staged mode.
+**Auto-commit boundary**: auto-commits ONLY when all changes are `type: function | class | discovery`. Any new `type: decision` or architecture change → staged mode.
 
 ### Step 0 — Guard checks
 
@@ -41,7 +41,7 @@ Read `_shared/realm-conventions.md` before executing.
 
 ### Step 1 — Identify changed files via git diff
 
-Run `git diff --name-only` from project root:
+Run `git diff --name-only` from `projectRoot`:
 - `manifest.lastRun` set: `git diff --name-only HEAD@{<last-manifest-datetime>}..HEAD`
 - `manifest.lastRun` null: use all tracked files (first flourish = full scan, warn user)
 - Filter: source files only (exclude `.realm/`, test files, lock files, assets)
@@ -51,20 +51,18 @@ Print: `Changed source files (<N>): <list>`
 
 ### Step 2 — Map changed files to entity targets
 
-For each changed file:
-- Grep for top-level function/class definitions
-- Check if vault node exists: `functions/<id>.md` or `classes/<id>.md`
-- Separate: **Known** (node exists → update) | **Unknown** (no node → create)
+For each changed file: grep for top-level function/class definitions. Check if vault node exists.
+Separate: **Known** (node exists → update) | **Unknown** (no node → create)
 
 Print: `Targets: <N> known (update), <M> new (create)`
 
-### Step 3 — Spawn targeted cavecrew-investigator
+### Step 3 — Spawn targeted investigator
 
-Spawn with entity list from Step 2 (same targeted prompt as `realm-phase` targeted mode). Collect output.
+Spawn `cavecrew-investigator` subagent with entity list from Step 2 (same targeted prompt as `realm-agent-scan` targeted mode). Collect output.
 
 ### Step 4 — Diff and classify changes
 
-For each entity, compare investigator output vs vault node. Classify:
+For each entity, compare investigator output vs vault node first 50 lines. Classify:
 - `minor` — function body changed, perf note added, dep link changed
 - `structural` — new service boundary, new data flow, new pattern decision in comments
 - `new-decision` — found `"DO NOT"`, invariant, or architecture rationale not in vault
@@ -75,22 +73,27 @@ Build:
 
 ### Step 5 — Route by classification
 
-**If `review_required` is empty:**
+**If `review_required` is empty → Auto-commit path:**
 
-→ Auto-commit:
-1. Draft manifest (`mode: targeted`)
-2. Write node updates directly (skip staged-draft)
-3. Update `realm-state.json`: `manifest.lastRun = <now>`, mark docs `committed`
-4. Write session log (Step 6)
-5. Print summary (Step 7)
+1. Write `.realm/manifest-draft.md` inline with minor change nodes (mode: targeted).
+2. Update realm-state.json: `phase.draftReady = true`.
+3. Spawn agent `realm-agent-write` with this prompt:
 
-**If `review_required` non-empty:**
+```
+projectRoot: <absolute path to project root>
 
-→ Staged mode:
-1. Draft manifest for ALL changes (minor + structural)
-2. Write `.realm/manifest-draft.md`
-3. Update `realm-state.json`: `phase.draftReady = true`
-4. Print:
+Write the manifest draft to the vault (auto-commit flourish path).
+Follow the full procedure in your instructions.
+```
+
+4. On write agent completion: write session log (Step 6), print summary (Step 7).
+
+**If `review_required` non-empty → Staged path:**
+
+1. Write `.realm/manifest-draft.md` with ALL changes (minor + structural).
+2. Update realm-state.json: `phase.draftReady = true`.
+3. Print:
+
 ```
 realm-flourish → staged (review required)
 
@@ -105,7 +108,8 @@ realm-flourish → staged (review required)
 
   (To force auto-commit: edit draft to remove structural sections, then run /realm-manifest)
 ```
-5. STOP.
+
+STOP.
 
 ### Step 6 — Write session log (auto-commit path only)
 

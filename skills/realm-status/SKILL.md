@@ -28,40 +28,18 @@ Inspect realm pipeline state without scanning or writing.
 
 ## Procedure
 
-### Step 1 — Read state
+This skill delegates entirely to `realm-agent-query` in status mode.
 
-Read `.realm/realm-state.json` from project root. If missing:
-```
-No realm state found for this project.
-Run /realm-forge to bootstrap.
-```
-STOP.
+### Step 1 — Spawn query agent
 
-### Step 2 — Print status (caveman-compressed)
-
-Apply caveman rules: drop articles/filler, use fragments, keep technical data exact. Omit zero-count categories silently.
+Spawn agent `realm-agent-query` with this prompt:
 
 ```
-realm:<projectSlug>
-vault:<vaultPath>  proj:<projectDir>
+projectRoot: <absolute path to project root>
+mode: status
 
-PIPELINE init✓  phase:<ts|never> draft:<yes/no>  manifest:<ts|never>
-
-NODES <total>
-decisions/<N>: [[id]]<date> [[id2]]<date>
-functions/<N>: [[id]]→<Class> [[id2]]→<Class>
-classes/<N>:   [[id]]deps:<N> [[id2]]deps:<N>
-discoveries/<N>: [[id]]<date>
-planned/<N>: <path>
-stale/<N>: <path>
-
-TAGS #auth:<N> #critical-path:<N> #perf:<N> #<tag>:<N>
-
-→ <single most relevant next step based on state>
+Print the full realm pipeline status report.
+Follow the full procedure in your instructions.
 ```
 
-`NEXT STEP` logic (pick one line):
-- `phase.draftReady == true` and manifest not run since phase → `→ /realm-manifest  (draft ready)`
-- `phase.draftReady == false`, no stale docs → `→ pipeline current. /realm-phase after next milestone.`
-- Any docs `stale` → `→ /realm-phase  (<N> stale docs)`
-- `manifest.lastRun == null` → `→ /realm-phase  (never run)`
+Wait for completion. Surface the agent's output directly to the user.
