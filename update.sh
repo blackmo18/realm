@@ -1,0 +1,72 @@
+#!/bin/bash
+set -e
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+REALM_PLUGIN_PATH="$HOME/.claude/plugins/marketplaces/realm"
+CAVEMAN_PLUGIN_PATH="$HOME/.claude/plugins/marketplaces/caveman"
+
+echo -e "${GREEN}Realm Update${NC}"
+echo "============"
+echo ""
+
+# Guard: must be a git repo
+if ! git -C "$SCRIPT_DIR" rev-parse --git-dir > /dev/null 2>&1; then
+  echo -e "${RED}Not a git repository: $SCRIPT_DIR${NC}"
+  exit 1
+fi
+
+# Step 1: Pull latest
+echo "Pulling latest..."
+BEFORE=$(git -C "$SCRIPT_DIR" rev-parse HEAD)
+git -C "$SCRIPT_DIR" pull origin main
+AFTER=$(git -C "$SCRIPT_DIR" rev-parse HEAD)
+
+echo ""
+
+if [ "$BEFORE" = "$AFTER" ]; then
+  echo -e "${YELLOW}Already up to date (${AFTER:0:7}).${NC}"
+else
+  echo -e "${GREEN}Updated: ${BEFORE:0:7} → ${AFTER:0:7}${NC}"
+  echo ""
+  git -C "$SCRIPT_DIR" log --oneline "${BEFORE}..${AFTER}"
+fi
+
+echo ""
+
+# Step 2: Sync to plugin path if different location
+if [ "$SCRIPT_DIR" != "$REALM_PLUGIN_PATH" ]; then
+  if [ -d "$REALM_PLUGIN_PATH" ]; then
+    echo "Syncing skills to plugin path..."
+    rsync -a --delete \
+      --exclude='.git' \
+      --exclude='.DS_Store' \
+      --exclude='.realm' \
+      "$SCRIPT_DIR/" "$REALM_PLUGIN_PATH/"
+    echo -e "${GREEN}✓ $REALM_PLUGIN_PATH synced${NC}"
+  else
+    echo -e "${YELLOW}Realm plugin not found at: $REALM_PLUGIN_PATH${NC}"
+    echo "  Re-run install: /plugin marketplace add $REALM_PLUGIN_PATH"
+  fi
+else
+  echo -e "${GREEN}✓ Installed in-place — git pull is the full update${NC}"
+fi
+
+echo ""
+
+# Step 3: Check caveman dependency
+if [ ! -d "$CAVEMAN_PLUGIN_PATH" ]; then
+  echo -e "${YELLOW}Warning: caveman plugin not found at $CAVEMAN_PLUGIN_PATH${NC}"
+  echo "  realm-recall and realm-status require caveman for compressed output."
+  echo "  Install: /plugin marketplace add $CAVEMAN_PLUGIN_PATH"
+  echo ""
+fi
+
+echo -e "${GREEN}Done.${NC}"
+echo ""
+echo "Restart Claude Code session to apply skill changes."
+echo ""

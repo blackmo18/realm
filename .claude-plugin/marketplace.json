@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "realm",
+  "description": "Obsidian project-knowledge pipeline for continuous learning, architecture docs, ADRs, and session logs. init → phase (dry) → manifest (write).",
+  "owner": {
+    "name": "blackmo",
+    "url": "https://github.com/blackmo18"
+  },
+  "plugins": [
+    {
+      "name": "realm",
+      "description": "Map any project into a living Obsidian knowledge base. Full pipeline: forge → phase → manifest. Quick update: flourish. Conversation capture: convey (compress session → user selects topics → targeted phase). Query: recall, status.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
