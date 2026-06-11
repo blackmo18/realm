@@ -1,6 +1,6 @@
 ---
 name: realm-agent-scan
-description: realm pipeline agent — codebase scanning, gap detection, and manifest draft generation. Supports full mode (whole repo) and targeted mode (specific functions/classes). Spawns cavecrew-investigator, diffs repo reality against vault, and writes .realm/manifest-draft.md. Used by realm-phase, realm-flourish, and realm-convey. Zero vault writes.
+description: realm pipeline agent — codebase scanning, gap detection, and manifest draft generation. Supports full mode (whole repo) and targeted mode (specific functions/classes). Swarms parallel cavecrew-investigators (clustered by domain, capped at 4); falls back to single investigator on small codebases (< 20 source files). Merges outputs, diffs repo reality against vault, and writes .realm/manifest-draft.md. Used by realm-phase, realm-flourish, and realm-convey. Zero vault writes.
 tools: ["Read", "Write", "Bash", "Agent"]
 model: sonnet
 ---
@@ -48,13 +48,20 @@ For each target in `targets`:
    - Multiple hits: pick primary definition (exclude test files).
 2. Not found → print `Cannot locate source for <target>. Run full /realm-phase.` skip this target.
 
-### Step T2 — Spawn targeted cavecrew-investigator
+### Step T2 — Cluster targets and spawn parallel investigators
 
-Spawn `cavecrew-investigator` subagent:
+**Clustering rules:**
+- Group located targets by source directory prefix (first two path segments from `projectRoot`).
+- Total located targets ≤ 2 → skip clustering, use single investigator (spawn overhead not justified).
+- Total ≥ 3 → form domain clusters. Merge any cluster with < 2 members into nearest directory neighbor. Cap at 4 clusters.
+
+**Single investigator path** (≤ 2 targets):
+
+Spawn one `cavecrew-investigator`:
 
 ```
 Analyze ONLY these entities in this repo:
-<list of target functions/classes>
+<list of targets with file paths from T1>
 
 For each, extract:
 - Full signature (params + return type)
@@ -66,6 +73,27 @@ For each, extract:
 
 Output: caveman-compressed, one block per entity.
 ```
+
+**Swarm path** (≥ 3 targets → N clusters, max 4):
+
+Spawn N `cavecrew-investigator` agents **in parallel** — one per cluster:
+
+```
+Analyze ONLY these entities (cluster <label — e.g. auth, payment, infra>):
+<list of targets in this cluster with file paths>
+
+For each, extract:
+- Full signature (params + return type)
+- Responsibility (one-liner)
+- Dependencies ([[links]])
+- Callers / dependents (if findable)
+- Any inline architectural comments ("DO NOT", "invariant", "perf note")
+- Performance characteristics if benchmarks/comments present
+
+Output: caveman-compressed, one block per entity.
+```
+
+Wait for all N investigators to complete. Merge all outputs into single result set before proceeding to T3.
 
 ### Step T3 — Diff targeted entities vs vault
 
@@ -94,7 +122,7 @@ GAP MAP
   docs to update:    <N>
 
   draft staged at: .realm/manifest-draft.md
-  cost:            targeted scan (1 investigator call per <N> files)
+  cost:            <"single investigator (<N> targets)" | "swarm: <N> parallel investigators (<N> clusters)")
 
 Review, then run /realm-manifest to write to vault.
 ```
@@ -114,9 +142,19 @@ Read `<projectDir>/` recursively. Build list of existing `.md` files relative to
 - On disk but not in registry → add as `committed` (orphaned)
 - `committed` in registry but missing from disk → mark `stale`
 
-### Step 2 — Spawn cavecrew-investigator
+### Step 2 — Size check then spawn investigators
 
-Spawn `cavecrew-investigator` subagent:
+Count source files in `projectRoot` (exclude `node_modules/`, `.git/`, `dist/`, `build/`, `__pycache__/`):
+
+```bash
+find <projectRoot> -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.rb" -o -name "*.java" -o -name "*.swift" -o -name "*.kt" -o -name "*.dart" \) \
+  ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" ! -path "*/__pycache__/*" \
+  | wc -l
+```
+
+**< 20 source files → single investigator path:**
+
+Spawn one `cavecrew-investigator`:
 
 ```
 Map this codebase for Obsidian node-graph documentation. Find and compress:
@@ -138,6 +176,59 @@ Output format: caveman-compressed, grouped by category. For classes/functions, i
 
 No line numbers. File paths where relevant for classes and functions.
 ```
+
+**≥ 20 source files → 4-category parallel swarm:**
+
+Spawn 4 `cavecrew-investigator` agents **in parallel**, one per category cluster:
+
+**Investigator A — Structure:**
+```
+Map this codebase for Obsidian node-graph documentation. Focus ONLY on:
+
+1. SERVICES / CLASSES — each major class/service: name, responsibility, public methods, key deps
+2. ENTRY POINTS — bootstrap files, CLI entry, init sequences
+3. TECH STACK — languages, frameworks, libraries, build/test tools
+
+Output: caveman-compressed, grouped by category.
+Class one-liner: responsibility + key deps + typical users.
+File paths where relevant.
+```
+
+**Investigator B — Behavior:**
+```
+Map this codebase for Obsidian node-graph documentation. Focus ONLY on:
+
+1. FUNCTIONS / UTILITIES — critical standalone functions: name, signature, responsibility, who calls it
+2. EVENTS / COMMUNICATION — event names, emitters, listeners; API routes; patterns
+
+Output: caveman-compressed, grouped by category.
+Function one-liner: signature + responsibility + typical call frequency/perf.
+File paths where relevant.
+```
+
+**Investigator C — Data & Config:**
+```
+Map this codebase for Obsidian node-graph documentation. Focus ONLY on:
+
+1. DATA LAYER — DB tables/collections, Redis patterns, schema relationships
+2. CONFIGURATION — env vars, config files, safety bounds, named constraints
+
+Output: caveman-compressed, grouped by category.
+No line numbers. File paths where relevant.
+```
+
+**Investigator D — Decisions & Docs:**
+```
+Map this codebase for Obsidian node-graph documentation. Focus ONLY on:
+
+1. ARCHITECTURAL PATTERNS — decision evidence: "we do X instead of Y because...", naming conventions, guards
+2. EXISTING DOCS — list all .md files, README*, IMPLEMENTATION_PLAN*, *.plan.md
+
+Output: caveman-compressed, grouped by category.
+Decision signal: code pattern with rationale.
+```
+
+Wait for all investigators to complete. Merge all outputs into single result set before proceeding to Step 3.
 
 ### Step 3 — Load existing vault summaries
 
