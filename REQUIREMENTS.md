@@ -2,10 +2,27 @@
 
 ## Required
 
+### Supported AI host
+- Install one or more supported hosts: Claude Code, Cursor, Codex, or Gemini.
+- Cursor, Codex, and Gemini installs use the Skills CLI through `npx`.
+- Claude Code installs use the local plugin marketplace path.
+
+Install commands:
+
+```bash
+npx skills add blackmo18/realm -a codex
+npx skills add blackmo18/realm -a cursor
+npx skills add blackmo18/realm -a gemini
+```
+
 ### Claude Code CLI
 - Version: latest
 - Install: https://claude.ai/code
-- Used by: all realm skills
+- Used by: Claude Code plugin installs and by Realm's Claude-oriented subagent workflow
+
+### Node.js and npx
+- Version: any recent Node.js release with `npx`
+- Used by: Cursor, Codex, and Gemini installs
 
 ### Obsidian
 - Version: 1.x or later
@@ -27,7 +44,7 @@ Realm depends on two skills from the **caveman** plugin:
 | `cavecrew-investigator` agent | `realm-phase`, `realm-flourish` | Scans repo; outputs caveman-compressed findings |
 | `caveman-compress` skill | `realm-phase`, `realm-manifest` | Compresses node body prose before vault writes |
 
-Install caveman first:
+Install caveman first for Claude Code:
 
 ```bash
 /plugin marketplace add ~/.claude/plugins/marketplaces/caveman

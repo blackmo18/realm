@@ -1,0 +1,44 @@
+{
+  "name": "realm",
+  "version": "0.1.0",
+  "description": "Obsidian project-knowledge pipeline for Claude Code, Cursor, Codex, and Gemini.",
+  "author": {
+    "name": "blackmo",
+    "url": "https://github.com/blackmo18"
+  },
+  "homepage": "https://github.com/blackmo18/realm#readme",
+  "repository": "https://github.com/blackmo18/realm",
+  "license": "MIT",
+  "keywords": [
+    "obsidian",
+    "knowledge-graph",
+    "architecture",
+    "documentation",
+    "claude-code",
+    "cursor",
+    "codex",
+    "gemini"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Realm",
+    "shortDescription": "Turn a repo into a living Obsidian knowledge graph.",
+    "longDescription": "Realm maps your codebase into structured Obsidian nodes with a review-first pipeline for scanning, staging, writing, querying, and incremental updates.",
+    "developerName": "blackmo",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Knowledge"
+    ],
+    "websiteURL": "https://github.com/blackmo18/realm",
+    "privacyPolicyURL": "https://github.com/blackmo18/realm/blob/main/README.md",
+    "termsOfServiceURL": "https://github.com/blackmo18/realm/blob/main/README.md",
+    "defaultPrompt": [
+      "Map this repo into Realm and show the first scan flow.",
+      "Recall the auth subsystem from the Realm vault.",
+      "Use Realm to stage documentation updates after my changes."
+    ],
+    "brandColor": "#2F6FED"
+  }
+}

@@ -1,6 +1,6 @@
 # Realm
 
-**Project-knowledge pipeline for Claude Code.** Keeps architectural knowledge in structured, caveman-compressed Obsidian nodes — cheap to pull into any AI context, human-readable in Obsidian's graph view.
+**Project-knowledge pipeline for Claude Code, Cursor, Codex, and Gemini.** Keeps architectural knowledge in structured, caveman-compressed Obsidian nodes — cheap to pull into any AI context, human-readable in Obsidian's graph view.
 
 ---
 
@@ -25,7 +25,7 @@
 
 ## What is Realm?
 
-Realm is a Claude Code plugin that bridges your codebase and your Obsidian vault. It scans your project, extracts architectural knowledge — functions, classes, decisions, systems — and writes that knowledge as compressed, interlinked nodes into an Obsidian vault.
+Realm is an AI-coding-host skill/plugin that bridges your codebase and your Obsidian vault. It scans your project, extracts architectural knowledge — functions, classes, decisions, systems — and writes that knowledge as compressed, interlinked nodes into an Obsidian vault.
 
 The vault becomes a persistent, human-browsable knowledge graph. When you start a new Claude session, you query the vault instead of re-reading source files. You get the same context at a fraction of the token cost.
 
@@ -112,11 +112,36 @@ See [VISUALS.md](VISUALS.md) for pipeline flow diagrams.
 
 See [REQUIREMENTS.md](REQUIREMENTS.md) for prerequisites.
 
+### Cursor, Codex, and Gemini
+
+```bash
+# One-liners
+curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent codex
+curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent cursor
+curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent gemini
+
+# Direct installs
+npx skills add blackmo18/realm -a codex
+npx skills add blackmo18/realm -a cursor
+npx skills add blackmo18/realm -a gemini
+```
+
+After install, restart your host or open a new session so the new skills are loaded, then run:
+
+```bash
+/realm-forge
+```
+
+### Claude Code
+
 ```bash
 # 1. Install caveman plugin (required dependency)
 /plugin marketplace add ~/.claude/plugins/marketplaces/caveman
 
-# 2. Install realm
+# 2. Copy Realm into the Claude plugin marketplace path from a local clone
+node bin/install.js --agent claude --force
+
+# 3. Install realm
 /plugin marketplace add ~/.claude/plugins/marketplaces/realm
 ```
 
@@ -127,6 +152,13 @@ Full step-by-step guide: [INSTALL.md](INSTALL.md)
 ## Uninstallation
 
 To remove Realm and its dependencies:
+
+```bash
+# Skills CLI installs (Cursor, Codex, Gemini)
+npx skills remove realm
+```
+
+For Claude Code installs:
 
 ```bash
 # Automated uninstall (recommended)
@@ -142,7 +174,7 @@ Full uninstall guide: [UNINSTALL.md](UNINSTALL.md)
 Notes:
 - Local project state (`.realm/`) can be removed separately
 - Obsidian vault nodes are preserved unless manually deleted
-- Realm skills will no longer be available after uninstall
+- Start a new host session after uninstall so removed skills are not cached
 
 ---
 
@@ -364,7 +396,8 @@ Default recall loads the `Compressed` section only. Pass `--expand` to load full
 
 | Dependency | Purpose |
 |---|---|
-| [Claude Code CLI](https://claude.ai/code) (latest) | Runtime for all realm skills |
+| Supported host: Claude Code, Cursor, Codex, or Gemini | Runtime for Realm skills |
+| Node.js with `npx` | Installs Realm for Cursor, Codex, and Gemini |
 | [Obsidian](https://obsidian.md) 1.x+ | Vault storage, graph view, backlinks, tag pane |
 | Git (any recent version) | Used by `realm-flourish` for diff-based incremental updates |
 
@@ -377,7 +410,7 @@ Realm depends on two skills from the **caveman** plugin:
 | `cavecrew-investigator` agent | `realm-phase`, `realm-flourish`, `realm-fathom` | Scans repo; outputs caveman-compressed findings |
 | `caveman-compress` skill | `realm-phase`, `realm-manifest` | Compresses node body prose before vault writes |
 
-Install caveman first:
+Install caveman first for Claude Code:
 
 ```bash
 /plugin marketplace add ~/.claude/plugins/marketplaces/caveman

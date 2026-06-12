@@ -2,9 +2,21 @@
 
 This guide covers removing the Realm plugin and associated local state from your system.
 
+## Cursor, Codex, and Gemini Uninstall
+
+If you installed Realm with `npx skills add`, remove it with:
+
+```bash
+npx skills remove realm
+```
+
+Start a new host session after removal so the old skill set is no longer cached.
+
+---
+
 ## Quick Uninstall
 
-Run the automated uninstall script:
+For Claude Code installs, run the automated uninstall script:
 
 ```bash
 ./uninstall.sh
@@ -94,7 +106,7 @@ rm -rf /path/to/your/vault/_templates/  # only if no other projects use it
 
 ### Realm Skills No Longer Available
 
-These skills will no longer work in Claude Code:
+These skills will no longer work in the host where Realm was removed:
 
 - `/realm-forge` — Bootstrap vault
 - `/realm-phase` — Scan and stage
