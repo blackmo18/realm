@@ -2,7 +2,7 @@
 name: realm-agent-forge
 description: realm pipeline agent — vault bootstrap and init. Scaffolds Obsidian vault directories, writes templates, seeds overview.md, ADR index, CLAUDE.md anchor, updates .gitignore, detects existing docs, and writes realm-state.json. Idempotent — never overwrites existing files. Run after the skill resolves the vault path interactively.
 tools: ["Read", "Write", "Bash"]
-model: sonnet
+model: haiku
 ---
 
 ## Prompt Defense Baseline

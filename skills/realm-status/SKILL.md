@@ -28,18 +28,65 @@ Inspect realm pipeline state without scanning or writing.
 
 ## Procedure
 
-This skill delegates entirely to `realm-agent-query` in status mode.
+Handle all steps inline using Read and Bash. No agent spawn.
 
-### Step 1 — Spawn query agent
+### Step 1 — Read state
 
-Spawn agent `realm-agent-query` with this prompt:
+Read `<projectRoot>/.realm/realm-state.json`.
+If missing:
+```
+No realm state found.
+Run /realm-forge to bootstrap.
+```
+STOP.
+
+Extract: `vaultPath`, `projectSlug`, `projectDir`, `phase`, `manifest`, `docs`.
+
+### Step 2 — Count nodes by type
+
+Run:
+```bash
+find <projectDir> -name "*.md" | grep -v "_templates" | sort
+```
+
+Group results by subdirectory: `decisions/`, `functions/`, `classes/`, `systems/`, `discoveries/`, `sessions/`.
+
+For tag frequency, run:
+```bash
+grep -rh "^  - " <projectDir> --include="*.md" | sort | uniq -c | sort -rn | head 20
+```
+
+### Step 3 — Identify planned and stale docs
+
+From `docs` registry in realm-state.json:
+- `status: "planned"` → planned list
+- `status: "stale"` → stale list
+- `status: "committed"` → committed count
+
+### Step 4 — Print status (caveman-compressed)
 
 ```
-projectRoot: <absolute path to project root>
-mode: status
+realm:<projectSlug>
+vault:<vaultPath>  proj:<projectDir>
 
-Print the full realm pipeline status report.
-Follow the full procedure in your instructions.
+PIPELINE init✓  phase:<lastRun ts or never>  draft:<yes/no>  manifest:<lastRun ts or never>
+
+NODES <total>
+decisions/<N>:   [[id]] <date>  [[id2]] <date>
+functions/<N>:   [[id]]→<Class>  [[id2]]→<Class>
+classes/<N>:     [[id]] deps:<N>  [[id2]] deps:<N>
+discoveries/<N>: [[id]] <date>
+sessions/<N>:    <filename>
+planned/<N>:     <path>
+stale/<N>:       <path>
+
+TAGS #<tag>:<N>  #<tag>:<N>  #<tag>:<N>  (top 10)
+
+→ <single most relevant next step>
 ```
 
-Wait for completion. Surface the agent's output directly to the user.
+Next step logic (pick one):
+- `phase.draftReady == true` → `→ /realm-manifest  (draft ready)`
+- `phase.draftReady == false`, stale docs exist → `→ /realm-phase  (<N> stale docs)`
+- `manifest.lastRun == null` → `→ /realm-phase  (never run)`
+- otherwise → `→ pipeline current. /realm-phase after next milestone.`
