@@ -1,7 +1,7 @@
 ---
 name: realm-manifest
 description: >
-  Vault-write step in the realm pipeline. Orchestrates two agents: realm-agent-compress (sonnet) validates and compresses the staged draft, then realm-agent-write (haiku) commits all nodes to the Obsidian vault, updates cross-links, creates session log, and archives the draft. The ONLY realm skill that writes to the vault. Must run after realm-phase.
+  Vault-write step in the realm pipeline. Spawns realm-agent-write (haiku) which validates YAML frontmatter, applies caveman compression inline, commits all nodes to the Obsidian vault, updates cross-links, creates session log, and archives the draft. Single-agent pipeline — no separate compress step. The ONLY realm skill that writes to the vault. Must run after realm-phase.
 origin: realm
 ---
 
@@ -28,34 +28,21 @@ Commit staged draft to Obsidian. Third skill in realm pipeline.
 
 ## Procedure
 
-This skill orchestrates two agents sequentially. Do not perform the steps yourself.
+This skill spawns one agent. Do not perform the steps yourself.
 
 ### Step 1 — Determine project root
 
 Use the current working directory as `projectRoot`. Verify `.realm/realm-state.json` exists before proceeding. If missing: print `No realm state. Run /realm-forge then /realm-phase.` and STOP.
 
-### Step 2 — Spawn compress agent (sonnet)
+### Step 2 — Spawn write agent (haiku)
 
-Spawn agent `realm-agent-compress` with this prompt:
-
-```
-projectRoot: <absolute path to project root>
-
-Validate and compress the staged manifest draft at <projectRoot>/.realm/manifest-draft.md.
-Follow the full procedure in your instructions.
-```
-
-Wait for completion. If the agent reports an error or guard failure: surface the message to the user and STOP.
-
-### Step 3 — Spawn write agent (haiku)
-
-On compress success, spawn agent `realm-agent-write` with this prompt:
+Spawn agent `realm-agent-write` with this prompt:
 
 ```
 projectRoot: <absolute path to project root>
 
-Write the compressed manifest draft to the vault.
+Validate, compress, and write the staged manifest draft to the vault.
 Follow the full procedure in your instructions.
 ```
 
-Wait for completion. Surface the write agent's summary to the user.
+Wait for completion. Surface the agent's summary to the user.
