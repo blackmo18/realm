@@ -74,6 +74,22 @@ YAML frontmatter, wikilinks, and tags are never compressed — only prose bodies
 
 No vault writes happen at phase time. You review the staged draft before anything is committed to the vault.
 
+> [!WARNING]
+> **`/realm-phase` (full scan) is token-intensive.** Cost scales with project size:
+>
+> | Project size | LOC | Approx. cost |
+> |---|---|---|
+> | Small | < 5K | ~5–8K+ tokens |
+> | Medium | 5–50K | ~15K–25K+ tokens |
+> | Large | 50K+ | ~40K–80K+ tokens |
+>
+> **Use targeted mode to cut cost by 10–20×:**
+> ```
+> /realm-phase function:validateUser   # ~1–4K+ tokens regardless of repo size
+> /realm-phase class:AuthService
+> ```
+> Reserve full scan for initial mapping and post-milestone syncs. See [Token Economics](#token-economics).
+
 For incremental updates:
 
 ```
@@ -208,6 +224,9 @@ Notes:
 ---
 
 ## Quick Start
+
+> [!NOTE]
+> `/realm-phase` with no target scans the **entire repo**. Cost: ~5–8K tokens (small), ~15–25K (medium), ~40–80K (large). For a first run on a large codebase, consider a targeted scan first: `/realm-phase function:X` or `/realm-phase class:Y` (~1–4K tokens).
 
 ```bash
 # Bootstrap the vault for your project

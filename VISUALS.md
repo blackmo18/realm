@@ -9,6 +9,7 @@ Pipeline flows, vault structure, and guard logic for [Realm](README.md).
 - [Core Pipeline](#core-pipeline)
 - [Incremental Update](#incremental-update)
 - [Conversation Capture](#conversation-capture)
+- [Ideation Canvas (realm-plan)](#ideation-canvas-realm-plan)
 - [Queries](#queries)
 - [Vault Structure](#vault-structure)
 - [Local Pipeline State (.realm/)](#local-pipeline-state-realm)
@@ -78,6 +79,68 @@ flowchart TD
 
 ---
 
+## Ideation Canvas (realm-plan)
+
+Single-intent invocation — routes to the matching agent, saves to `work/`:
+
+```mermaid
+flowchart TD
+    PL(["/realm-plan &lt;intent&gt; &lt;topic&gt;"]):::cmd --> VC["pre-load vault context"]:::file
+    VC --> IR{intent}:::choice
+
+    IR -->|plan| AG1(["planner"]):::agent
+    IR -->|design| AG2(["architect"]):::agent
+    IR -->|scaffold| AG3(["code-architect"]):::agent
+    IR -->|investigate| AG4(["cavecrew-investigator"]):::agent
+    IR -->|deep-research| AG5(["firecrawl + exa"]):::agent
+
+    AG1 --> WP["work/plans/"]:::dir
+    AG2 --> WD["work/designs/"]:::dir
+    AG3 --> WS["work/scaffolds/"]:::dir
+    AG4 --> WR["work/research/"]:::dir
+    AG5 --> WR
+
+    WP & WD & WS & WR --> FIN{finalize?}:::choice
+    FIN -->|Yes| VN["vault nodes\ndecisions/ · classes/ · systems/ · sessions/"]:::vault
+    FIN -->|No| RS["resumable\nacross sessions"]:::ok
+
+    classDef cmd    fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    classDef file   fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+    classDef dir    fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    classDef choice fill:#1e1e2e,stroke:#f9e2af,color:#cdd6f4
+    classDef agent  fill:#1e1e2e,stroke:#f9e2af,color:#cdd6f4
+    classDef vault  fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4
+    classDef ok     fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+```
+
+Chain syntax — generation order hint, not a hard pipeline:
+
+```mermaid
+flowchart LR
+    CH(["/realm-plan A->B->C &lt;topic&gt;"]):::cmd --> S1["stage A\ne.g. deep-research"]:::stage
+    S1 -->|"output feeds next"| S2["stage B\ne.g. design"]:::stage
+    S2 -->|"output feeds next"| S3["stage C\ne.g. plan"]:::stage
+    S3 --> WK["work/&lt;category&gt;/\n&lt;canvas&gt;.md"]:::file
+
+    classDef cmd   fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    classDef stage fill:#1e1e2e,stroke:#f9e2af,color:#cdd6f4
+    classDef file  fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+```
+
+Session management:
+
+```mermaid
+flowchart LR
+    LS(["/realm-plan list"]):::cmd        --> IX["work/index.md\ngrouped by category"]:::file
+    RS(["/realm-plan resume &lt;path&gt;"]):::cmd --> CV["reload canvas\ncontinue where left off"]:::ok
+
+    classDef cmd fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    classDef file fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+    classDef ok  fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+```
+
+---
+
 ## Queries
 
 Read-only skills — no pipeline state required:
@@ -138,6 +201,7 @@ graph TD
     ROOT --> SY["systems/\n─ subsystems and integrations"]:::dir
     ROOT --> DI["discoveries/\n─ ephemeral findings, perf notes, bug post-mortems"]:::dir
     ROOT --> SE["sessions/\n─ per-session discovery logs"]:::dir
+    ROOT --> WK["work/\n─ in-progress realm-plan canvases"]:::dir
 
     classDef dir  fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
     classDef node fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
