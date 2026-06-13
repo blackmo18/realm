@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "realm",
-      "description": "Map any project into a living Obsidian knowledge base. Full pipeline: forge → phase → manifest. Quick update: flourish. Conversation capture: convey (compress session → user selects topics → targeted phase). Query: recall, status.",
+      "description": "Living Obsidian vault for project knowledge. Core: forge → phase → manifest. Capture, update, query.",
       "source": {
         "source": "url",
         "url": "https://github.com/blackmo18/realm.git",
