@@ -543,6 +543,11 @@ realm-plan finalized
   next: /realm-manifest to write to vault
 ```
 
+> **ADR note:** If this planning session produced decisions not already captured as ADR nodes
+> (chose X over Y, rejected an approach, imposed a constraint), run `/realm-convey` immediately
+> after — while the conversation context is still live — to capture them with a structured
+> interview before they leave context.
+
 ---
 
 ## realm-plan list output

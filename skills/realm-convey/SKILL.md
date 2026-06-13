@@ -1,35 +1,40 @@
 ---
 name: realm-convey
 description: >
-  Conversation-to-realm bridge. Caveman-compresses the current conversation context, dissects it into typed topics (entities, decisions, discoveries), then routes code entities to realm-phase targeted mode. Lets you push conversation knowledge into the vault without manually identifying what changed.
+  Conversation-to-vault ADR bridge. Extracts decisions, rejected alternatives, and discoveries
+  from the current conversation, runs a structured interview per decision, then writes a
+  manifest draft directly — no codebase scan. One command to capture session knowledge as
+  ADR and discovery nodes.
 origin: realm
 ---
 
 # realm-convey
 
-Compress conversation → dissect topics → feed realm-phase. One command to capture session knowledge.
+Extract decisions from conversation → structured ADR interview → manifest-draft → vault.
 
 ## When to Use
 
 | Trigger | Example |
 |---|---|
-| End of coding session | "convey this", `/realm-convey` |
-| Discussed new decision/entity | "push this to realm" |
-| Want to capture conversation findings | "log this session" |
+| Made an architectural decision | "convey this", `/realm-convey` |
+| Discussed tradeoffs and chose a direction | "push this decision to realm" |
+| End of session with non-obvious choices | "log this session" |
+| Finished a `/realm-plan` that produced decisions | "convey the decisions from this plan" |
 
 ## When NOT to Use
 
 - No realm state → `/realm-forge` first (hard guard)
-- Nothing technical discussed → skip
-- Already used `/realm-flourish` → vault current
+- Nothing decided — just wrote code with no tradeoffs → skip
+- Want to understand code + prior decisions before touching something → `/realm-fathom`
+- Want to query existing decisions → `/realm-recall`
 
 ---
 
 ## Procedure
 
-Read `_shared/realm-conventions.md` before executing.
-
-Steps 0–2.5 run inline (require main conversation context and user interaction). Step 3 delegates to `realm-agent-scan`. Steps 4–5 run inline.
+Steps 0–2.5 run inline (require main conversation context and user interaction).
+Step 3 is an interactive interview — no agents spawned.
+Step 4 writes manifest-draft directly. No codebase scan.
 
 ### Step 0 — Guard check
 
@@ -38,82 +43,91 @@ Steps 0–2.5 run inline (require main conversation context and user interaction
 
 ### Step 1 — Caveman-compress conversation
 
-Scan current conversation context (all turns). Apply caveman compression policy from `_shared/realm-conventions.md`:
-- Drop filler, articles, pleasantries
-- Keep: function/class names, file paths, decisions, error messages, architectural rationale
-- Preserve wikilink candidates: any named service, class, function mentioned ≥ 2x
+Scan current conversation context (all turns). Apply caveman compression:
+- Drop: restated code already in source, pleasantries, filler
+- Keep: decisions made, options considered, reasons given, constraints stated, unexpected findings, things explicitly rejected
 
-Output: compressed flat list of all meaningful items discussed.
+Output: compressed flat list of meaningful items discussed.
 
 ### Step 2 — Dissect into topics
 
 Classify each item:
 
-| Type | Signal | Realm destination |
-|------|--------|-------------------|
-| `function` | "wrote X()", "fixed X()", "X does Y" | `realm-agent-scan targeted function:X` |
-| `class` | "class X", "service X", "module X" | `realm-agent-scan targeted class:X` |
-| `decision` | "decided to", "because", "instead of", "DO NOT" | new ADR candidate |
-| `discovery` | perf finding, bug post-mortem, unexpected behavior | `discoveries/` |
-| `session` | everything else | session log entry |
+| Type | Signal | Action |
+|------|--------|--------|
+| `decision` | "decided to", "chose X over Y", "because", "instead of", "DO NOT", "rejected", "went with" | ADR candidate → structured interview (Step 3) |
+| `discovery` | perf finding, unexpected behavior, bug post-mortem, tech constraint, "turns out" | discovery node stub |
+| `session` | general session summary, what was worked on | session log entry |
+
+**Functions and classes are not captured here.** Code entities are derivable from source — only capture what code cannot express: decisions, rationale, rejected alternatives, constraints.
 
 ### Step 2.5 — User selection (BLOCKING)
 
-Present numbered pick-list. **Do not proceed until user replies.**
+Present pick-list. **Do not proceed until user replies.**
 
 ```
-realm-convey: select items to process
-
-  Functions
-    [1] <functionName> — <one-liner>
-    [2] <functionName> — <one-liner>
-
-  Classes
-    [3] <ClassName> — <one-liner>
+realm-convey: select items to capture
 
   Decisions
-    [4] <decision title> — <one-liner>
+    [1] <decision title> — <one-liner>
+    [2] <decision title> — <one-liner>
 
   Discoveries
-    [5] <discovery title> — <one-liner>
+    [3] <discovery title> — <one-liner>
 
-Enter numbers (e.g. 1 3 5), "all", or "none" to cancel:
+  Session log
+    [4] this session — <summary one-liner>
+
+Enter numbers (e.g. 1 3), "all", or "none" to cancel:
 ```
 
 Rules:
-- Wait for explicit reply before any vault or draft action
+- Wait for explicit reply before any draft action
 - `all` → select every item
 - `none` / empty → `Nothing selected. Vault unchanged.` STOP
-- Invalid numbers → re-prompt once, then STOP if still invalid
-- Selected set is the only input for Steps 3–4; discard unselected
+- Invalid numbers → re-prompt once, then STOP
 
-### Step 3 — Spawn scan agent for entities
+### Step 3 — Structured ADR interview (decisions only)
 
-If selected items include functions or classes:
-
-Spawn agent `realm-agent-scan` with this prompt:
+For each selected decision, present this block and wait for user reply before moving to the next:
 
 ```
-projectRoot: <absolute path to project root>
-mode: targeted
-targets: <list of function:X and class:X specifiers from selected items>
+Decision [N/total]: <title>
 
-Scan the codebase for these entities and generate a staged manifest draft.
-Follow the full procedure in your instructions.
+Answer each — skip any you don't know yet (just press enter):
+
+1. What exactly was decided?
+2. What alternatives were considered, and why was each rejected?
+3. What constraints or consequences does this impose on future work?
+4. What triggered this? (PR, bug, requirement, conversation, spike)
 ```
 
-Wait for completion.
+Use answers to populate ADR node fields. Skipped fields become `—` placeholders.
+After all decisions are interviewed, proceed to Step 4.
 
-If zero entities but decisions/discoveries present: skip to Step 4.
-If nothing selected: `Nothing to convey. Vault unchanged.` STOP.
+### Step 4 — Write manifest-draft
 
-### Step 4 — Append decision/discovery candidates to draft
+Read `_shared/realm-conventions.md` with `offset=0 limit=50` (frontmatter schema only).
 
-If Step 3 produced a draft (`<projectRoot>/.realm/manifest-draft.md`):
-- Append ADR candidate stubs for each selected decision item
-- Append discovery note stubs for each selected discovery item
+Write `<projectRoot>/.realm/manifest-draft.md` containing:
+- One full ADR node per selected decision (interview answers in body)
+- One discovery stub per selected discovery
+- One session log stub if selected
 
-If Step 3 was skipped (no entities), write `<projectRoot>/.realm/manifest-draft.md` with only the stubs.
+ADR node body structure:
+```markdown
+## Context
+<what triggered this — from interview answer 4>
+
+## Decision
+<what was decided — from interview answer 1>
+
+## Rejected alternatives
+<each alternative + reason rejected — from interview answer 2>
+
+## Consequences
+<constraints imposed, known tradeoffs — from interview answer 3>
+```
 
 Update `realm-state.json`: `phase.draftReady = true`.
 
@@ -122,10 +136,9 @@ Update `realm-state.json`: `phase.draftReady = true`.
 ```
 realm-convey complete
 
-  topics extracted:   <N>
-  realm-agent-scan:   targeted (<entity list> | skipped)
-  ADR candidates:     <N>  (staged in manifest-draft.md)
-  discoveries:        <N>  (staged)
+  decisions captured:  <N>  (ADR nodes staged in manifest-draft.md)
+  discoveries:         <N>
+  session log:         <yes|no>
 
   draft: .realm/manifest-draft.md
   next:  /realm-manifest to write to vault

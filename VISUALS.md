@@ -7,8 +7,7 @@ Pipeline flows, vault structure, and guard logic for [Realm](README.md).
 ## Table of Contents
 
 - [Core Pipeline](#core-pipeline)
-- [Incremental Update](#incremental-update)
-- [Conversation Capture](#conversation-capture)
+- [Conversation Capture (realm-convey)](#conversation-capture-realm-convey)
 - [Ideation Canvas (realm-plan)](#ideation-canvas-realm-plan)
 - [Queries](#queries)
 - [Vault Structure](#vault-structure)
@@ -19,63 +18,54 @@ Pipeline flows, vault structure, and guard logic for [Realm](README.md).
 
 ## Core Pipeline
 
-Full pipeline from bootstrap to vault:
+Decision capture from conversation to vault:
 
 ```mermaid
 flowchart TD
     A(["/realm-forge"]):::cmd -->|"bootstrap vault dirs + realm-state.json"| B
 
-    B(["/realm-phase"]):::cmd -->|"scan repo → compress → diff vs vault"| C1
-    C1[".realm/manifest-draft.md"]:::file -->|"review draft"| C
+    B(["/realm-convey"]):::cmd -->|"compress conversation → ADR interview"| C1
+    C1[".realm/manifest-draft.md\nADR nodes + discoveries"]:::file -->|"review draft"| C
 
-    C(["/realm-manifest"]):::cmd -->|"write + link nodes → archive draft"| V
+    C(["/realm-manifest"]):::cmd -->|"write nodes → link → archive draft"| V
 
-    V[("Obsidian Vault")]:::vault
+    V[("Obsidian Vault\ndecisions/ · discoveries/ · sessions/")]:::vault
 
     classDef cmd   fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4,rx:6
     classDef file  fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4,rx:4
     classDef vault fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4,rx:8
 ```
 
-> No vault writes at phase time — review the draft before committing.
+> No vault writes at convey time — review the staged draft before committing.
 
 ---
 
-## Incremental Update
+## Conversation Capture (realm-convey)
 
-Quick sync after small code changes:
-
-```mermaid
-flowchart LR
-    RF(["/realm-flourish"]):::cmd -->|"git diff + targeted scan"| D{structural\ndecision?}
-    D -->|No| AC["auto-commit\nminor changes"]:::ok
-    D -->|Yes| SM["fall back to\nstaged mode"]:::warn
-
-    classDef cmd  fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
-    classDef ok   fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
-    classDef warn fill:#1e1e2e,stroke:#fab387,color:#cdd6f4
-```
-
----
-
-## Conversation Capture
-
-Compress a conversation and route selected topics to the vault:
+Extract decisions from a conversation and stage them as ADR nodes:
 
 ```mermaid
 flowchart TD
-    CV(["/realm-convey"]):::cmd -->|"compress + dissect conversation"| TL["topic list\nfunctions · classes · decisions · discoveries"]:::file
+    CV(["/realm-convey"]):::cmd -->|"compress + dissect conversation"| TL["topic list\ndecisions · discoveries · session"]:::file
     TL -->|"user selects items"| SEL{selection}:::choice
-    SEL -->|"entities chosen"| RP(["/realm-phase (targeted)"]):::cmd
-    SEL -->|"decisions/discoveries only"| ST[".realm/manifest-draft.md\nstubs only"]:::file
+
+    SEL -->|"decisions chosen"| INT["structured ADR interview\nper decision (inline)"]:::step
+    SEL -->|"discoveries only"| ST[".realm/manifest-draft.md\ndiscovery stubs"]:::file
     SEL -->|"none"| NO["no-op"]:::warn
-    RP --> DR[".realm/manifest-draft.md"]:::file
+
+    INT -->|"answered"| DR[".realm/manifest-draft.md\nADR nodes with rationale + rejected + consequences"]:::file
+    DR --> RM(["/realm-manifest"]):::cmd
+    RM --> V[("Obsidian Vault")]:::vault
 
     classDef cmd    fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
     classDef file   fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+    classDef step   fill:#1e1e2e,stroke:#cba6f7,color:#cdd6f4
     classDef choice fill:#1e1e2e,stroke:#f9e2af,color:#cdd6f4
     classDef warn   fill:#1e1e2e,stroke:#fab387,color:#cdd6f4
+    classDef vault  fill:#1e1e2e,stroke:#f38ba8,color:#cdd6f4
 ```
+
+> No codebase scan. No investigator agents. Decisions already exist in the conversation.
 
 ---
 
@@ -101,7 +91,8 @@ flowchart TD
     AG5 --> WR
 
     WP & WD & WS & WR --> FIN{finalize?}:::choice
-    FIN -->|Yes| VN["vault nodes\ndecisions/ · classes/ · systems/ · sessions/"]:::vault
+    FIN -->|Yes| VN["vault nodes\ndecisions/ · systems/ · sessions/"]:::vault
+    FIN -->|Decisions made| CV(["/realm-convey"]):::cmd
     FIN -->|No| RS["resumable\nacross sessions"]:::ok
 
     classDef cmd    fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
@@ -127,18 +118,6 @@ flowchart LR
     classDef file  fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
 ```
 
-Session management:
-
-```mermaid
-flowchart LR
-    LS(["/realm-plan list"]):::cmd        --> IX["work/index.md\ngrouped by category"]:::file
-    RS(["/realm-plan resume &lt;path&gt;"]):::cmd --> CV["reload canvas\ncontinue where left off"]:::ok
-
-    classDef cmd fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
-    classDef file fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
-    classDef ok  fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
-```
-
 ---
 
 ## Queries
@@ -147,7 +126,7 @@ Read-only skills — no pipeline state required:
 
 ```mermaid
 flowchart LR
-    Q1(["/realm-recall &lt;topic&gt;"]):::cmd  --> R["compressed context\nfrom vault"]:::out
+    Q1(["/realm-recall &lt;query&gt;"]):::cmd  --> R["compressed ADR context\nwhy · rejected · constraints"]:::out
     Q2(["/realm-status"]):::cmd             --> S["read-only\nhealth check"]:::out
     Q3(["/realm-fathom &lt;entity|question&gt;"]):::cmd --> F["live code ＋ vault\nconsolidated report"]:::out
 
@@ -168,7 +147,7 @@ flowchart TD
     PAR --> RQ(["realm-agent-query\n(vault context)"]):::agent
 
     CI  --> CO["code findings\nsignature · flow · callers"]:::out
-    RQ  --> VO["vault context\nwhy · ADRs · intent"]:::out
+    RQ  --> VO["vault context\nwhy · rejected · consequences"]:::out
     CI2 --> CO
 
     CO --> DR{drift\ndetected?}
@@ -195,12 +174,9 @@ graph TD
 
     ROOT --> OV["overview.md\n─ milestone tracker, stack, key files"]:::node
     ROOT --> AR["architecture.md\n─ service map, event shapes, schema groups"]:::node
-    ROOT --> DE["decisions/\n─ ADRs — one node per decision"]:::dir
-    ROOT --> FN["functions/\n─ critical functions — signature, deps, callers"]:::dir
-    ROOT --> CL["classes/\n─ services/classes — methods, deps, dependents"]:::dir
-    ROOT --> SY["systems/\n─ subsystems and integrations"]:::dir
-    ROOT --> DI["discoveries/\n─ ephemeral findings, perf notes, bug post-mortems"]:::dir
-    ROOT --> SE["sessions/\n─ per-session discovery logs"]:::dir
+    ROOT --> DE["decisions/\n─ ADRs — context, decision, rejected, consequences"]:::dir
+    ROOT --> DI["discoveries/\n─ perf notes, bug findings, unexpected constraints"]:::dir
+    ROOT --> SE["sessions/\n─ per-session decision logs"]:::dir
     ROOT --> WK["work/\n─ in-progress realm-plan canvases"]:::dir
 
     classDef dir  fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
@@ -215,7 +191,7 @@ graph TD
 graph LR
     ROOT[".realm/"]:::dir
     ROOT --> RS["realm-state.json\n─ doc registry + pipeline state"]:::node
-    ROOT --> MD["manifest-draft.md\n─ staged draft (phase → manifest)"]:::node
+    ROOT --> MD["manifest-draft.md\n─ staged draft (convey → manifest)"]:::node
     ROOT --> AR["archive/\n─ past drafts after each manifest run"]:::dir
 
     classDef dir  fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
@@ -232,18 +208,12 @@ Prerequisite checks enforced by each skill:
 
 ```mermaid
 flowchart LR
-    P(["/realm-phase"]):::cmd -->|requires| RS["realm-state.json\nexists?"]
+    CV(["/realm-convey"]):::cmd -->|requires| RS["realm-state.json\nexists?"]
     RS -->|No| RI(["/realm-forge"]):::warn
+    CV -->|blocks on| USR["user item\nselection"]
 
     M(["/realm-manifest"]):::cmd -->|requires| DR["phase.draftReady\n== true?"]
-    DR -->|No| RP(["/realm-phase"]):::warn
-
-    F(["/realm-flourish"]):::cmd -->|blocks if| SD["staged draft\npending?"]
-    SD -->|Yes| CM["commit or\ndiscard first"]:::warn
-
-    CV(["/realm-convey"]):::cmd -->|requires| RS2["realm-state.json\nexists?"]
-    RS2 -->|No| RI2(["/realm-forge"]):::warn
-    CV -->|blocks on| USR["user item\nselection"]
+    DR -->|No| RC(["/realm-convey"]):::warn
 
     FT(["/realm-fathom"]):::cmd -->|soft guard| RS3["realm-state.json\nexists?"]
     RS3 -->|No| CO["proceeds code-only\nnote vault unavailable"]:::ok

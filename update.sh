@@ -67,8 +67,8 @@ if [ -d "$AGENTS_SRC" ]; then
     cp "$agent_file" "$AGENTS_DST/"
     echo -e "${GREEN}✓ $(basename "$agent_file")${NC}"
   done
-  # Remove renamed agents from previous versions
-  for obsolete in realm-manifest-compress realm-manifest-write; do
+  # Remove scrapped agents (scan pipeline removed in ADR-focused refactor)
+  for obsolete in realm-manifest-compress realm-manifest-write realm-agent-scan realm-agent-scan-full realm-agent-scan-targeted realm-agent-compress; do
     if [ -f "$AGENTS_DST/${obsolete}.md" ]; then
       rm -f "$AGENTS_DST/${obsolete}.md"
       echo -e "${YELLOW}  removed obsolete: ${obsolete}.md${NC}"
@@ -86,6 +86,13 @@ if [ -d "$CODEX_AGENTS_SRC" ]; then
     [ -f "$agent_file" ] || continue
     cp "$agent_file" "$CODEX_AGENTS_DST/"
     echo -e "${GREEN}✓ $(basename "$agent_file")${NC}"
+  done
+  # Remove scrapped Codex agents
+  for obsolete in realm-agent-scan realm-agent-compress; do
+    if [ -f "$CODEX_AGENTS_DST/${obsolete}.toml" ]; then
+      rm -f "$CODEX_AGENTS_DST/${obsolete}.toml"
+      echo -e "${YELLOW}  removed obsolete codex agent: ${obsolete}.toml${NC}"
+    fi
   done
 fi
 
