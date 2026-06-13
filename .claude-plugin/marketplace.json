@@ -10,8 +10,13 @@
     {
       "name": "realm",
       "description": "Map any project into a living Obsidian knowledge base. Full pipeline: forge → phase → manifest. Quick update: flourish. Conversation capture: convey (compress session → user selects topics → targeted phase). Query: recall, status.",
-      "source": "./",
-      "category": "productivity"
+      "source": {
+        "source": "url",
+        "url": "https://github.com/blackmo18/realm.git",
+        "sha": "85e975b5fdb02147bc1c230f23fdda3261f39866"
+      },
+      "category": "productivity",
+      "homepage": "https://github.com/blackmo18/realm"
     }
   ]
 }
