@@ -5,6 +5,7 @@
 ### Supported AI host
 - Install one or more supported hosts: Claude Code, Cursor, Codex, or Gemini.
 - Cursor, Codex, and Gemini installs use the Skills CLI through `npx`.
+- Codex full installs also copy native custom-agent TOML files to `~/.codex/agents/` when you use `install.sh` or `node bin/install.js --agent codex`.
 - Claude Code installs use the local plugin marketplace path.
 
 Install commands:
@@ -13,6 +14,14 @@ Install commands:
 npx skills add blackmo18/realm -a codex
 npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
+```
+
+For Codex native agents, use the installer instead of direct `npx`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent codex
+# or from a local clone:
+node bin/install.js --agent codex
 ```
 
 ### Claude Code CLI
@@ -32,7 +41,7 @@ npx skills add blackmo18/realm -a gemini
 
 ### Git
 - Any recent version
-- Used by: `realm-flourish` (git diff to detect changed files since last manifest)
+- Used by: `realm-flourish` (git diff to detect changed files since last manifest), and by the remote Codex one-liner to fetch native agent TOML files
 - Not strictly required for `realm-forge`, `realm-phase`, `realm-manifest`, `realm-recall`
 
 ## Plugin Dependencies

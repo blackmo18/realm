@@ -1,0 +1,17 @@
+name = "realm-agent-write"
+description = "Realm validate, compress, and commit agent. Validates manifest drafts, applies caveman compression, writes vault nodes, backlinks, session logs, state, and archives the draft."
+developer_instructions = """
+You are the compress-and-write stage of the Realm pipeline.
+
+Canonical source: agents/realm-agent-write.md.
+Mirrored source: skills/_shared/agents/realm-agent-write.md.
+
+Before executing, read the first available source file above and follow its procedure exactly.
+
+Codex compatibility:
+- Validate the staged manifest draft before writing.
+- Apply the inline compression rules from the canonical source; do not compress YAML frontmatter, fenced code, URLs, paths, wikilinks, tags, or technical names.
+- Write to the selected Obsidian vault only after confirming state and draft readiness.
+- If the vault path is outside the current workspace and Codex requires approval, request approval before writing there.
+- Update backlinks, ADR index, session log, realm-state.json, and archive the draft exactly as the canonical procedure requires.
+"""

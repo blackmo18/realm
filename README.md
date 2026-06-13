@@ -157,18 +157,26 @@ See [VISUALS.md](VISUALS.md) for pipeline flow diagrams.
 
 See [REQUIREMENTS.md](REQUIREMENTS.md) for prerequisites.
 
-### Cursor, Codex, and Gemini
+### Codex, Cursor, and Gemini
 
 ```bash
-# One-liners
+# Recommended installer
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent codex
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent cursor
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent gemini
 
-# Direct installs
+# Skills-only direct installs
 npx skills add blackmo18/realm -a codex
 npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
+```
+
+For Codex, use the one-liner or local installer when you want the full install. The installer runs `npx skills add` and copies Realm's Codex custom agents to `~/.codex/agents/realm-agent-*.toml`. The direct `npx` command installs skills only.
+
+From a local clone:
+
+```bash
+node bin/install.js --agent codex
 ```
 
 After install, restart your host or open a new session so the new skills are loaded, then run:
@@ -201,6 +209,9 @@ To remove Realm and its dependencies:
 ```bash
 # Skills CLI installs (Cursor, Codex, Gemini)
 npx skills remove realm
+
+# Codex native agents, if installed
+rm -f ~/.codex/agents/realm-agent-*.toml
 ```
 
 For Claude Code installs:

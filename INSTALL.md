@@ -4,9 +4,9 @@ See [REQUIREMENTS.md](REQUIREMENTS.md) before proceeding.
 
 Realm supports Claude Code, Cursor, Codex, and Gemini. Use the install path that matches your host.
 
-## Cursor, Codex, and Gemini
+## Codex, Cursor, and Gemini
 
-### One-liner
+### Recommended install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent codex
@@ -14,7 +14,9 @@ curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | b
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent gemini
 ```
 
-### Direct install
+For Codex, use the installer path above. It installs both Realm skills and the Codex-native subagent files.
+
+### Skills-only direct install
 
 ```bash
 npx skills add blackmo18/realm -a codex
@@ -22,11 +24,14 @@ npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
 ```
 
+The direct `npx` command installs skills only. For Codex, it does not copy Realm's native agent TOML files into `~/.codex/agents/`.
+
 What it does:
 
 - Installs Realm's skills into the selected host from `blackmo18/realm`
 - Makes the Realm command set available in new sessions
 - Leaves your current repo untouched until you actually run `/realm-forge`
+- For Codex only: also installs Realm's Codex-native subagent definitions into `~/.codex/agents/`
 
 Want to preview before installing?
 
@@ -39,8 +44,35 @@ curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | b
 After installing:
 
 1. Restart your host or open a new session.
-2. In the project you want to map, run `/realm-forge`.
-3. Continue with the pipeline below.
+2. For Codex, verify native agents if desired:
+
+   ```bash
+   ls ~/.codex/agents/realm-agent-*.toml
+   ```
+
+3. In the project you want to map, run `/realm-forge`.
+4. Continue with the pipeline below.
+
+### Codex local-clone install
+
+From a local Realm clone, this installs both Skills CLI entries and Codex-native agents:
+
+```bash
+node bin/install.js --agent codex
+```
+
+Preview first:
+
+```bash
+node bin/install.js --agent codex --dry-run
+```
+
+Codex install writes:
+
+- Skills through `npx skills add blackmo18/realm -a codex`
+- Native Realm agent TOML files to `~/.codex/agents/realm-agent-*.toml`
+
+The native agents let Codex resolve prompts such as `spawn realm-agent-scan` using Codex's custom-agent format. The skills still work without subagent spawning; the agents improve Codex-native delegation.
 
 ## Claude Code
 
@@ -212,19 +244,24 @@ Incremental:
 ./update.sh
 ```
 
-Pulls latest from `main`, syncs skills to the Claude Code plugin path if installed elsewhere, and checks the caveman dependency. Restart Claude Code after.
+Pulls latest from `main`, syncs skills to the Claude Code plugin path if installed elsewhere, refreshes Codex-native agents from `.codex/agents/` when present, and checks the caveman dependency.
 
 If installed in-place (repo cloned directly to `~/.claude/plugins/marketplaces/realm`), the git pull is the full update — no sync needed.
 
-For Cursor, Codex, or Gemini installs, re-run the matching command:
+For Cursor or Gemini installs, re-run the matching command:
 
 ```bash
-npx skills add blackmo18/realm -a codex
 npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
 ```
 
-Then restart your host or open a new session so the refreshed skills are loaded.
+For Codex, re-run the installer so skills and native agents both refresh:
+
+```bash
+node bin/install.js --agent codex
+```
+
+Then restart your host or open a new session so the refreshed skills and agents are loaded.
 
 ---
 
@@ -234,6 +271,12 @@ Cursor, Codex, and Gemini:
 
 ```bash
 npx skills remove realm
+```
+
+Codex native agents are separate files. Remove them too if you want a full Codex uninstall:
+
+```bash
+rm -f ~/.codex/agents/realm-agent-*.toml
 ```
 
 Claude Code and local project cleanup:

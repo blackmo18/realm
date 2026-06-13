@@ -10,6 +10,12 @@ If you installed Realm with `npx skills add`, remove it with:
 npx skills remove realm
 ```
 
+If you installed Realm for Codex with `install.sh` or `node bin/install.js --agent codex`, also remove Codex-native Realm agents:
+
+```bash
+rm -f ~/.codex/agents/realm-agent-*.toml
+```
+
 Start a new host session after removal so the old skill set is no longer cached.
 
 ---

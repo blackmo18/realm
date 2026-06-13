@@ -32,7 +32,7 @@ function main() {
   }
 
   if (SKILLS_CLI_AGENTS.has(options.agent)) {
-    installForSkillsCli(options);
+    installForSkillsCli(options, repoRoot);
     return;
   }
 
@@ -131,11 +131,7 @@ function detectRepoRoot() {
     : null;
 }
 
-function installForSkillsCli(options) {
-  if (!hasCommand('npx')) {
-    fail(`npx is required to install Realm for ${agentLabel(options.agent)}. Install Node.js first.`);
-  }
-
+function installForSkillsCli(options, repoRoot) {
   const command = ['npx', 'skills', 'add', options.repo, '-a', options.agent];
   if (options.force) {
     warn('--force is only used by the Claude Code local plugin installer; ignoring it for Skills CLI install.');
@@ -144,10 +140,21 @@ function installForSkillsCli(options) {
   info(`Realm install target: ${options.repo}`);
   info(`Agent: ${options.agent}`);
   info(`Command: ${command.join(' ')}`);
+  if (options.agent === 'codex') {
+    info(`Codex agents dir: ${defaultCodexAgentsDir()}`);
+  }
 
   if (options.dryRun) {
+    if (options.agent === 'codex') {
+      process.stdout.write('Planned Codex native agent install:\n');
+      process.stdout.write(`- Copy .codex/agents/*.toml into ${defaultCodexAgentsDir()}\n`);
+    }
     success('Dry run complete.');
     return;
+  }
+
+  if (!hasCommand('npx')) {
+    fail(`npx is required to install Realm for ${agentLabel(options.agent)}. Install Node.js first.`);
   }
 
   const result = childProcess.spawnSync(command[0], command.slice(1), {
@@ -156,6 +163,10 @@ function installForSkillsCli(options) {
 
   if (result.status !== 0) {
     fail(`${agentLabel(options.agent)} install failed with exit code ${result.status ?? 'unknown'}.`);
+  }
+
+  if (options.agent === 'codex') {
+    installCodexAgents(repoRoot);
   }
 
   process.stdout.write('\n');
@@ -266,6 +277,31 @@ function copyAgentFiles(sourceDir, destinationDir) {
   }
 }
 
+function installCodexAgents(repoRoot) {
+  const sourceDir = path.join(repoRoot, '.codex', 'agents');
+  const destinationDir = defaultCodexAgentsDir();
+
+  if (!fs.existsSync(sourceDir)) {
+    warn(`Codex native agents not found at ${sourceDir}`);
+    warn('Realm skills were installed, but Codex subagent definitions were not copied.');
+    return;
+  }
+
+  ensureDir(destinationDir);
+
+  for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
+    if (!entry.isFile() || path.extname(entry.name) !== '.toml' || !entry.name.startsWith('realm-agent-')) {
+      continue;
+    }
+
+    fs.copyFileSync(
+      path.join(sourceDir, entry.name),
+      path.join(destinationDir, entry.name)
+    );
+    info(`Installed Codex agent: ${path.join(destinationDir, entry.name)}`);
+  }
+}
+
 function ensureDir(targetDir) {
   fs.mkdirSync(targetDir, { recursive: true });
 }
@@ -302,6 +338,10 @@ function defaultClaudeMarketplaceDir() {
 
 function defaultClaudePluginDir() {
   return path.join(defaultClaudeMarketplaceDir(), 'realm');
+}
+
+function defaultCodexAgentsDir() {
+  return path.join(os.homedir(), '.codex', 'agents');
 }
 
 function agentLabel(agent) {

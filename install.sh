@@ -71,11 +71,6 @@ done
 
 case "$AGENT" in
   codex|cursor|gemini)
-    if ! command -v npx >/dev/null 2>&1; then
-      echo "npx is required to install Realm for $AGENT. Install Node.js first." >&2
-      exit 1
-    fi
-
     CMD=(npx skills add "$REPO_SLUG" -a "$AGENT")
 
     echo "Realm install target: $REPO_SLUG"
@@ -83,11 +78,52 @@ case "$AGENT" in
     echo "Command: ${CMD[*]}"
 
     if [ "$DRY_RUN" = true ]; then
+      if [ "$AGENT" = "codex" ]; then
+        echo "Planned Codex native agent install:"
+        echo "- Copy .codex/agents/*.toml into ~/.codex/agents/"
+        echo "- If this script is run remotely, clone https://github.com/${REPO_SLUG}.git into a temp dir first"
+      fi
       echo "Dry run complete."
       exit 0
     fi
 
+    if ! command -v npx >/dev/null 2>&1; then
+      echo "npx is required to install Realm for $AGENT. Install Node.js first." >&2
+      exit 1
+    fi
+
     "${CMD[@]}"
+
+    if [ "$AGENT" = "codex" ]; then
+      CODEX_AGENTS_DIR="${HOME}/.codex/agents"
+      SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+      AGENTS_SRC=""
+      TMP_DIR=""
+
+      if [ -d "$SCRIPT_DIR/.codex/agents" ]; then
+        AGENTS_SRC="$SCRIPT_DIR/.codex/agents"
+      else
+        if ! command -v git >/dev/null 2>&1; then
+          echo "Warning: git is required to install Codex-native Realm agents from a remote install script." >&2
+          echo "Realm skills were installed, but ~/.codex/agents/realm-agent-*.toml was not updated." >&2
+          echo "From a local Realm clone, run: node bin/install.js --agent codex" >&2
+        else
+          TMP_DIR="$(mktemp -d)"
+          git clone --depth 1 "https://github.com/${REPO_SLUG}.git" "$TMP_DIR/realm" >/dev/null 2>&1
+          AGENTS_SRC="$TMP_DIR/realm/.codex/agents"
+        fi
+      fi
+
+      if [ -n "$AGENTS_SRC" ] && [ -d "$AGENTS_SRC" ]; then
+        mkdir -p "$CODEX_AGENTS_DIR"
+        cp "$AGENTS_SRC"/realm-agent-*.toml "$CODEX_AGENTS_DIR"/
+        echo "Codex-native Realm agents installed to $CODEX_AGENTS_DIR"
+      fi
+
+      if [ -n "$TMP_DIR" ]; then
+        rm -rf "$TMP_DIR"
+      fi
+    fi
 
     cat <<EOF
 

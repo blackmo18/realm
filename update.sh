@@ -76,9 +76,22 @@ if [ -d "$AGENTS_SRC" ]; then
   done
 fi
 
+# Step 4: Sync Codex native agents to ~/.codex/agents/
+CODEX_AGENTS_SRC="${SCRIPT_DIR}/.codex/agents"
+CODEX_AGENTS_DST="$HOME/.codex/agents"
+if [ -d "$CODEX_AGENTS_SRC" ]; then
+  mkdir -p "$CODEX_AGENTS_DST"
+  echo "Syncing Codex realm agents to $CODEX_AGENTS_DST..."
+  for agent_file in "$CODEX_AGENTS_SRC"/realm-agent-*.toml; do
+    [ -f "$agent_file" ] || continue
+    cp "$agent_file" "$CODEX_AGENTS_DST/"
+    echo -e "${GREEN}✓ $(basename "$agent_file")${NC}"
+  done
+fi
+
 echo ""
 
-# Step 4: Check caveman dependency
+# Step 5: Check caveman dependency
 if [ ! -d "$CAVEMAN_PLUGIN_PATH" ]; then
   echo -e "${YELLOW}Warning: caveman plugin not found at $CAVEMAN_PLUGIN_PATH${NC}"
   echo "  realm-recall and realm-status require caveman for compressed output."
@@ -88,5 +101,5 @@ fi
 
 echo -e "${GREEN}Done.${NC}"
 echo ""
-echo "Restart Claude Code session to apply skill changes."
+echo "Restart Claude Code or Codex sessions to apply skill/agent changes."
 echo ""
