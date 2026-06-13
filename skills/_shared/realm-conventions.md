@@ -25,7 +25,16 @@ Every project gets one directory under `<vault>/projects/<slug>/`:
 │   └── YYYY-MM-DD-<topic>.md  # ephemeral findings, perf notes, bug discoveries
 ├── sessions/
 │   └── YYYY-MM-DD-<topic>.md  # per-session discovery log
-└── learning/            # optional standalone concept notes
+├── learning/            # optional standalone concept notes
+└── work/                # in-progress realm-plan canvases (never directly vaulted)
+    ├── index.md         # auto-maintained master list, grouped by category
+    ├── plans/           # building something — terminal mode: plan
+    ├── designs/         # deciding/architecting something — terminal mode: design
+    ├── research/        # learning/investigating — terminal mode: research or investigate
+    └── scaffolds/       # blueprinting a module/service — terminal mode: scaffold
+        └── <slug>/
+            ├── _meta.md     # category, chain, status, section registry
+            └── <section>.md # one file per section (research, design, plan, scaffold)
 <vault>/_templates/
 ├── Decision-Node.md
 ├── Function-Node.md
@@ -46,6 +55,7 @@ Slug = project directory name (e.g. `poly-bot-v2`). Derive from `package.json` `
 | `system` | `systems/` | Service boundary, API surface, events, external deps |
 | `discovery` | `discoveries/` | Findings, perf data, bug post-mortems |
 | session log | `sessions/` | What changed, decided, discovered per session |
+| work canvas | `work/` | In-progress realm-plan canvases; promoted to real nodes on `finalize` |
 
 ---
 

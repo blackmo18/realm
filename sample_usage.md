@@ -8,6 +8,29 @@
 /realm-manifest     # review draft → write nodes → archive
 ```
 
+## Plan — free-form ideation canvas → vault
+
+```bash
+# Single section
+/realm-plan plan "refactor auth to JWT"              # planner → decisions/ + sessions/
+/realm-plan investigate "caching bug"                # cavecrew-investigator → discoveries/
+/realm-plan deep-research "event sourcing tradeoffs" # firecrawl+exa → discoveries/ + learning/
+/realm-plan scaffold "NotificationService"           # code-architect → classes/ + systems/ stubs
+/realm-plan design "API versioning strategy"         # architect → decisions/ + architecture.md
+/realm-plan design --ui "checkout flow"              # adds a11y considerations
+
+# Chain — generation order hint, not a hard pipeline
+/realm-plan deep-research->design->plan "auth refactor"
+/realm-plan investigate->plan "caching bug"
+/realm-plan scaffold->design->plan "PaymentService"
+
+# Session management
+/realm-plan list                                     # show all in-progress work items
+/realm-plan resume auth-refactor                     # continue saved canvas
+```
+
+Chain defines which agents run and in what order to populate sections. After generation, one free-form loop: update any section, add sections, skip, save, resume across sessions. `finalize` promotes sections to real vault nodes.
+
 ## Sync
 
 ```bash

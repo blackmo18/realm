@@ -1,5 +1,9 @@
 # Realm
 
+<p align="center">
+  <img src="images/realm_icon.png" alt="Realm" width="250" />
+</p>
+
 **Project-knowledge pipeline for Claude Code, Cursor, Codex, and Gemini.** Keeps architectural knowledge in structured, caveman-compressed Obsidian nodes — cheap to pull into any AI context, human-readable in Obsidian's graph view.
 
 ---
@@ -77,6 +81,30 @@ For incremental updates:
 /realm-convey     ← compress conversation → pick topics → targeted phase
 ```
 
+### 4. Plan — free-form ideation canvas
+
+Think, research, design, and plan inside a persistent canvas. No manual MD files. Pre-loads vault context before spawning agents. Saves across sessions. Finalizes to vault when ready.
+
+```bash
+# Single section
+/realm-plan plan "refactor auth to JWT"          # planner → decisions/ + sessions/
+/realm-plan design "API versioning strategy"     # architect → decisions/ + architecture.md
+/realm-plan scaffold "NotificationService"       # code-architect → classes/ + systems/ stubs
+/realm-plan investigate "caching bug"            # cavecrew-investigator → discoveries/
+/realm-plan deep-research "event sourcing"       # firecrawl+exa → discoveries/ + learning/
+
+# Chain — generation order hint, not a hard pipeline
+/realm-plan deep-research->design->plan "auth refactor"
+/realm-plan investigate->plan "caching bug"
+/realm-plan scaffold->design->plan "PaymentService"
+
+# Session management
+/realm-plan list                                 # all in-progress work, grouped by category
+/realm-plan resume plans/auth-refactor           # continue saved canvas
+```
+
+Work items persist in vault under `work/` — categorized by intent (`plans/`, `designs/`, `research/`, `scaffolds/`). Resumable across sessions. One free-form collaboration loop; no forced stage gates.
+
 ### 3. Query — realm-recall
 
 Pull node content into Claude's context surgically:
@@ -104,6 +132,7 @@ See [VISUALS.md](VISUALS.md) for pipeline flow diagrams.
 | `/realm-convey` | Compress the current conversation, extract topics (functions, classes, decisions, discoveries), route to targeted phase. |
 | `/realm-recall` | Query vault by tag, function name, class name, or semantic phrase. Returns compressed context. |
 | `/realm-fathom` | Deep investigation: live code + vault in parallel. Returns consolidated what (code) + why (vault). Flags drift. Zero writes. |
+| `/realm-plan` | Free-form ideation canvas. Optional chain syntax defines generation order (not a hard pipeline). Categorized `work/` persistence (`plans/`, `designs/`, `research/`, `scaffolds/`). Resume across sessions. Finalizes sections to proper vault nodes. |
 | `/realm-status` | Read-only health check. Lists node counts, stale docs, pipeline state. |
 
 ---
@@ -322,8 +351,14 @@ A medium project maps for ~20K tokens. An average session saves ~2K tokens (3–
 │   └── <id>.md          # one file per subsystem or integration
 ├── discoveries/
 │   └── YYYY-MM-DD-<topic>.md  # ephemeral findings, perf notes, bug discoveries
-└── sessions/
-    └── YYYY-MM-DD-<topic>.md  # per-session discovery log
+├── sessions/
+│   └── YYYY-MM-DD-<topic>.md  # per-session discovery log
+└── work/                      # in-progress realm-plan canvases
+    ├── index.md               # auto-maintained master list
+    ├── plans/                 # building something
+    ├── designs/               # deciding / architecting
+    ├── research/              # learning / investigating
+    └── scaffolds/             # blueprinting modules / services
 ```
 
 **Node types:**
@@ -336,6 +371,7 @@ A medium project maps for ~20K tokens. An average session saves ~2K tokens (3–
 | `system` | `systems/` | Service boundary, API surface, events, external deps |
 | `discovery` | `discoveries/` | Findings, perf data, bug post-mortems |
 | session log | `sessions/` | What changed, decided, discovered per session |
+| work canvas | `work/<category>/` | In-progress ideation — promoted to real nodes on `finalize` |
 
 Each node stores two representations in the same file:
 

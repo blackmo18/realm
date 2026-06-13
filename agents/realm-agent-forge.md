@@ -139,6 +139,8 @@ Create `.claude/` dir first if missing.
 
 Grep `<projectRoot>/.gitignore` for `.realm/`. If not found: append `.realm/` line.
 
+Create `<projectRoot>/.realm/plans/` if missing. This directory holds realm-plan working drafts during collaboration sessions and must stay gitignored under `.realm/`.
+
 ### Step 8 — Detect existing vault docs
 
 Scan `<projectDir>/` recursively for all `.md` files. Build `docs` registry:
