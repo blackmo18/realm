@@ -52,6 +52,7 @@ Load: `vaultPath`, `projectSlug`, `projectDir`, `manifest.lastRun`, `docs` regis
 Parse invocation args:
 - `--full` present → set `mode: full`. Skip to Step 4.
 - Entity specifiers present (`function:X`, `class:X`, `system:X`) → set `mode: targeted`, collect target list. Skip to Step 3.
+- File path present (bare path like `src/foo.tsx` or `@`-expanded file) → grep the file for top-level entity definitions (same patterns as Step 2), set `mode: targeted`, mark the file as `already-read`. Do NOT read it again. Skip to Step 3.
 - Neither → set `mode: auto`. Proceed to Step 2.
 
 ### Step 2 — Auto mode: infer targets from git diff
@@ -105,8 +106,15 @@ Spawn agent `realm-agent-scan` with this prompt:
 
 ```
 projectRoot: <absolute path to project root>
+vaultPath: <vaultPath from Step 0>
+projectSlug: <projectSlug from Step 0>
+projectDir: <projectDir from Step 0>
 mode: <full|targeted>
 targets: <list of specifiers, e.g. "function:validateUser class:UserService", or empty if full>
+already-read: <comma-separated list of file paths already in context, or "none">
+
+State already loaded — do NOT re-read realm-state.json.
+Files listed under already-read: do NOT re-read; treat their content as authoritative from main thread context.
 
 Scan the codebase and generate a staged manifest draft.
 Follow the full procedure in your instructions.

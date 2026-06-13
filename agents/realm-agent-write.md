@@ -20,10 +20,16 @@ Received in prompt:
 
 ### Step 1 — Run the write script
 
+Extract `projectRoot` from the first line of your input (format: `projectRoot: /absolute/path`).
+
+Run this exact Bash command, substituting the extracted path for PROJECT_ROOT:
+
 ```bash
 python3 "${HOME}/.claude/plugins/marketplaces/realm/scripts/manifest_write.py" \
-  --project-root "<projectRoot>"
+  --project-root "PROJECT_ROOT"
 ```
+
+Do NOT write or generate any Python script. The script already exists at the path above — just run it.
 
 Surface stdout verbatim. If exit code is non-zero, surface the error and STOP.
 
