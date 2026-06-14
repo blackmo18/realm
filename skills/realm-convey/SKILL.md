@@ -129,7 +129,15 @@ ADR node body structure:
 <constraints imposed, known tradeoffs — from interview answer 3>
 ```
 
-Update `realm-state.json`: `phase.draftReady = true`.
+Push to `realm-state.json` `pendingDrafts`:
+```json
+{
+  "source": "convey",
+  "slug": null,
+  "path": ".realm/manifest-draft.md",
+  "created": "<ISO 8601>"
+}
+```
 
 ### Step 5 — Print summary
 

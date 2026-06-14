@@ -68,13 +68,17 @@ Location: `<project-root>/.realm/realm-state.json`
   "vaultPath": "<absolute path to Obsidian vault root>",
   "projectSlug": "<kebab-case slug>",
   "projectDir": "<vaultPath>/projects/<projectSlug>",
-  "phase": {
-    "lastRun": "<ISO 8601 or null>",
-    "draftReady": false
-  },
   "manifest": {
     "lastRun": "<ISO 8601 or null>"
   },
+  "pendingDrafts": [
+    {
+      "source": "plan | convey",
+      "slug": "<category>/<slug> | null",
+      "path": "<path to manifest-draft.md relative to projectRoot>",
+      "created": "<ISO 8601>"
+    }
+  ],
   "docs": {
     "<relative-to-projectDir path>": {
       "status": "committed | planned | stale",
@@ -84,10 +88,15 @@ Location: `<project-root>/.realm/realm-state.json`
 }
 ```
 
-**Status meanings:**
+**pendingDrafts entries:**
+- `source: plan` — produced by `realm-plan finalize`. `slug` = `work/<category>/<slug>`. `path` = `work/<category>/<slug>/manifest-draft.md` (relative to projectRoot, inside vault).
+- `source: convey` — produced by `realm-convey`. `slug` = null. `path` = `.realm/manifest-draft.md`.
+- Removed when `realm-manifest` commits that entry.
+
+**docs status meanings:**
 - `committed` — file exists in vault, written by realm-manifest (or detected as pre-existing on init).
-- `planned` — realm-phase identified this doc as needed; draft content is in `manifest-draft.md`; not yet in vault.
-- `stale` — committed doc exists but realm-phase detected the repo has diverged enough to warrant an update. Manifest will overwrite.
+- `planned` — doc staged in a pending draft; not yet in vault.
+- `stale` — committed doc exists but codebase has diverged enough to warrant an update.
 
 ---
 
@@ -96,9 +105,14 @@ Location: `<project-root>/.realm/realm-state.json`
 ```
 <project-root>/.realm/
 ├── realm-state.json
-├── manifest-draft.md        # written by realm-phase, consumed by realm-manifest
+├── manifest-draft.md        # written by realm-convey only
 └── archive/
-    └── <timestamp>-draft.md # archived copies after each manifest run
+    └── <slug>-<timestamp>-draft.md   # archived after each manifest run
+
+<vault>/projects/<slug>/work/<category>/<slug>/
+├── _meta.md
+├── <section>.md             # canvas section files
+└── manifest-draft.md        # written by realm-plan finalize (local to canvas)
 ```
 
 `.realm/` MUST be in `.gitignore`. realm-forge ensures this.
@@ -170,20 +184,20 @@ ADR **Context** and **Decision** sections: compress filler but keep the full cau
 
 ## Ordering Guards
 
-**realm-phase** checks at startup:
-```
-if .realm/realm-state.json does not exist:
-  STOP → print: "No realm state found. Run /realm-forge first."
-```
-
 **realm-manifest** checks at startup:
 ```
 if .realm/realm-state.json does not exist:
-  STOP → print: "No realm state. Run /realm-forge then /realm-phase."
-if realm-state.json.phase.draftReady != true:
-  STOP → print: "No staged draft. Run /realm-phase first."
-if .realm/manifest-draft.md does not exist:
-  STOP → print: "Draft file missing. Run /realm-phase to regenerate."
+  STOP → print: "No realm state. Run /realm-forge first."
+if realm-state.json.pendingDrafts is empty (or missing):
+  STOP → print: "No pending drafts. Run /realm-plan finalize or /realm-convey."
+if selected draft file does not exist:
+  STOP → print: "Draft file missing: <path>. Stage again with /realm-plan finalize."
+```
+
+**realm-plan** checks at startup (Step 0):
+```
+if .realm/realm-state.json does not exist:
+  STOP → print: "No realm state. Run /realm-forge first."
 ```
 
 ---
@@ -207,8 +221,32 @@ When realm-forge runs on a project that already has vault docs, scan `<projectDi
 
 ---
 
+## Decision Node — source_plan Field
+
+Decision nodes promoted from `realm-plan` carry a `source_plan` frontmatter field:
+
+```yaml
+source_plan: work/plans/auth-refactor   # relative to projectDir; omit if not from realm-plan
+```
+
+Rules:
+- Set by realm-plan Step 5 (finalize) when promoting a `design` section to a decision node.
+- Omit for decisions captured directly via realm-convey or realm-phase (no planning canvas).
+- realm-recall can filter/surface by `source_plan` to trace a decision back to its planning context.
+- The ADR body includes `## Origin` with a wikilink to the plan canvas `_meta.md`.
+
+Corresponding `_meta.md` update (written by realm-plan finalize before producing manifest-draft):
+
+```yaml
+promoted_to:
+  - decisions/<adr-id>.md
+```
+
+---
+
 ## Wikilink Convention
 
 Use `[[filename-without-extension]]` for cross-links within the same project dir.
 Use `[[projects/slug/filename]]` for cross-project links (rare).
 Every new doc should contain at least one wikilink to `[[overview]]` or a decision.
+Decision nodes promoted from realm-plan include `[[work/<category>/<slug>/_meta|<topic>]]` in `## Origin`.

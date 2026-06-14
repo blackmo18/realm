@@ -20,6 +20,7 @@ tags: [auth, security, session]
 status: active
 depends_on: [oauth-provider, token-validation]
 related: [login-ui, auth-service, session-refresh]
+source_plan: work/plans/auth-refactor
 compressed: |
   Auth: 3-stage. OAuth → token gen → session cookie.
   Refresh: Silent via iframe, manual via endpoint.

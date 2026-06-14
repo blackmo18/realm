@@ -4,7 +4,9 @@ description: >
   Natural-language knowledge retrieval from the Obsidian vault. Primary interface for querying
   decisions, rejected alternatives, constraints, and discoveries. Maps a topic, decision keyword,
   or freeform phrase ("why JWT", "what was rejected for auth", "constraint on payments") to vault
-  ADR and discovery nodes. Supports --trace (link structure only), --full (expand prose),
+  ADR and discovery nodes. When an ADR has source_plan (promoted from realm-plan), intent-maps
+  the query to exactly one canvas section (plan/design/research/scaffold) and lazy-loads only
+  that file — no full canvas pull. Supports --trace (link structure only), --full (expand prose),
   --deps (include dependencies). Zero vault writes.
 origin: realm
 ---
@@ -22,6 +24,7 @@ Ask vault anything. Get compressed context back. Optimized for ADR queries.
 /realm-recall <topic> --deps        # Include [[depends_on]] nodes (compressed)
 /realm-recall <topic> --count       # Estimate token cost before pulling
 /realm-recall <topic> --expand <id> # Expand one node's full prose after compressed view
+/realm-recall <topic> --no-canvas   # Skip canvas expansion even if source_plan present
 ```
 
 ## ADR Query Patterns
@@ -47,6 +50,44 @@ The primary reason to use realm-recall — answering questions code can't answer
 /realm-recall decisions --full
 → full prose for all ADRs including context, rejected, consequences
 ```
+
+## Canvas Lazy-Load (source_plan)
+
+When an ADR was promoted from a `realm-plan` canvas, its `source_plan` field points to the
+canvas dir. realm-recall intent-maps the query to exactly one canvas section and reads only
+that file. Cost: ADR compressed (~20t) + one section (~80–150t).
+
+| Query words | Section loaded | Extra tokens |
+|---|---|---|
+| plan / steps / tasks / phases / build / implement | `plan.md` | ~100t |
+| design / architecture / how / approach / structure | `design.md` | ~100t |
+| research / why / evidence / tradeoffs / source / learned | `research.md` | ~120t |
+| scaffold / blueprint / interface / methods / class / file | `scaffold.md` | ~100t |
+| summary / what is / overview / which / what | `_meta.md` section headers only | ~15t |
+| rejected / alternatives / why decided / constraint / chose | ADR body (already loaded) | 0t |
+
+```bash
+/realm-recall "what is the plan for auth refactor"
+→ ADR-auth-refactor (compressed) + work/plans/auth-refactor/plan.md
+
+/realm-recall "what design did we choose for auth"
+→ ADR-auth-refactor (compressed) + work/plans/auth-refactor/design.md
+
+/realm-recall "which research drove the auth decision"
+→ ADR-auth-refactor (compressed) + work/plans/auth-refactor/research.md
+
+/realm-recall "why did we reject X for auth"
+→ ADR-auth-refactor body only — rejected_alternatives already there, 0 extra read
+
+/realm-recall "summarize the auth refactor work"
+→ ADR-auth-refactor (compressed) + _meta.md headers only
+
+/realm-recall "auth" --no-canvas
+→ ADR only, no canvas expansion (suppress source_plan follow)
+```
+
+No canvas follow when: ADR has no `source_plan` (came from realm-convey or realm-phase),
+`--no-canvas` flag passed, `--trace` flag passed, or intent maps to ADR body (rejected/constraints).
 
 ## General Query Examples
 
@@ -187,6 +228,49 @@ Read YAML frontmatter + `Compressed:` section + link arrays.
 
 For ADR nodes, also surface: `decision`, `rejected_alternatives`, `consequences` fields in compressed form.
 
+### Step 4.5 — Canvas expansion (source_plan lazy-load)
+
+Skip entirely if: `--trace` flag, `--no-canvas` flag, or no ADR nodes loaded.
+
+For each ADR node loaded that has a `source_plan` field in frontmatter:
+
+**4.5a — Classify query intent:**
+
+Tokenize query (lowercase, split on spaces). Match first winning rule:
+
+| Rule | Trigger words | Target file |
+|---|---|---|
+| `plan` | plan, steps, tasks, phases, build, implement, roadmap, milestones | `plan.md` |
+| `design` | design, architecture, how, approach, structure, pattern, system | `design.md` |
+| `research` | research, why, evidence, tradeoffs, tradeoff, source, learned, studied, found | `research.md` |
+| `scaffold` | scaffold, blueprint, interface, methods, class, file, module, boundary | `scaffold.md` |
+| `meta` | summary, summarize, overview, which, what, list | `_meta.md` |
+| `adr-only` | rejected, alternatives, chose, chose, constraint, consequence, decided | — (no read) |
+
+If no rule matches: default to `meta` (read `_meta.md` headers only).
+
+**4.5b — Resolve canvas path:**
+
+```
+canvas_dir = <projectDir>/<source_plan>
+section_path = <canvas_dir>/<target_file>
+```
+
+If `section_path` does not exist: skip canvas expansion for this node, note in output:
+`canvas section not found: <section_path>`
+
+**4.5c — Read section:**
+
+For `_meta.md` target: read headers only (lines starting with `#` or `|`). ~15 tokens.
+For all other targets: read full file content. ~80–150 tokens.
+
+Attach section content to the node's output under `## Canvas: <section>`.
+
+**4.5d — Token note:**
+
+Append to Step 6 footer:
+`canvas: +<N>t (<section> from <source_plan>)`
+
 ### Step 5 — Format output (caveman-compressed)
 
 Apply caveman rules: drop articles/filler, use fragments, keep technical data exact. Omit empty fields.
@@ -199,6 +283,10 @@ decided: <decision field>
 rejected: <rejected_alternatives field, compressed>
 consequences: <consequences field, compressed>
 [Full prose if --full]
+
+## Canvas: <section>          ← only if source_plan present and intent matched
+<section file content, caveman-compressed>
+origin: <source_plan>
 ```
 
 **Cluster:**
@@ -231,5 +319,6 @@ tree:<query>
 
 ```
 recall done · <N>nodes · ~<estimated>t · mode:<compressed|full|trace>
-→ /realm-recall <id> --full | --deps | /realm-fathom <entity> for live+vault
+[canvas: +<Nt> (<section> from <source_plan>)]   ← only if canvas expanded
+→ /realm-recall <id> --full | --deps | --no-canvas | /realm-fathom <entity> for live+vault
 ```

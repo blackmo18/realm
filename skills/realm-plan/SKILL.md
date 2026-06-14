@@ -513,11 +513,63 @@ On `finalize`:
 | `research/` | `discoveries/` |
 | `scaffolds/` | `classes/` + `systems/` stubs |
 
+**ADR quality check (before classifying):**
+
+For each `design` section being promoted to a `decision` node, verify it contains all 4 subsections:
+- `## Context` (or `Context:`)
+- `## Decision` (or `Decision:`)
+- `## Rejected alternatives` (or `Alternatives:`)
+- `## Consequences` (or `Consequences:`)
+
+If any missing → **do not write draft**. Print:
+```
+ADR quality check failed — <slug>
+
+  missing sections: <list>
+
+  Fix in loop then re-run finalize.
+  Commands: update: design — <feedback>  |  dig deeper: design
+```
+Return user to Step 4 loop. Do NOT close the canvas.
+
+---
+
 Convert section files → `manifest-draft.md` format (per realm-conventions schema).
 
-Write `<projectRoot>/.realm/manifest-draft.md`.
-Update `realm-state.json`: `phase.draftReady = true`.
-Update `_meta.md`: `status: finalized`.
+**For every decision node produced:**
+
+1. Add `source_plan: work/<category>/<slug>` to the ADR frontmatter.
+2. Append an `## Origin` section to the ADR body:
+   ```markdown
+   ## Origin
+   Promoted from planning canvas [[work/<category>/<slug>/_meta|<topic>]].
+   ```
+3. Collect the node path (e.g. `decisions/<adr-slug>.md`) into a `promoted_to` list.
+
+**After all nodes are classified and quality check passes:**
+
+1. Update `<projectDir>/work/<category>/<slug>/_meta.md`:
+   - Set `status: finalized`
+   - Add/replace `promoted_to:` block:
+     ```yaml
+     promoted_to:
+       - decisions/<adr-slug>.md
+       - systems/<system-slug>.md   # if any
+     ```
+
+2. Write draft to canvas-local path:
+   `<projectDir>/work/<category>/<slug>/manifest-draft.md`
+   (NOT `.realm/manifest-draft.md` — draft stays local to this canvas)
+
+3. Push to `realm-state.json` `pendingDrafts`:
+   ```json
+   {
+     "source": "plan",
+     "slug": "work/<category>/<slug>",
+     "path": "work/<category>/<slug>/manifest-draft.md",
+     "created": "<ISO 8601>"
+   }
+   ```
 
 ### Step 6 — Print summary
 
@@ -530,23 +582,18 @@ realm-plan finalized
   sections:           <list>
 
   nodes staged:
-    decisions:        <N>  → decisions/<slug>.md
+    decisions:        <N>  → decisions/<slug>.md  [source_plan linked]
     systems:          <N>  → systems/<slug>.md
     classes:          <N>  → classes/<slug>.md
     functions:        <N>  → functions/<slug>.md
     discoveries:      <N>  → discoveries/<date>-<slug>.md
     architecture:     <updated | unchanged>
 
-  work item:  work/<category>/<slug>/   [status: finalized]
-  staged:     .realm/manifest-draft.md
+  work item:  work/<category>/<slug>/   [status: finalized, promoted_to: <N> nodes]
+  staged:     work/<category>/<slug>/manifest-draft.md   ← local to this canvas
 
-  next: /realm-manifest to write to vault
+  next: /realm-manifest to commit  |  /realm-manifest (no arg) to see all pending
 ```
-
-> **ADR note:** If this planning session produced decisions not already captured as ADR nodes
-> (chose X over Y, rejected an approach, imposed a constraint), run `/realm-convey` immediately
-> after — while the conversation context is still live — to capture them with a structured
-> interview before they leave context.
 
 ---
 

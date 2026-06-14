@@ -43,21 +43,16 @@ from realm_lib import (
 # Guards (Step 0)
 # ---------------------------------------------------------------------------
 
-def run_guards(project_root: str) -> dict:
+def run_guards(project_root: str, draft_path: str) -> dict:
     state_path = os.path.join(project_root, ".realm", "realm-state.json")
     if not os.path.exists(state_path):
-        print("No realm state. Run /realm-forge then /realm-phase.")
+        print("No realm state. Run /realm-forge first.")
         sys.exit(1)
 
     state = load_state(project_root)
 
-    if not state.get("phase", {}).get("draftReady", False):
-        print("No staged draft. Run /realm-phase first.")
-        sys.exit(1)
-
-    draft_path = os.path.join(project_root, ".realm", "manifest-draft.md")
     if not os.path.exists(draft_path):
-        print("Draft file missing. Run /realm-phase to regenerate.")
+        print(f"Draft file missing: {draft_path}")
         sys.exit(1)
 
     return state
@@ -353,7 +348,6 @@ def update_state(state: dict, written_nodes: list, deferred_count: int, project_
         docs[rel_path] = {"status": "committed", "updated": now}
 
     state.setdefault("manifest", {})["lastRun"] = now
-    state.setdefault("phase", {})["draftReady"] = False
 
     save_state(state, project_root)
 
@@ -362,12 +356,12 @@ def update_state(state: dict, written_nodes: list, deferred_count: int, project_
 # Step 8 — Archive the draft
 # ---------------------------------------------------------------------------
 
-def archive_draft(project_root: str) -> str:
-    draft_path = os.path.join(project_root, ".realm", "manifest-draft.md")
+def archive_draft(project_root: str, draft_path: str, slug: str = "") -> str:
     archive_dir = os.path.join(project_root, ".realm", "archive")
     os.makedirs(archive_dir, exist_ok=True)
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-    archive_path = os.path.join(archive_dir, f"{ts}-draft.md")
+    prefix = slug.replace("/", "-") + "-" if slug else ""
+    archive_path = os.path.join(archive_dir, f"{prefix}{ts}-draft.md")
     shutil.move(draft_path, archive_path)
     return os.path.relpath(archive_path, project_root)
 
@@ -428,18 +422,25 @@ def print_summary(
 def main() -> None:
     parser = argparse.ArgumentParser(description="realm manifest writer")
     parser.add_argument("--project-root", required=True, help="Absolute path to project root")
+    parser.add_argument(
+        "--draft-path",
+        default=None,
+        help="Absolute path to manifest-draft.md (default: <project-root>/.realm/manifest-draft.md)",
+    )
+    parser.add_argument("--slug", default="", help="Canvas slug for archive naming (optional)")
     args = parser.parse_args()
 
     project_root = os.path.abspath(args.project_root)
+    draft_path = args.draft_path or os.path.join(project_root, ".realm", "manifest-draft.md")
+    slug = args.slug or ""
 
     # Step 0 — guards
-    state = run_guards(project_root)
+    state = run_guards(project_root, draft_path)
     vault_path = state.get("vaultPath", "")
     project_slug = state.get("projectSlug", "")
     project_dir = state.get("projectDir", os.path.join(vault_path, "projects", project_slug))
 
     # Step 1 — parse draft
-    draft_path = os.path.join(project_root, ".realm", "manifest-draft.md")
     with open(draft_path, "r", encoding="utf-8") as f:
         draft_text = f.read()
 
@@ -467,7 +468,7 @@ def main() -> None:
     update_state(state, write_results["written_nodes"], write_results["deferred"], project_root)
 
     # Step 8 — archive draft
-    archive_rel = archive_draft(project_root)
+    archive_rel = archive_draft(project_root, draft_path, slug)
 
     # Step 9 — summary
     print_summary(

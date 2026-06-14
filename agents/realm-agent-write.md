@@ -15,19 +15,25 @@ model: haiku
 
 Received in prompt:
 - `projectRoot` — absolute path to project directory
+- `draftPath` — absolute path to the manifest-draft.md to commit
+- `slug` — canvas slug or null (used for archive naming)
 
 ## Procedure
 
 ### Step 1 — Run the write script
 
-Extract `projectRoot` from the first line of your input (format: `projectRoot: /absolute/path`).
+Extract `projectRoot`, `draftPath`, and `slug` from your input.
 
-Run this exact Bash command, substituting the extracted path for PROJECT_ROOT:
+Run this exact Bash command, substituting the extracted values:
 
 ```bash
 python3 "${HOME}/.claude/plugins/marketplaces/realm/scripts/manifest_write.py" \
-  --project-root "PROJECT_ROOT"
+  --project-root "PROJECT_ROOT" \
+  --draft-path "DRAFT_PATH" \
+  --slug "SLUG_OR_EMPTY"
 ```
+
+Omit `--slug` if slug is null.
 
 Do NOT write or generate any Python script. The script already exists at the path above — just run it.
 

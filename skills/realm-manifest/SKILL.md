@@ -1,48 +1,112 @@
 ---
 name: realm-manifest
 description: >
-  Vault-write step in the realm pipeline. Spawns realm-agent-write (haiku) which validates YAML frontmatter, applies caveman compression inline, commits all nodes to the Obsidian vault, updates cross-links, creates session log, and archives the draft. Single-agent pipeline — no separate compress step. The ONLY realm skill that writes to the vault. Must run after realm-phase.
+  Vault-write step in the realm pipeline. Reads pendingDrafts from realm-state.json, lists
+  available staged drafts (from realm-plan finalize or realm-convey), lets user select which
+  to commit. Spawns realm-agent-write (haiku) per selected draft — validates YAML frontmatter,
+  applies caveman compression, writes nodes to vault, updates backlinks, archives draft, removes
+  from pendingDrafts. The ONLY realm skill that writes to the vault.
 origin: realm
 ---
 
 # realm-manifest
 
-Commit staged draft to Obsidian. Third skill in realm pipeline.
+Commit staged draft(s) to Obsidian. Final step in realm pipeline.
+
+## Syntax
+
+```bash
+/realm-manifest                          # list pending drafts, prompt selection
+/realm-manifest plans/auth-refactor      # commit specific canvas draft by slug
+/realm-manifest all                      # commit all pending drafts
+```
 
 ## When to Use
 
 | Trigger | Example |
 |---|---|
-| After reviewing realm-phase output | "commit realm", `/realm-manifest`, "manifest" |
-| Draft reviewed, ready to write | No changes needed to staged content |
-| Applying manually edited draft | Edited `.realm/manifest-draft.md` before committing |
+| After realm-plan finalize | "commit this", `/realm-manifest` |
+| After realm-convey | "manifest", "write to vault" |
+| Multiple pending, commit selectively | `/realm-manifest plans/auth-refactor` |
+| Commit everything staged | `/realm-manifest all` |
 
 ## When NOT to Use
 
 - `.realm/realm-state.json` missing → `/realm-forge` first
-- `phase.draftReady != true` → `/realm-phase` first (hard guard)
-- `.realm/manifest-draft.md` missing → `/realm-phase` to regenerate
-- Unsatisfied with draft → edit `.realm/manifest-draft.md` manually, then re-invoke
+- `pendingDrafts` empty → nothing staged yet; run `/realm-plan finalize` or `/realm-convey`
+- Unsatisfied with a draft → edit `<draft-path>` manually first, then re-invoke
 
 ---
 
 ## Procedure
 
-This skill spawns one agent. Do not perform the steps yourself.
+### Step 0 — Guard check
 
-### Step 1 — Determine project root
+Read `.realm/realm-state.json`. If missing: `No realm state. Run /realm-forge first.` STOP.
 
-Use the current working directory as `projectRoot`. Verify `.realm/realm-state.json` exists before proceeding. If missing: print `No realm state. Run /realm-forge then /realm-phase.` and STOP.
+Load `pendingDrafts` array. If empty (or field missing):
+```
+No pending drafts.
+Run /realm-plan finalize or /realm-convey to stage nodes.
+```
+STOP.
 
-### Step 2 — Spawn write agent (haiku)
+### Step 1 — Resolve target draft(s)
 
-Spawn agent `realm-agent-write` with this prompt:
+**No arg:**
+Print pending list and wait for selection:
+```
+realm-manifest: pending drafts
+
+  [1] plans/auth-refactor   plan     "auth JWT refactor"   2026-06-14
+  [2] convey                convey   conversation capture  2026-06-13
+
+Select: (number | slug | all | cancel):
+```
+Wait for reply. `cancel` or empty → STOP.
+
+**`/realm-manifest <slug>`:**
+Match `slug` against `pendingDrafts[].slug`. If no match:
+`Draft not found: <slug>. Run /realm-manifest to see pending list.` STOP.
+
+**`/realm-manifest all`:**
+Select all entries from `pendingDrafts`.
+
+### Step 2 — Verify draft files exist
+
+For each selected entry, verify `path` file exists (absolute: `<projectRoot>/<entry.path>` for plan drafts; `<projectRoot>/<entry.path>` for convey).
+
+If missing: `Draft file not found: <path>. Stage again with /realm-plan finalize or /realm-convey.` Skip that entry.
+
+### Step 3 — Spawn write agent (haiku) per selected draft
+
+For each selected entry, spawn `realm-agent-write` with:
 
 ```
 projectRoot: <absolute path to project root>
+draftPath: <absolute path to draft file>
+slug: <entry.slug | null>
 
 Validate, compress, and write the staged manifest draft to the vault.
 Follow the full procedure in your instructions.
 ```
 
-Wait for completion. Surface the agent's summary to the user.
+Wait for each agent to complete before starting the next. Surface agent summary per draft.
+
+### Step 4 — Remove committed entries from pendingDrafts
+
+After each successful agent run, remove the corresponding entry from `pendingDrafts` in `realm-state.json`.
+
+### Step 5 — Print summary
+
+```
+realm-manifest complete
+
+  committed: <N> draft(s)
+    <slug | convey>  →  decisions: X  functions: Y  classes: Z  discoveries: W
+
+  pending remaining: <M>
+  [run /realm-manifest to commit remaining]   ← only if M > 0
+
+  next: /realm-status · /realm-recall <topic>
+```
