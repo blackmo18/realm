@@ -107,8 +107,6 @@ After all decisions are interviewed, proceed to Step 4.
 
 ### Step 4 — Write manifest-draft
 
-Read `_shared/realm-conventions.md` with `offset=0 limit=50` (frontmatter schema only).
-
 Write `<projectRoot>/.realm/manifest-draft.md` containing:
 - One full ADR node per selected decision (interview answers in body)
 - One discovery stub per selected discovery
@@ -129,15 +127,15 @@ ADR node body structure:
 <constraints imposed, known tradeoffs — from interview answer 3>
 ```
 
-Push to `realm-state.json` `pendingDrafts`:
-```json
-{
-  "source": "convey",
-  "slug": null,
-  "path": ".realm/manifest-draft.md",
-  "created": "<ISO 8601>"
-}
+Register draft:
+```bash
+python3 "${HOME}/.claude/plugins/marketplaces/realm/scripts/manifest_write.py" \
+  --project-root "<projectRoot>" \
+  --push-draft \
+  --draft-path ".realm/manifest-draft.md" \
+  --source convey
 ```
+If exit code non-zero: surface error. STOP.
 
 ### Step 5 — Print summary
 

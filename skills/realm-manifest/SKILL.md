@@ -95,7 +95,14 @@ Wait for each agent to complete before starting the next. Surface agent summary 
 
 ### Step 4 — Remove committed entries from pendingDrafts
 
-After each successful agent run, remove the corresponding entry from `pendingDrafts` in `realm-state.json`.
+After each successful agent run:
+```bash
+python3 "${HOME}/.claude/plugins/marketplaces/realm/scripts/manifest_write.py" \
+  --project-root "<projectRoot>" \
+  --remove-draft \
+  --draft-path "<entry.path>"
+```
+If exit code non-zero: warn but continue (vault write already succeeded).
 
 ### Step 5 — Print summary
 

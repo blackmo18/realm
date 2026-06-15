@@ -182,7 +182,7 @@ updated: <ISO 8601>
 
 ## Procedure
 
-Read `_shared/realm-conventions.md` before executing.
+Read `_shared/realm-schema.md` for state schema only.
 
 ### Step 0 — Guard check
 
@@ -561,15 +561,16 @@ Convert section files → `manifest-draft.md` format (per realm-conventions sche
    `<projectDir>/work/<category>/<slug>/manifest-draft.md`
    (NOT `.realm/manifest-draft.md` — draft stays local to this canvas)
 
-3. Push to `realm-state.json` `pendingDrafts`:
-   ```json
-   {
-     "source": "plan",
-     "slug": "work/<category>/<slug>",
-     "path": "work/<category>/<slug>/manifest-draft.md",
-     "created": "<ISO 8601>"
-   }
+3. Register draft:
+   ```bash
+   python3 "${HOME}/.claude/plugins/marketplaces/realm/scripts/manifest_write.py" \
+     --project-root "<projectRoot>" \
+     --push-draft \
+     --draft-path "work/<category>/<slug>/manifest-draft.md" \
+     --source plan \
+     --slug "work/<category>/<slug>"
    ```
+   If exit code non-zero: surface error. STOP.
 
 ### Step 6 — Print summary
 

@@ -349,6 +349,10 @@ def update_state(state: dict, written_nodes: list, deferred_count: int, project_
 
     state.setdefault("manifest", {})["lastRun"] = now
 
+    project_dir = state.get("projectDir", "")
+    if project_dir and os.path.isdir(project_dir):
+        state["nodeIndex"] = _build_node_index(project_dir)
+
     save_state(state, project_root)
 
 
@@ -364,6 +368,69 @@ def archive_draft(project_root: str, draft_path: str, slug: str = "") -> str:
     archive_path = os.path.join(archive_dir, f"{prefix}{ts}-draft.md")
     shutil.move(draft_path, archive_path)
     return os.path.relpath(archive_path, project_root)
+
+
+# ---------------------------------------------------------------------------
+# pendingDrafts management (C1)
+# ---------------------------------------------------------------------------
+
+def push_draft(project_root: str, draft_path: str, source: str, slug: str = None) -> None:
+    state = load_state(project_root)
+    pending = state.setdefault("pendingDrafts", [])
+    for entry in pending:
+        if entry.get("path") == draft_path:
+            print(f"Already staged: {draft_path}")
+            return
+    entry = {
+        "source": source,
+        "slug": slug,
+        "path": draft_path,
+        "created": datetime.now(timezone.utc).isoformat(),
+    }
+    pending.append(entry)
+    save_state(state, project_root)
+    print(f"Staged: {draft_path}  (source: {source})")
+
+
+def remove_draft(project_root: str, draft_path: str) -> None:
+    state = load_state(project_root)
+    pending = state.get("pendingDrafts", [])
+    before = len(pending)
+    state["pendingDrafts"] = [e for e in pending if e.get("path") != draft_path]
+    save_state(state, project_root)
+    removed = before - len(state["pendingDrafts"])
+    print(f"Removed: {removed} draft(s) matching {draft_path}")
+
+
+def list_drafts(project_root: str) -> None:
+    state = load_state(project_root)
+    pending = state.get("pendingDrafts", [])
+    if not pending:
+        print("No pending drafts.")
+        return
+    for i, e in enumerate(pending, 1):
+        display = e.get("slug") or e.get("source", "?")
+        print(f"  [{i}] {display}  {e.get('source')}  {e.get('path')}  {e.get('created', '')[:10]}")
+
+
+# ---------------------------------------------------------------------------
+# nodeIndex (M3)
+# ---------------------------------------------------------------------------
+
+def _build_node_index(project_dir: str) -> dict:
+    """Scan vault dirs → id→path index + per-subdir counts."""
+    counts = {}
+    ids = {}
+    for subdir in ("decisions", "functions", "classes", "systems", "discoveries", "sessions"):
+        d = os.path.join(project_dir, subdir)
+        if not os.path.isdir(d):
+            counts[subdir] = 0
+            continue
+        files = [f for f in os.listdir(d) if f.endswith(".md") and not f.startswith("_")]
+        counts[subdir] = len(files)
+        for fname in files:
+            ids[fname[:-3]] = f"{subdir}/{fname}"
+    return {"counts": counts, "ids": ids, "updatedAt": datetime.now(timezone.utc).isoformat()}
 
 
 # ---------------------------------------------------------------------------
@@ -425,12 +492,41 @@ def main() -> None:
     parser.add_argument(
         "--draft-path",
         default=None,
-        help="Absolute path to manifest-draft.md (default: <project-root>/.realm/manifest-draft.md)",
+        help="Absolute path to draft file (vault-write) or relative path (draft management)",
     )
-    parser.add_argument("--slug", default="", help="Canvas slug for archive naming (optional)")
+    parser.add_argument("--slug", default="", help="Canvas slug for archive naming or push-draft slug")
+    parser.add_argument("--source", choices=["plan", "convey"], help="Draft source (required with --push-draft)")
+    mgmt = parser.add_mutually_exclusive_group()
+    mgmt.add_argument("--push-draft", action="store_true", help="Stage a draft into pendingDrafts")
+    mgmt.add_argument("--remove-draft", action="store_true", help="Remove a draft from pendingDrafts by path")
+    mgmt.add_argument("--list-drafts", action="store_true", help="List all pending drafts")
     args = parser.parse_args()
 
     project_root = os.path.abspath(args.project_root)
+
+    # draft management modes (C1)
+    if args.list_drafts:
+        list_drafts(project_root)
+        return
+
+    if args.push_draft:
+        if not args.draft_path:
+            print("ERROR: --push-draft requires --draft-path", file=sys.stderr)
+            sys.exit(1)
+        if not args.source:
+            print("ERROR: --push-draft requires --source (plan|convey)", file=sys.stderr)
+            sys.exit(1)
+        push_draft(project_root, args.draft_path, args.source, args.slug or None)
+        return
+
+    if args.remove_draft:
+        if not args.draft_path:
+            print("ERROR: --remove-draft requires --draft-path", file=sys.stderr)
+            sys.exit(1)
+        remove_draft(project_root, args.draft_path)
+        return
+
+    # vault-write mode (original flow)
     draft_path = args.draft_path or os.path.join(project_root, ".realm", "manifest-draft.md")
     slug = args.slug or ""
 

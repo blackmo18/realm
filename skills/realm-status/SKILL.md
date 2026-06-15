@@ -44,16 +44,17 @@ Extract: `vaultPath`, `projectSlug`, `projectDir`, `phase`, `manifest`, `docs`.
 
 ### Step 2 — Count nodes by type
 
-Run:
-```bash
-find <projectDir> -name "*.md" | grep -v "_templates" | sort
-```
+If `nodeIndex` present in state: read counts from `state.nodeIndex.counts` (no bash needed).
+Fallback (no nodeIndex): `find <projectDir> -name "*.md" | grep -v "_templates" | sort`
 
-Group results by subdirectory: `decisions/`, `functions/`, `classes/`, `systems/`, `discoveries/`, `sessions/`.
+Derive node list from `docs` registry (loaded in Step 1):
+- Group `docs` keys by leading path segment (`decisions/foo.md` → `decisions/`)
+- Strip `.md` suffix for `[[id]]` display
+- Use `docs[path].updated` for date display
 
-For tag frequency, run:
+Tag frequency (run once):
 ```bash
-grep -rh "^  - " <projectDir> --include="*.md" | sort | uniq -c | sort -rn | head 20
+grep -rh "^  - " <projectDir> --include="*.md" 2>/dev/null | sort | uniq -c | sort -rn | head 20
 ```
 
 ### Step 3 — Identify planned and stale docs

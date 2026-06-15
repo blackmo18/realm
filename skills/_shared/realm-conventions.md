@@ -1,6 +1,13 @@
 # Realm Shared Conventions
 
-All realm skills read this file. Conventions here override nothing outside realm; they define how realm skills behave internally.
+> **Load-on-demand fragments available** — prefer these over reading this full file:
+> - `realm-schema.md` — state.json schema, pendingDrafts, nodeIndex, docs, staging layout, ordering guards
+> - `realm-taxonomy.md` — vault dirs, node types, templates, ADR index, wikilinks, doc detection
+> - `realm-compression.md` — caveman compression policy, manifest-draft.md format
+>
+> Read only the fragment your skill needs. Read this master file only when all sections are required.
+
+All realm skills read the relevant fragment. Conventions here override nothing outside realm; they define how realm skills behave internally.
 
 ---
 
