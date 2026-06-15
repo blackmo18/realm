@@ -146,7 +146,18 @@ def _inject_links(body: str, links_line: str) -> str:
     return body.rstrip() + f"\n\n## References\n{refs}\n"
 
 
-def write_nodes(nodes: list, project_dir: str, project_root: str) -> dict:
+def check_conflicts(nodes: list, project_dir: str) -> list:
+    """Return list of rel_paths for status=new nodes whose files already exist."""
+    conflicts = []
+    for node in nodes:
+        if node.status == "new":
+            full_path = os.path.join(project_dir, node.rel_path)
+            if os.path.exists(full_path):
+                conflicts.append(node.rel_path)
+    return conflicts
+
+
+def write_nodes(nodes: list, project_dir: str, project_root: str, overwrite: bool = False) -> dict:
     results = {"wrote": 0, "merged": 0, "skipped": 0, "deferred": 0, "written_nodes": []}
     written_info = []  # [(id, type, rel_path)]
 
@@ -171,9 +182,11 @@ def write_nodes(nodes: list, project_dir: str, project_root: str) -> dict:
 
         if node.status == "new":
             if os.path.exists(full_path):
-                print(f"  SKIP    {rel} (exists)")
-                results["skipped"] += 1
-                continue
+                if not overwrite:
+                    print(f"  SKIP    {rel} (exists)")
+                    results["skipped"] += 1
+                    continue
+                print(f"  OVERWRITE {rel}  (id: {node_id})")
             body_to_write = _inject_links(node.body, node.links)
             with open(full_path, "w", encoding="utf-8") as f:
                 f.write(body_to_write + "\n")
@@ -508,10 +521,12 @@ def main() -> None:
     )
     parser.add_argument("--slug", default="", help="Canvas slug for archive naming or push-draft slug")
     parser.add_argument("--source", choices=["plan", "convey"], help="Draft source (required with --push-draft)")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing status=new nodes instead of skipping")
     mgmt = parser.add_mutually_exclusive_group()
     mgmt.add_argument("--push-draft", action="store_true", help="Stage a draft into pendingDrafts")
     mgmt.add_argument("--remove-draft", action="store_true", help="Remove a draft from pendingDrafts by path")
     mgmt.add_argument("--list-drafts", action="store_true", help="List all pending drafts")
+    mgmt.add_argument("--check-conflicts", action="store_true", help="Dry-run: list status=new nodes whose files already exist, no writes")
     args = parser.parse_args()
 
     project_root = os.path.abspath(args.project_root)
@@ -519,6 +534,24 @@ def main() -> None:
     # draft management modes (C1)
     if args.list_drafts:
         list_drafts(project_root)
+        return
+
+    if args.check_conflicts:
+        if not args.draft_path:
+            print("ERROR: --check-conflicts requires --draft-path", file=sys.stderr)
+            sys.exit(1)
+        draft_path = args.draft_path
+        state = run_guards(project_root, draft_path)
+        vault_path = state.get("vaultPath", "")
+        project_slug = state.get("projectSlug", "")
+        project_dir = state.get("projectDir", os.path.join(vault_path, "projects", project_slug))
+        with open(draft_path, "r", encoding="utf-8") as f:
+            draft_text = f.read()
+        draft = parse_draft(draft_text)
+        conflicts = check_conflicts(draft.nodes, project_dir)
+        for c in conflicts:
+            print(f"CONFLICT: {c}")
+        print(f"conflicts: {len(conflicts)}")
         return
 
     if args.push_draft:
@@ -562,7 +595,7 @@ def main() -> None:
         print(w)
 
     # Step 4 — write nodes
-    write_results = write_nodes(all_nodes, project_dir, project_root)
+    write_results = write_nodes(all_nodes, project_dir, project_root, overwrite=args.overwrite)
     has_prose_merge = write_results["deferred"] > 0
 
     # Step 5 — ADR index + backlinks

@@ -77,6 +77,19 @@ Review the staged draft, then `/realm-manifest` writes ADR nodes to the vault, g
 /realm-manifest   ← write ADR nodes → vault
 ```
 
+If any node in the draft targets a file that already exists, realm-manifest surfaces the conflict before writing:
+
+```
+realm-manifest: existing vault files detected
+
+  plans/online-book-reader:
+    CONFLICT: decisions/ADR-007-book-reader.md
+
+  Overwrite existing files? (y/n):
+```
+
+`y` → overwrite. `n` → cancel, vault unchanged. Existing nodes are only touched with explicit confirmation.
+
 ### 3. Query — realm-recall
 
 ```bash
@@ -120,7 +133,7 @@ See [VISUALS.md](VISUALS.md) for pipeline flow diagrams.
 |-------|---------|
 | `/realm-forge` | Bootstrap vault directory structure and local state. Run once per project. |
 | `/realm-convey` | Extract decisions and discoveries from the current conversation. Structured ADR interview per decision. Writes staged manifest-draft — no codebase scan. |
-| `/realm-manifest` | Write staged draft to vault, generate backlinks, archive draft, update doc registry. |
+| `/realm-manifest` | Write staged draft to vault, generate backlinks, archive draft, update doc registry. Detects conflicts before writing — prompts to overwrite if a target node already exists. |
 | `/realm-recall` | Query vault by decision keyword, tag, or semantic phrase. Optimized for ADR queries: "why X", "rejected for Y", "constraint on Z". |
 | `/realm-fathom` | Deep investigation: live code + vault in parallel. Returns what (code) + why (vault). Flags drift. Zero writes. |
 | `/realm-plan` | Free-form ideation canvas. Chain syntax defines generation order. Categorized `work/` persistence. Resume across sessions. Finalizes to vault nodes. |
@@ -355,6 +368,7 @@ Use JWT with 15-min expiry + refresh token rotation.
 | `.realm/realm-state.json` missing | `realm-convey` | `No realm state found. Run /realm-forge first.` | `/realm-forge` |
 | `phase.draftReady != true` | `realm-manifest` | `No staged draft. Run /realm-convey first.` | `/realm-convey` |
 | `manifest-draft.md` missing | `realm-manifest` | `Draft file missing. Run /realm-convey to regenerate.` | `/realm-convey` |
+| Draft targets existing file | `realm-manifest` | `CONFLICT: <path>` — prompts `Overwrite? (y/n)` | Reply `y` to overwrite, `n` to cancel |
 | No vault nodes | `realm-recall` | `No nodes in vault yet.` | `/realm-convey` then `/realm-manifest` |
 
 ---

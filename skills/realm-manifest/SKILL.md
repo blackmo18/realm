@@ -78,6 +78,37 @@ For each selected entry, verify `path` file exists (absolute: `<projectRoot>/<en
 
 If missing: `Draft file not found: <path>. Stage again with /realm-plan finalize or /realm-convey.` Skip that entry.
 
+### Step 2.5 — Conflict check
+
+For each selected entry, run:
+
+```bash
+python3 "${HOME}/.claude/plugins/marketplaces/realm/scripts/manifest_write.py" \
+  --project-root "<projectRoot>" \
+  --check-conflicts \
+  --draft-path "<entry.path>"
+```
+
+Parse stdout for lines starting with `CONFLICT:` and the final `conflicts: N` count.
+
+If any conflicts found, print:
+
+```
+realm-manifest: existing vault files detected
+
+  <slug>:
+    CONFLICT: decisions/ADR-007-foo.md
+    CONFLICT: sessions/2026-06-15-bar.md
+
+  Overwrite existing files? (y/n):
+```
+
+Wait for user reply.
+- `n` or empty → `Cancelled. Vault unchanged.` STOP.
+- `y` → set `overwrite = true` for this draft, continue.
+
+If no conflicts → `overwrite = false`, continue.
+
 ### Step 3 — Spawn write agent (haiku) per selected draft
 
 For each selected entry, spawn `realm-agent-write` with:
@@ -86,6 +117,7 @@ For each selected entry, spawn `realm-agent-write` with:
 projectRoot: <absolute path to project root>
 draftPath: <absolute path to draft file>
 slug: <entry.slug | null>
+overwrite: <true | false>
 
 Validate, compress, and write the staged manifest draft to the vault.
 Follow the full procedure in your instructions.

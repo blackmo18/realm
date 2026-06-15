@@ -17,20 +17,29 @@ Received in prompt:
 - `projectRoot` — absolute path to project directory
 - `draftPath` — absolute path to the manifest-draft.md to commit
 - `slug` — canvas slug or null (used for archive naming)
+- `overwrite` — optional boolean; if `true`, existing status=new nodes are overwritten instead of skipped
 
 ## Procedure
 
 ### Step 1 — Run the write script
 
-Extract `projectRoot`, `draftPath`, and `slug` from your input.
+Extract `projectRoot`, `draftPath`, `slug`, and `overwrite` from your input.
 
-Run this exact Bash command, substituting the extracted values:
+Run this exact Bash command, substituting the extracted values. Include `--overwrite` only when `overwrite` is `true`:
 
 ```bash
+# without overwrite (default)
 python3 "${HOME}/.claude/plugins/marketplaces/realm/scripts/manifest_write.py" \
   --project-root "PROJECT_ROOT" \
   --draft-path "DRAFT_PATH" \
   --slug "SLUG_OR_EMPTY"
+
+# with overwrite
+python3 "${HOME}/.claude/plugins/marketplaces/realm/scripts/manifest_write.py" \
+  --project-root "PROJECT_ROOT" \
+  --draft-path "DRAFT_PATH" \
+  --slug "SLUG_OR_EMPTY" \
+  --overwrite
 ```
 
 Omit `--slug` if slug is null.
