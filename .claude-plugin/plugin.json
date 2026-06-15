@@ -1,7 +1,7 @@
 {
   "name": "realm",
   "description": "Obsidian project-knowledge pipeline. Six-skill system: realm-forge (bootstrap), realm-phase (scan+stage), realm-manifest (write), realm-flourish (incremental update), realm-convey (conversation capture), realm-recall (query). Dry-run safety boundary before vault writes. realm-convey bridges conversation context into the pipeline via user-selected topic routing.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "author": {
     "name": "blackmo",
     "url": "https://github.com/blackmo18"
