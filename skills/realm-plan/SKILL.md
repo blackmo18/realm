@@ -515,7 +515,7 @@ On `finalize`:
 
 **ADR quality check (before classifying):**
 
-For each `design` section being promoted to a `decision` node, verify it contains all 4 subsections:
+For each `design` section being promoted to a `decision` node, verify the canvas content contains all 4 subsections (flat headers are fine here — conversion to vault format happens next):
 - `## Context` (or `Context:`)
 - `## Decision` (or `Decision:`)
 - `## Rejected alternatives` (or `Alternatives:`)
@@ -536,14 +536,53 @@ Return user to Step 4 loop. Do NOT close the canvas.
 
 Convert section files → `manifest-draft.md` format (per realm-conventions schema).
 
+**Decision node body format (required by manifest_write.py):**
+
+Each decision node entry in `manifest-draft.md` must use this exact structure:
+
+```markdown
+### decisions/<adr-id>.md
+status: new
+links: [[ADR-000-index]], [[overview]]
+---
+---
+id: <ADR-NNN-kebab-slug>
+title: "<topic>"
+type: decision
+status: active
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
+tags: [decision]
+source_plan: work/<category>/<slug>
+---
+
+## Compressed
+<caveman one-liner: causal chain, drop articles/filler, ≤2 sentences. See realm-compression.md rules.>
+
+## Full Decision
+
+### Context
+<canvas ## Context content — compress filler, keep causal chain intact>
+
+### Decision
+<canvas ## Recommendation content — caveman compressed>
+
+### Rejected Alternatives
+<canvas ## Options (excluding chosen) — list format, caveman compressed>
+
+### Consequences
+<canvas ## Consequences content — caveman compressed>
+
+## Origin
+Promoted from planning canvas [[work/<category>/<slug>/_meta|<topic>]].
+```
+
+Apply caveman compression (drop articles/filler/pleasantries, prefer fragments in lists, short synonyms) to all prose in `## Compressed` and inside `## Full Decision`. Never compress YAML frontmatter, code blocks, URLs, wikilinks, or table structure.
+
 **For every decision node produced:**
 
 1. Add `source_plan: work/<category>/<slug>` to the ADR frontmatter.
-2. Append an `## Origin` section to the ADR body:
-   ```markdown
-   ## Origin
-   Promoted from planning canvas [[work/<category>/<slug>/_meta|<topic>]].
-   ```
+2. Include `## Origin` in the body (shown above).
 3. Collect the node path (e.g. `decisions/<adr-slug>.md`) into a `promoted_to` list.
 
 **After all nodes are classified and quality check passes:**

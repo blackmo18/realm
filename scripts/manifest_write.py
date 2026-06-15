@@ -135,6 +135,17 @@ def _append_architecture_rows(existing: str, new_body: str) -> str:
     return existing.rstrip() + "\n" + "\n".join(additions) + "\n"
 
 
+def _inject_links(body: str, links_line: str) -> str:
+    """Append any wikilinks from the draft `links:` header that aren't already in the body."""
+    if not links_line:
+        return body
+    missing = [lnk for lnk in extract_wikilinks(links_line) if f"[[{lnk}]]" not in body]
+    if not missing:
+        return body
+    refs = "  ".join(f"[[{lnk}]]" for lnk in missing)
+    return body.rstrip() + f"\n\n## References\n{refs}\n"
+
+
 def write_nodes(nodes: list, project_dir: str, project_root: str) -> dict:
     results = {"wrote": 0, "merged": 0, "skipped": 0, "deferred": 0, "written_nodes": []}
     written_info = []  # [(id, type, rel_path)]
@@ -163,8 +174,9 @@ def write_nodes(nodes: list, project_dir: str, project_root: str) -> dict:
                 print(f"  SKIP    {rel} (exists)")
                 results["skipped"] += 1
                 continue
+            body_to_write = _inject_links(node.body, node.links)
             with open(full_path, "w", encoding="utf-8") as f:
-                f.write(node.body + "\n")
+                f.write(body_to_write + "\n")
             print(f"  WROTE   {rel}  (id: {node_id})")
             results["wrote"] += 1
 

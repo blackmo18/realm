@@ -131,11 +131,19 @@ def parse_draft(text: str) -> Draft:
                 links = hline[len("links:"):].strip()
             i += 1
 
-        # collect body until next ### or ## or EOF
+        # collect body until next node (### ) or top-level draft section (## ) or EOF.
+        # Stop only on known top-level ## headers — NOT on ## inside the node body
+        # (e.g. ## Compressed, ## Full Decision are node body content, not boundaries).
+        _DRAFT_BOUNDARIES = {
+            "## Meta",
+            "## Planned Node Documents",
+            "## Updated Overview/Architecture",
+            "## Session Log Entry",
+        }
         body_lines = []
         while i < len(lines):
             peek = lines[i]
-            if peek.startswith("### ") or peek.startswith("## "):
+            if peek.startswith("### ") or peek.strip() in _DRAFT_BOUNDARIES:
                 break
             body_lines.append(peek)
             i += 1

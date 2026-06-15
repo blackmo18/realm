@@ -54,7 +54,7 @@ Slug = project dir name, kebab-case. Derive from `package.json` `name` or repo r
 ## Node Templates
 
 **Decision-Node.md** frontmatter: `id`, `title`, `type: decision`, `status`, `created`, `updated`, `tags`, optional `source_plan`.
-Body sections: `## Context`, `## Decision`, `## Rejected alternatives`, `## Consequences`, `## Compressed`.
+Body sections: `## Compressed` (caveman one-liner), `## Full Decision` (contains `### Context`, `### Decision`, `### Rejected Alternatives`, `### Consequences`), optional `## Origin` (if promoted from realm-plan canvas).
 
 **Function-Node.md** frontmatter: `id`, `type: function`, `class`, `depends_on`, `called_by`, `tags`.
 Body: `## Compressed` (one-liner), `## Full` (signature + flow).
