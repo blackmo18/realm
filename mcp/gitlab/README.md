@@ -45,11 +45,11 @@ In Cursor, ask agent to list open merge requests on `org/realm-facts`.
 
 | Tool | Used by | Purpose |
 |---|---|---|
-| `create_merge_request` | `/realm-fact-submit` | Open fact review MR |
-| `get_merge_request` | `/realm-fact-review` | Check MR status |
-| `create_merge_request_note` | `/realm-fact-review` | Post review comments |
-| `approve_merge_request` | `/realm-fact-review --approve` | Approve fact |
-| `merge_merge_request` | `/realm-fact-review` | Merge after approval |
+| `create_merge_request` | `/realm-facts submit` | Open fact review MR |
+| `get_merge_request` | `/realm-facts review` | Check MR status |
+| `create_merge_request_note` | `/realm-facts review` | Post review comments |
+| `approve_merge_request` | `/realm-facts review --approve` | Approve fact |
+| `merge_merge_request` | `/realm-facts review` | Merge after approval |
 | `list_merge_requests` | status checks | List pending fact MRs |
 
 ## MR Conventions
@@ -67,11 +67,14 @@ Add `.gitlab-ci.yml` to facts repo:
 validate-facts:
   stage: test
   script:
-    - python3 scripts/facts_validate.py --facts-root .
-    - python3 scripts/facts_index.py --facts-root .
+    - python3 scripts/facts.py validate --facts-root . --mr-ready
+    - python3 scripts/facts.py index --facts-root .
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 ```
+
+`scripts/facts.py` is vendored into this repo by `facts.py init` (run once during
+`/realm-facts forge`) — no realm plugin install needed inside the facts repo's own CI runner.
 
 Blocks MR merge if validation fails.
 

@@ -123,16 +123,18 @@ Deterministic crawler (`scripts/concise.py`) finds oversized files, scores blast
 
 Central GitLab `realm-facts` repo for organization knowledge. GitLab MR review + Microsoft Teams notifications.
 
-| Skill | Purpose |
+One routed skill, `/realm-facts`, with 8 subcommands:
+
+| Subcommand | Purpose |
 |-------|---------|
-| `/realm-facts-forge` | Connect product repo to central facts repo |
-| `/realm-fact-new` | Create a new team fact |
-| `/realm-fact-link` | Link facts (related, depends_on, subfacts) |
-| `/realm-fact-submit` | Submit for GitLab MR review + Teams notification |
-| `/realm-fact-review` | Reviewer approve or request changes |
-| `/realm-fact-sync` | Pull latest approved facts |
-| `/realm-fact-recall` | Query facts (compressed by default) |
-| `/realm-fact-ingest` | Bundle facts for other agents |
+| `/realm-facts forge` | Connect product repo to central facts repo |
+| `/realm-facts new` | Create a new team fact |
+| `/realm-facts link` | Link facts (related, depends_on, supersedes) |
+| `/realm-facts submit` | Submit for GitLab MR review + Teams notification |
+| `/realm-facts review` | Reviewer approve or request changes |
+| `/realm-facts sync` | Pull latest approved facts |
+| `/realm-facts recall` | Query facts (compressed by default) |
+| `/realm-facts ingest` | Bundle facts for other agents |
 
 See [docs/realm-facts-workflow.md](docs/realm-facts-workflow.md) for full team workflow.
 

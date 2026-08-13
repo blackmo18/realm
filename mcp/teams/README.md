@@ -10,7 +10,8 @@ Teams integration for organization channel notifications: new fact reviews, appr
 2. Create webhook, copy URL
 3. Set `REALM_TEAMS_WEBHOOK=<url>`
 
-Skills use webhook via `realm-agent-fact-notify` curl fallback or lightweight MCP server.
+`/realm-facts submit` and `/realm-facts review` call this directly — either the `post_message`
+MCP tool below, or a `curl` fallback when the MCP server isn't configured.
 
 #### Cursor MCP config (webhook server)
 
@@ -49,10 +50,10 @@ export REALM_TEAMS_CHANNEL_ID="<channel-id>"
 
 | Mode | Trigger | Channel message |
 |---|---|---|
-| `review-request` | `/realm-fact-submit` | New fact needs review + MR link |
-| `approved` | `/realm-fact-review --approve` | Fact merged, team should sync |
-| `changes-requested` | `/realm-fact-review --request-changes` | Author notified with reason |
-| `weekly-digest` | scheduled | Summary of new/updated facts |
+| `review-request` | `/realm-facts submit` | New fact needs review + MR link |
+| `approved` | `/realm-facts review --approve` | Fact merged, team should sync |
+| `changes-requested` | `/realm-facts review --request-changes` | Author notified with reason |
+| `weekly-digest` | scheduled (not yet implemented) | Summary of new/updated facts |
 
 ## Message Format
 
@@ -85,7 +86,7 @@ Teams Adaptive Card (via webhook):
 
 ## Fallback Without MCP
 
-`/realm-fact-submit` and `realm-agent-fact-notify` run:
+`/realm-facts submit` and `/realm-facts review` run:
 
 ```bash
 curl -X POST "$REALM_TEAMS_WEBHOOK" -H "Content-Type: application/json" -d '<message-card-json>'

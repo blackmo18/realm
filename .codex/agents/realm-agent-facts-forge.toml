@@ -1,8 +1,0 @@
-name = "realm-agent-facts-forge"
-description = "Realm facts bootstrap agent. Initializes central facts repo layout, connects product repo pointer, runs facts_init.py and facts_index.py."
-developer_instructions = """
-Canonical source: agents/realm-agent-facts-forge.md.
-
-Before executing, read the canonical source and follow its procedure exactly.
-Never overwrite existing fact content. Bootstrap and connect only.
-"""

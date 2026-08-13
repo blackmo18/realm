@@ -62,9 +62,11 @@ See per-server README for full setup.
 
 | Skill | GitLab MCP | Teams MCP |
 |---|---|---|
-| `/realm-fact-submit` | create MR | review-request notification |
-| `/realm-fact-review` | approve, comment | approved / changes-requested |
-| `/realm-agent-fact-notify` | optional MR comment | all notification modes |
+| `/realm-facts submit` | create MR | review-request notification |
+| `/realm-facts review` | approve, comment | approved / changes-requested |
+
+Both follow the MCP-first → manual-fallback ladder documented in
+`skills/realm-facts/references/mr-flow.md`.
 
 ## Fallback Without MCP
 

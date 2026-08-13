@@ -28,7 +28,7 @@ node bin/install.js --agent gemini
 
 ### Python 3.9+
 - Version: Python 3.9 or higher
-- Used by: Realm helper scripts (`scripts/concise.py` for god-file triage, `scripts/forge_init.py` for vault bootstrap, and `scripts/facts_*.py` for team facts).
+- Used by: Realm helper scripts (`skills/realm-concise/scripts/concise.py` for god-file triage, `scripts/forge_init.py` for vault bootstrap, and `skills/realm-facts/scripts/facts.py` for team facts).
 
 ### Node.js and npx
 - Version: Any recent Node.js LTS release with `npx`

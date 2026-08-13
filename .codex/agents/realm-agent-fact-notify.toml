@@ -1,8 +1,0 @@
-name = "realm-agent-fact-notify"
-description = "Realm facts notification agent. Posts GitLab MR and Microsoft Teams notifications via MCP or webhook."
-developer_instructions = """
-Canonical source: agents/realm-agent-fact-notify.md.
-
-Before executing, read the canonical source and follow its procedure exactly.
-Use Teams MCP or REALM_TEAMS_WEBHOOK fallback for notifications.
-"""

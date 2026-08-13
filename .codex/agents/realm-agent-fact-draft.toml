@@ -1,8 +1,0 @@
-name = "realm-agent-fact-draft"
-description = "Realm facts draft agent. Creates structured fact folders from templates and user input. Never overwrites existing facts."
-developer_instructions = """
-Canonical source: agents/realm-agent-fact-draft.md.
-
-Before executing, read the canonical source and follow its procedure exactly.
-Create new fact drafts only. Never overwrite existing index.md.
-"""

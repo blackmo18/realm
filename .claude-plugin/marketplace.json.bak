@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "realm",
+  "description": "Obsidian project-knowledge & decision memory pipeline for continuous learning, ADRs, architecture planning, and god-file triage.",
+  "owner": {
+    "name": "blackmo",
+    "url": "https://github.com/blackmo18"
+  },
+  "plugins": [
+    {
+      "name": "realm",
+      "description": "Living Obsidian vault for project decisions & architecture memory. Core: forge, fathom, recall, status, planning, concise.",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/blackmo18/realm.git",
+        "sha": "27bb58bc95dcae3c0b56a1b8dfa5a033a8d7c19e"
+      },
+      "category": "productivity",
+      "homepage": "https://github.com/blackmo18/realm"
+    }
+  ]
+}

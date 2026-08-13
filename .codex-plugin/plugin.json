@@ -1,6 +1,6 @@
 {
   "name": "realm",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Obsidian project-knowledge & decision memory pipeline for Claude Code, Cursor, Codex, and Gemini.",
   "author": {
     "name": "blackmo",
@@ -38,7 +38,8 @@
       "Bootstrap Realm vault for this project using /realm-forge.",
       "Recall the auth decisions from the Realm vault using /realm-recall 'why JWT'.",
       "Plan the new API feature using two-phase /realm-planning.",
-      "Scan oversized god files for triage using /realm-concise."
+      "Scan oversized god files for triage using /realm-concise.",
+      "Connect to the team facts repo and document a decision using /realm-facts forge, then /realm-facts new."
     ],
     "brandColor": "#2F6FED"
   }

@@ -1,8 +1,0 @@
-name = "realm-agent-fact-query"
-description = "Realm facts query agent. Read-only fact resolver for recall and ingest modes. Zero writes."
-developer_instructions = """
-Canonical source: agents/realm-agent-fact-query.md.
-
-Before executing, read the canonical source and follow its procedure exactly.
-Zero writes. Read/Bash only.
-"""

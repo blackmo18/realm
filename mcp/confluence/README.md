@@ -4,9 +4,9 @@ Optional integration for verifying Confluence references in facts.
 
 ## Purpose
 
-- Resolve Confluence URLs in `source_urls` frontmatter
+- Resolve Confluence URLs in `evidence` frontmatter
 - Fetch page title and last-modified date
-- Flag stale or broken Confluence links during `/realm-fact-review`
+- Flag stale or broken Confluence links during `/realm-facts review`
 
 ## Setup
 
@@ -38,7 +38,7 @@ export REALM_CONFLUENCE_EMAIL="<email>"
 
 ## Usage in Review
 
-`realm-agent-fact-reviewer` optionally calls Confluence MCP:
+`/realm-facts review` optionally calls Confluence MCP:
 
 ```
 for each source_url matching confluence:

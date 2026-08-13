@@ -16,8 +16,8 @@ Central repo: `realm-facts` on GitLab. Product repos hold a pointer in `.realm/r
 |---|---|
 | **Author** | Create facts, submit MRs, respond to review feedback |
 | **Reviewer** | Review MRs, approve or request changes |
-| **Team member** | Pull synced facts, query via `/realm-fact-recall`, ingest for agents |
-| **Agent** | Consume compressed fact bundles via `/realm-fact-ingest` |
+| **Team member** | Pull synced facts, query via `/realm-facts recall`, ingest for agents |
+| **Agent** | Consume compressed fact bundles via `/realm-facts ingest` |
 
 ## Phase 1 — Setup (once per org)
 
@@ -29,7 +29,7 @@ git clone git@gitlab.example.com:org/realm-facts.git
 cd realm-facts
 
 # Bootstrap layout
-python3 /path/to/realm/scripts/facts_init.py --facts-root .
+python3 /path/to/realm/skills/realm-facts/scripts/facts.py init --facts-root .
 git add . && git commit -m "init realm-facts" && git push
 ```
 
@@ -43,9 +43,9 @@ Set env vars: `REALM_GITLAB_TOKEN`, `REALM_GITLAB_API_URL`, `REALM_TEAMS_WEBHOOK
 In each product repo:
 
 ```bash
-/realm-facts-forge
+/realm-facts forge
 # Provide path to local realm-facts clone
-# Or: /realm-facts-forge --facts-url https://gitlab.example.com/org/realm-facts.git
+# Or: /realm-facts forge --facts-url https://gitlab.example.com/org/realm-facts.git
 ```
 
 Writes to `.realm/realm-state.json`:
@@ -62,33 +62,34 @@ Writes to `.realm/realm-state.json`:
 ## Phase 2 — Create a Fact
 
 ```bash
-/realm-fact-new platform jwt-token-rotation
+/realm-facts new platform jwt-token-rotation
 ```
 
-Agent gathers:
-- Compressed summary (1-2 sentences)
+Skill interviews the user for:
+- Compressed summary (1-2 sentences, ≤400 chars)
 - Evidence (Confluence links, repo refs)
 - Owners and reviewers
 - Tags
 
+`scripts/facts.py new` writes and validates the file; the interview never hand-writes it.
+
 Output: `facts/platform/jwt-token-rotation/index.md` (status: `draft`)
 
 Optional:
-- Add docs in `docs/`
-- Add diagrams in `diagrams/`
-- Link related facts: `/realm-fact-link jwt-token-rotation --related session-refresh-policy`
+- Add prose in `## Context` / `## Evidence` directly in the fact file
+- Link related facts: `/realm-facts link jwt-token-rotation --related session-refresh-policy`
 
 ## Phase 3 — Submit for Review
 
 ```bash
-/realm-fact-submit jwt-token-rotation
+/realm-facts submit jwt-token-rotation
 ```
 
 Pipeline:
-1. `facts_validate.py --mr-ready` — schema check
-2. Git branch `fact/jwt-token-rotation` → push
-3. GitLab MR created via MCP
-4. Fact status → `review`
+1. `facts.py validate --mr-ready` — schema check
+2. Fact status → `review` (`facts.py set-status`)
+3. Git branch `fact/jwt-token-rotation` → push
+4. GitLab MR created via MCP (manual fallback if MCP unavailable)
 5. Microsoft Teams notification to org channel
 
 Teams message:
@@ -104,10 +105,10 @@ Summary: JWT 15min expiry. Refresh via silent iframe.
 Reviewer:
 
 ```bash
-/realm-fact-review jwt-token-rotation
-/realm-fact-review jwt-token-rotation --approve
+/realm-facts review jwt-token-rotation
+/realm-facts review jwt-token-rotation --approve
 # or
-/realm-fact-review jwt-token-rotation --request-changes "missing Confluence evidence"
+/realm-facts review jwt-token-rotation --request-changes "missing Confluence evidence"
 ```
 
 Review checklist:
@@ -131,7 +132,7 @@ On changes requested:
 After merge, team members:
 
 ```bash
-/realm-fact-sync
+/realm-facts sync
 ```
 
 Pulls latest from `main`, refreshes `facts-index.json`, updates `lastSync`.
@@ -141,15 +142,18 @@ Pulls latest from `main`, refreshes `facts-index.json`, updates `lastSync`.
 ### Query facts
 
 ```bash
-/realm-fact-recall jwt                          # tag/domain search
-/realm-fact-recall jwt-token-rotation --deps    # with dependencies
-/realm-fact-recall "payment settlement"         # semantic search
+/realm-facts recall jwt                          # keyword search across id/title/compressed/tags
+/realm-facts recall jwt --domain platform --tag auth --status active
+/realm-facts recall jwt-token-rotation --deps    # expand dependency compresses
 ```
+
+Reads `facts-index.json` only — never a live scan of the fact tree. If a fact you know exists
+doesn't show up, run `/realm-facts sync` first.
 
 ### Hand off to coding agent
 
 ```bash
-/realm-fact-ingest jwt-token-rotation --bundle impl
+/realm-facts ingest jwt-token-rotation --bundle impl
 ```
 
 Produces compact bundle for implementation agents:
@@ -169,8 +173,8 @@ Paste bundle into agent prompt or use as session context.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> draft: realm-fact-new
-  draft --> review: realm-fact-submit
+  [*] --> draft: realm-facts new
+  draft --> review: realm-facts submit
   review --> draft: changes-requested
   review --> active: approved-and-merged
   active --> deprecated: superseded
@@ -184,6 +188,7 @@ realm-facts/
 ├── facts/<domain>/<fact-id>/index.md
 ├── decisions/ADR-*.md
 ├── references/
+├── scripts/facts.py      # vendored by `facts.py init` — lets this repo's own CI validate/index
 ├── facts-index.json      # generated
 ├── facts-graph.json      # generated
 └── .realm/facts-state.json
@@ -194,24 +199,28 @@ realm-facts/
 ```yaml
 validate-facts:
   script:
-    - python3 scripts/facts_validate.py --facts-root .
-    - python3 scripts/facts_index.py --facts-root .
+    - python3 scripts/facts.py validate --facts-root . --mr-ready
+    - python3 scripts/facts.py index --facts-root .
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 ```
 
 ## Skills Reference
 
-| Skill | Purpose |
+One routed skill, `realm-facts`, with 8 subcommands. All mechanical work (parsing, validation,
+indexing, status transitions, the `factsRepo` pointer) runs through
+`skills/realm-facts/scripts/facts.py` — see `skills/realm-facts/SKILL.md` for the ground rules.
+
+| Subcommand | Purpose |
 |---|---|
-| `/realm-facts-forge` | Connect product repo to central facts |
-| `/realm-fact-new` | Create new fact |
-| `/realm-fact-link` | Link facts together |
-| `/realm-fact-submit` | GitLab MR + Teams notification |
-| `/realm-fact-review` | Reviewer approve/request changes |
-| `/realm-fact-sync` | Pull latest approved facts |
-| `/realm-fact-recall` | Query facts |
-| `/realm-fact-ingest` | Bundle for other agents |
+| `/realm-facts forge` | Connect this repo to a central facts repo |
+| `/realm-facts new <domain> <id>` | Interactively author a new fact |
+| `/realm-facts link <id> --related <id2>` | Link facts together |
+| `/realm-facts submit <id>` | Validate mr-ready, GitLab MR + Teams notification |
+| `/realm-facts review <id>` | Reviewer approve/request changes |
+| `/realm-facts sync` | Pull latest approved facts, reindex |
+| `/realm-facts recall <query>` | Query facts (index-backed) |
+| `/realm-facts ingest <id>` | FACT_BUNDLE for other agents |
 
 ## Operating Rules
 
@@ -219,15 +228,15 @@ validate-facts:
 2. **No direct push to main** — all facts via MR review
 3. **Compressed required** — every active fact must have agent-ingestable `## Compressed`
 4. **Owners assigned** — every fact has `@owner` responsible for accuracy
-5. **Sync cadence** — run `/realm-fact-sync` at session start or after Teams approval notice
+5. **Sync cadence** — run `/realm-facts sync` at session start or after Teams approval notice
 6. **Drift policy** — live code wins for behavior; facts explain intent; flag `FACT DRIFT`
 
 ## Troubleshooting
 
 | Issue | Fix |
 |---|---|
-| No facts repo connected | `/realm-facts-forge` |
-| MR validation fails | Fix errors from `facts_validate.py --mr-ready` |
+| No facts repo connected | `/realm-facts forge` |
+| MR validation fails | Fix errors from `facts.py validate --facts-root . --mr-ready` |
 | Teams notification skipped | Set `REALM_TEAMS_WEBHOOK` |
 | GitLab MCP unavailable | Create MR manually, paste URL to skill |
-| Stale local facts | `/realm-fact-sync --rebuild-index` |
+| Stale local facts | `/realm-facts sync` (always reindexes) |

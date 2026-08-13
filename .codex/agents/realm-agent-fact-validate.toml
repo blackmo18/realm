@@ -1,8 +1,0 @@
-name = "realm-agent-fact-validate"
-description = "Realm facts validation agent. Runs facts_validate.py and reports MR readiness. Read-only."
-developer_instructions = """
-Canonical source: agents/realm-agent-fact-validate.md.
-
-Before executing, read the canonical source and follow its procedure exactly.
-Read-only validation. Do not modify fact files.
-"""
