@@ -1,10 +1,17 @@
 #!/bin/bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || echo "")"
+if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/bin/install.js" ]; then
+  exec node "$SCRIPT_DIR/bin/install.js" "$@"
+fi
+
 REPO_SLUG="blackmo18/realm"
 AGENT="codex"
 DRY_RUN=false
 FORCE=false
+IS_LOCAL=false
+TARGET_DIR=""
 PLUGIN_DIR="${HOME}/.claude/plugins/marketplaces/realm"
 
 usage() {
@@ -12,14 +19,27 @@ usage() {
 Realm installer
 
 Usage:
-  ./install.sh [--dry-run] [--repo <owner/repo>] [--agent <claude|cursor|codex|gemini>]
+  ./install.sh [--dry-run] [--local [dir]] [--repo <owner/repo>] [--agent <claude|cursor|codex|gemini>]
+
+Options:
+  --agent <agent>          Install target: claude, cursor, codex, gemini. Default: codex
+  --local [dir], -l [dir]  Install locally into a project workspace (defaults to current directory)
+  --target-dir <dir>       Explicit project destination directory for local installation
+  --repo <owner/repo>      Repo slug used for Skills CLI installs. Default: blackmo18/realm
+  --plugin-dir <path>      Claude plugin destination. Default: ~/.claude/plugins/marketplaces/realm
+  --dry-run                Print planned actions without changing anything
+  --force                  Overwrite existing files
+  -h, --help               Show this help
 
 Examples:
   ./install.sh
   ./install.sh --dry-run
-  ./install.sh --agent cursor
   ./install.sh --agent gemini
-  ./install.sh --agent claude --plugin-dir ~/.claude/plugins/marketplaces/realm
+  ./install.sh --agent gemini --local
+  ./install.sh --agent gemini --local /path/to/project
+  ./install.sh --agent codex --local
+  ./install.sh --agent cursor --local
+  ./install.sh --agent claude --local
 EOF
 }
 
@@ -32,6 +52,25 @@ while [ $# -gt 0 ]; do
     --force)
       FORCE=true
       shift
+      ;;
+    --local|-l)
+      IS_LOCAL=true
+      if [ $# -ge 2 ] && [[ "$2" != -* ]]; then
+        TARGET_DIR="$2"
+        shift 2
+      else
+        TARGET_DIR="$(pwd)"
+        shift
+      fi
+      ;;
+    --target-dir|--project-dir)
+      if [ $# -lt 2 ]; then
+        echo "Missing value for $1" >&2
+        exit 1
+      fi
+      IS_LOCAL=true
+      TARGET_DIR="$2"
+      shift 2
       ;;
     --repo)
       if [ $# -lt 2 ]; then
@@ -69,6 +108,78 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+if [ "$IS_LOCAL" = true ]; then
+  TARGET_DIR="${TARGET_DIR/#\~/$HOME}"
+  [ -z "$TARGET_DIR" ] && TARGET_DIR="$(pwd)"
+  mkdir -p "$TARGET_DIR"
+  TARGET_DIR="$(cd "$TARGET_DIR" && pwd)"
+
+  echo "Realm local install target: $TARGET_DIR"
+  echo "Agent: $AGENT"
+
+  if [ "$DRY_RUN" = true ]; then
+    echo "Planned Local Actions:"
+    case "$AGENT" in
+      gemini)
+        echo "- Copy skills -> $TARGET_DIR/.agents/skills"
+        echo "- Copy .gemini/agents/*.md -> $TARGET_DIR/.gemini/agents"
+        ;;
+      codex)
+        echo "- Copy skills -> $TARGET_DIR/.agents/skills and $TARGET_DIR/.codex/skills"
+        echo "- Copy .codex/agents/*.toml -> $TARGET_DIR/.codex/agents"
+        ;;
+      cursor)
+        echo "- Copy skills -> $TARGET_DIR/.cursor/skills and $TARGET_DIR/.agents/skills"
+        ;;
+      claude)
+        echo "- Copy skills -> $TARGET_DIR/.claude/skills"
+        echo "- Copy agents/*.md -> $TARGET_DIR/.claude/agents"
+        ;;
+    esac
+    echo "Dry run complete."
+    exit 0
+  fi
+
+  TMP_DIR="$(mktemp -d)"
+  git clone --depth 1 "https://github.com/${REPO_SLUG}.git" "$TMP_DIR/realm" >/dev/null 2>&1
+  SOURCE_DIR="$TMP_DIR/realm"
+
+  case "$AGENT" in
+    gemini)
+      mkdir -p "$TARGET_DIR/.agents/skills" "$TARGET_DIR/.gemini/agents"
+      cp -r "$SOURCE_DIR"/skills/* "$TARGET_DIR/.agents/skills/"
+      cp "$SOURCE_DIR"/.gemini/agents/*.md "$TARGET_DIR/.gemini/agents/"
+      ;;
+    codex)
+      mkdir -p "$TARGET_DIR/.agents/skills" "$TARGET_DIR/.codex/skills" "$TARGET_DIR/.codex/agents"
+      cp -r "$SOURCE_DIR"/skills/* "$TARGET_DIR/.agents/skills/"
+      cp -r "$SOURCE_DIR"/skills/* "$TARGET_DIR/.codex/skills/"
+      cp "$SOURCE_DIR"/.codex/agents/*.toml "$TARGET_DIR/.codex/agents/"
+      ;;
+    cursor)
+      mkdir -p "$TARGET_DIR/.agents/skills" "$TARGET_DIR/.cursor/skills"
+      cp -r "$SOURCE_DIR"/skills/* "$TARGET_DIR/.agents/skills/"
+      cp -r "$SOURCE_DIR"/skills/* "$TARGET_DIR/.cursor/skills/"
+      ;;
+    claude)
+      mkdir -p "$TARGET_DIR/.claude/skills" "$TARGET_DIR/.claude/agents"
+      cp -r "$SOURCE_DIR"/skills/* "$TARGET_DIR/.claude/skills/"
+      cp "$SOURCE_DIR"/agents/*.md "$TARGET_DIR/.claude/agents/"
+      ;;
+  esac
+
+  rm -rf "$TMP_DIR"
+
+  echo ""
+  echo "Realm is installed locally for $AGENT in $TARGET_DIR."
+  echo ""
+  echo "Next steps:"
+  echo "1. Open $TARGET_DIR in $AGENT."
+  echo "2. Run /realm-forge to bootstrap local Realm vault state for this project."
+  echo "3. Query with /realm-recall or investigate with /realm-fathom."
+  exit 0
+fi
+
 case "$AGENT" in
   codex|cursor|gemini)
     CMD=(npx skills add "$REPO_SLUG" -a "$AGENT")
@@ -100,25 +211,11 @@ case "$AGENT" in
 
     if [ "$AGENT" = "codex" ] || [ "$AGENT" = "gemini" ]; then
       TARGET_DIR="${HOME}/.${AGENT}/agents"
-      SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-      AGENTS_SRC=""
-      TMP_DIR=""
+      TMP_DIR="$(mktemp -d)"
+      git clone --depth 1 "https://github.com/${REPO_SLUG}.git" "$TMP_DIR/realm" >/dev/null 2>&1
+      AGENTS_SRC="$TMP_DIR/realm/.$AGENT/agents"
       EXT="toml"
       [ "$AGENT" = "gemini" ] && EXT="md"
-
-      if [ -d "$SCRIPT_DIR/.$AGENT/agents" ]; then
-        AGENTS_SRC="$SCRIPT_DIR/.$AGENT/agents"
-      else
-        if ! command -v git >/dev/null 2>&1; then
-          echo "Warning: git is required to install $AGENT-native Realm agents from a remote install script." >&2
-          echo "Realm skills were installed, but ~/.${AGENT}/agents/*.$EXT was not updated." >&2
-          echo "From a local Realm clone, run: node bin/install.js --agent $AGENT" >&2
-        else
-          TMP_DIR="$(mktemp -d)"
-          git clone --depth 1 "https://github.com/${REPO_SLUG}.git" "$TMP_DIR/realm" >/dev/null 2>&1
-          AGENTS_SRC="$TMP_DIR/realm/.$AGENT/agents"
-        fi
-      fi
 
       if [ -n "$AGENTS_SRC" ] && [ -d "$AGENTS_SRC" ]; then
         mkdir -p "$TARGET_DIR"
@@ -126,14 +223,12 @@ case "$AGENT" in
         echo "$AGENT-native Realm agents installed to $TARGET_DIR"
       fi
 
-      if [ -n "$TMP_DIR" ]; then
-        rm -rf "$TMP_DIR"
-      fi
+      rm -rf "$TMP_DIR"
     fi
 
     cat <<EOF
 
-Realm is installed for $AGENT.
+Realm is installed globally for $AGENT.
 
 Next steps:
 1. Restart $AGENT or open a new session so the new skills are loaded cleanly.
@@ -142,21 +237,6 @@ Next steps:
 EOF
     ;;
   claude)
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-    if [ -f "$SCRIPT_DIR/bin/install.js" ]; then
-      CMD=(node "$SCRIPT_DIR/bin/install.js" --agent claude --plugin-dir "$PLUGIN_DIR")
-      [ "$DRY_RUN" = true ] && CMD+=(--dry-run)
-      [ "$FORCE" = true ] && CMD+=(--force)
-
-      echo "Realm install target: local clone"
-      echo "Agent: claude"
-      echo "Command: ${CMD[*]}"
-
-      "${CMD[@]}"
-      exit 0
-    fi
-
     if ! command -v git >/dev/null 2>&1; then
       echo "git is required for one-line Claude Code install. Install git or clone ${REPO_SLUG} manually." >&2
       exit 1
@@ -219,3 +299,4 @@ EOF
     exit 1
     ;;
 esac
+

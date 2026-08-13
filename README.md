@@ -159,9 +159,15 @@ npx skills add blackmo18/realm -a gemini
 From a local clone:
 
 ```bash
+# Global install
 node bin/install.js --agent codex
 node bin/install.js --agent gemini
+
+# Local project-only install (does not touch ~)
+./install.sh --agent gemini --local
+./install.sh --agent codex --local
 ```
+
 
 ### Claude Code
 

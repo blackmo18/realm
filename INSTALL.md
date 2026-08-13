@@ -47,9 +47,9 @@ After installing:
 1. Restart your host or open a new session.
 2. In the project you want to track, run `/realm-forge`.
 
-### Local-clone install (Codex & Gemini)
+### Global Install (Codex, Cursor, Gemini)
 
-From a local Realm clone, this installs both Skills CLI entries and host-native agents:
+From a local Realm clone, this installs both Skills CLI entries and host-native agents globally to your machine:
 
 ```bash
 node bin/install.js --agent codex
@@ -65,6 +65,41 @@ node bin/install.js --agent gemini --dry-run
 
 ---
 
+## Local / Project-Scoped Installation
+
+If you prefer **not** to install Realm globally on your machine, you can install it into a single project workspace using `--local`:
+
+### 1. Into the current directory
+```bash
+# Antigravity / Gemini
+./install.sh --agent gemini --local
+
+# Codex
+./install.sh --agent codex --local
+
+# Cursor
+./install.sh --agent cursor --local
+
+# Claude Code
+./install.sh --agent claude --local
+```
+
+### 2. Into a specific project directory
+```bash
+./install.sh --agent gemini --local /path/to/my-project
+node bin/install.js --agent codex --local /path/to/my-project
+```
+
+### What Local Install Does:
+- **Gemini / Antigravity**: Copies skills into `<project>/.agents/skills/` and agent definitions into `<project>/.gemini/agents/`.
+- **Codex**: Copies skills into `<project>/.codex/skills/` & `<project>/.agents/skills/`, and agent definitions into `<project>/.codex/agents/`.
+- **Cursor**: Copies skills into `<project>/.cursor/skills/` & `<project>/.agents/skills/`.
+- **Claude Code**: Copies skills into `<project>/.claude/skills/` and agent definitions into `<project>/.claude/agents/`.
+- **Zero Global State**: Leaves your `~` user home directory completely untouched.
+
+
+---
+
 ## Claude Code
 
 Claude Code installs Realm as a local or remote plugin. From a local clone of this repo:
@@ -77,75 +112,6 @@ Claude Code installs Realm as a local or remote plugin. From a local clone of th
 node bin/install.js --agent claude --force
 
 # 3. Install realm inside Claude Code
-/plugin marketplace add ~/.claude/plugins/marketplaces/realm
-```
-
----
-
-## Uploading & Publishing to Claude Plugins
-
-To upload, publish, or update Realm on the Claude Code plugin marketplace:
-
-### 1. Structure Requirements
-
-Claude Code plugins require a `.claude-plugin/` metadata folder with two key JSON files:
-- `.claude-plugin/plugin.json`: Defines the plugin name, version, description, and author.
-- `.claude-plugin/marketplace.json`: Defines the plugin marketplace entry, repository URL, commit SHA, and category.
-
-### 2. Update Manifest Files
-
-Before publishing a release:
-
-1. Bump the version in `.claude-plugin/plugin.json`:
-   ```json
-   {
-     "name": "realm",
-     "description": "Obsidian project-knowledge & decision memory pipeline...",
-     "version": "0.1.6",
-     "author": { ... }
-   }
-   ```
-
-2. Get your latest git commit SHA and update `.claude-plugin/marketplace.json`:
-   ```bash
-   git rev-parse HEAD
-   ```
-   Update `plugins[0].source.sha` in `.claude-plugin/marketplace.json`:
-   ```json
-   {
-     "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-     "name": "realm",
-     "description": "Obsidian project-knowledge & decision memory pipeline...",
-     "plugins": [
-       {
-         "name": "realm",
-         "source": {
-           "source": "url",
-           "url": "https://github.com/blackmo18/realm.git",
-           "sha": "<YOUR_COMMIT_SHA>"
-         }
-       }
-     ]
-   }
-   ```
-
-### 3. Push to GitHub
-
-```bash
-git add .claude-plugin/plugin.json .claude-plugin/marketplace.json
-git commit -m "chore(release): update plugin manifest and commit SHA"
-git push origin main
-```
-
-### 4. Register / Add Plugin in Claude Code
-
-Users or team members can now install the plugin directly via GitHub URL or local marketplace path:
-
-```bash
-# From GitHub repository:
-/plugin marketplace add blackmo18/realm
-
-# Or from local clone:
 /plugin marketplace add ~/.claude/plugins/marketplaces/realm
 ```
 

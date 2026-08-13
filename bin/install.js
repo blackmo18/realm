@@ -31,6 +31,11 @@ function main() {
     fail('Unable to locate the Realm repo root from bin/install.js.');
   }
 
+  if (options.isLocal) {
+    installLocal(options, repoRoot);
+    return;
+  }
+
   if (SKILLS_CLI_AGENTS.has(options.agent)) {
     installForSkillsCli(options, repoRoot);
     return;
@@ -45,6 +50,8 @@ function parseArgs(argv) {
     dryRun: false,
     force: false,
     help: false,
+    isLocal: false,
+    targetDir: null,
     pluginDir: defaultClaudePluginDir(),
     repo: DEFAULT_REPO,
   };
@@ -62,6 +69,23 @@ function parseArgs(argv) {
       case '--help':
       case '-h':
         options.help = true;
+        break;
+      case '--local':
+      case '-l': {
+        options.isLocal = true;
+        const nextArg = argv[index + 1];
+        if (nextArg && !nextArg.startsWith('-')) {
+          options.targetDir = expandHome(nextArg);
+          index += 1;
+        } else {
+          options.targetDir = process.cwd();
+        }
+        break;
+      }
+      case '--target-dir':
+      case '--project-dir':
+        options.isLocal = true;
+        options.targetDir = expandHome(requireValue(argv, ++index, arg));
         break;
       case '--agent':
         options.agent = requireValue(argv, ++index, '--agent');
@@ -100,19 +124,23 @@ Usage:
 
 Options:
   --agent <agent>          Install target: claude, cursor, codex, gemini. Default: codex
+  --local [dir], -l [dir]  Install locally into a project workspace (defaults to current directory)
+  --target-dir <dir>       Explicit project destination directory for local installation
   --repo <owner/repo>      Repo slug used for Skills CLI installs. Default: ${DEFAULT_REPO}
   --plugin-dir <path>      Claude plugin destination. Default: ${defaultClaudePluginDir()}
   --dry-run                Print planned actions without changing anything
-  --force                  Overwrite existing Claude install
+  --force                  Overwrite existing files in local or Claude install
   -h, --help               Show this help
 
 Examples:
   node bin/install.js
   node bin/install.js --dry-run
-  node bin/install.js --agent cursor
   node bin/install.js --agent gemini
-  node bin/install.js --agent claude
-  node bin/install.js --agent claude --plugin-dir ~/.claude/plugins/marketplaces/realm
+  node bin/install.js --agent gemini --local
+  node bin/install.js --agent gemini --local /path/to/project
+  node bin/install.js --agent codex --local
+  node bin/install.js --agent cursor --local
+  node bin/install.js --agent claude --local
 `);
 }
 
@@ -129,6 +157,123 @@ function detectRepoRoot() {
   return requiredPaths.every((relativePath) => fs.existsSync(path.join(root, relativePath)))
     ? root
     : null;
+}
+
+function installLocal(options, repoRoot) {
+  const targetDir = path.resolve(options.targetDir || process.cwd());
+  const agent = options.agent;
+  const skillsSrc = path.join(repoRoot, 'skills');
+
+  info(`Realm local install target: ${targetDir}`);
+  info(`Agent: ${agent}`);
+
+  const plannedActions = [];
+
+  // Determine destinations
+  let targetSkillsDirs = [];
+  let agentsSrc = null;
+  let targetAgentsDir = null;
+  let agentExt = 'md';
+
+  if (agent === 'gemini') {
+    targetSkillsDirs.push(path.join(targetDir, '.agents', 'skills'));
+    agentsSrc = path.join(repoRoot, '.gemini', 'agents');
+    targetAgentsDir = path.join(targetDir, '.gemini', 'agents');
+    agentExt = '.md';
+  } else if (agent === 'codex') {
+    targetSkillsDirs.push(path.join(targetDir, '.agents', 'skills'));
+    targetSkillsDirs.push(path.join(targetDir, '.codex', 'skills'));
+    agentsSrc = path.join(repoRoot, '.codex', 'agents');
+    targetAgentsDir = path.join(targetDir, '.codex', 'agents');
+    agentExt = '.toml';
+  } else if (agent === 'cursor') {
+    targetSkillsDirs.push(path.join(targetDir, '.cursor', 'skills'));
+    targetSkillsDirs.push(path.join(targetDir, '.agents', 'skills'));
+  } else if (agent === 'claude') {
+    targetSkillsDirs.push(path.join(targetDir, '.claude', 'skills'));
+    agentsSrc = path.join(repoRoot, 'agents');
+    targetAgentsDir = path.join(targetDir, '.claude', 'agents');
+    agentExt = '.md';
+  }
+
+  for (const sDir of targetSkillsDirs) {
+    plannedActions.push(`- Copy skills (${skillsSrc}) -> ${sDir}`);
+  }
+  if (agentsSrc && targetAgentsDir && fs.existsSync(agentsSrc)) {
+    plannedActions.push(`- Copy agent definitions (${agentsSrc}/*${agentExt}) -> ${targetAgentsDir}`);
+  }
+
+  if (options.dryRun) {
+    process.stdout.write('Planned Local Actions:\n');
+    for (const action of plannedActions) {
+      process.stdout.write(`${action}\n`);
+    }
+    success('Dry run complete.');
+    return;
+  }
+
+  // Execute copy
+  for (const sDir of targetSkillsDirs) {
+    ensureDir(sDir);
+    copySkillsDir(skillsSrc, sDir);
+    info(`Installed skills to ${sDir}`);
+  }
+
+  if (agentsSrc && targetAgentsDir && fs.existsSync(agentsSrc)) {
+    ensureDir(targetAgentsDir);
+    for (const entry of fs.readdirSync(agentsSrc, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.endsWith(agentExt)) {
+        fs.copyFileSync(
+          path.join(agentsSrc, entry.name),
+          path.join(targetAgentsDir, entry.name)
+        );
+        info(`Installed agent: ${path.join(targetAgentsDir, entry.name)}`);
+      }
+    }
+  }
+
+  process.stdout.write('\n');
+  success(`Realm is installed locally for ${agentLabel(agent)} in ${targetDir}.`);
+  process.stdout.write(
+    'Next steps:\n' +
+    `1. Open ${targetDir} in ${agentLabel(agent)}.\n` +
+    '2. Run /realm-forge to bootstrap local Realm vault state for this project.\n' +
+    '3. Query with /realm-recall or investigate with /realm-fathom.\n'
+  );
+}
+
+function copySkillsDir(sourceDir, destinationDir) {
+  ensureDir(destinationDir);
+  for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
+    if (INSTALL_EXCLUDES.has(entry.name)) {
+      continue;
+    }
+    const srcPath = path.join(sourceDir, entry.name);
+    const dstPath = path.join(destinationDir, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectoryRecursive(srcPath, dstPath);
+    } else if (entry.isFile()) {
+      fs.copyFileSync(srcPath, dstPath);
+    }
+  }
+}
+
+function copyDirectoryRecursive(src, dst) {
+  ensureDir(dst);
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    if (INSTALL_EXCLUDES.has(entry.name)) {
+      continue;
+    }
+    const srcPath = path.join(src, entry.name);
+    const dstPath = path.join(dst, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectoryRecursive(srcPath, dstPath);
+    } else if (entry.isFile()) {
+      fs.copyFileSync(srcPath, dstPath);
+    }
+  }
 }
 
 function installForSkillsCli(options, repoRoot) {
@@ -177,7 +322,7 @@ function installForSkillsCli(options, repoRoot) {
   }
 
   process.stdout.write('\n');
-  success(`Realm is installed for ${agentLabel(options.agent)}.`);
+  success(`Realm is installed globally for ${agentLabel(options.agent)}.`);
   process.stdout.write(
     'Next steps:\n' +
     `1. Restart ${agentLabel(options.agent)} or open a new session so the new skills are loaded cleanly.\n` +
@@ -408,3 +553,4 @@ function fail(message) {
 }
 
 main();
+
