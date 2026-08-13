@@ -1,0 +1,46 @@
+{
+  "name": "realm",
+  "version": "0.1.6",
+  "description": "Obsidian project-knowledge & decision memory pipeline for Gemini, Antigravity, Claude Code, Cursor, and Codex.",
+  "author": {
+    "name": "blackmo",
+    "url": "https://github.com/blackmo18"
+  },
+  "homepage": "https://github.com/blackmo18/realm#readme",
+  "repository": "https://github.com/blackmo18/realm",
+  "license": "MIT",
+  "keywords": [
+    "obsidian",
+    "knowledge-graph",
+    "architecture",
+    "documentation",
+    "gemini",
+    "antigravity",
+    "claude-code",
+    "cursor",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Realm",
+    "shortDescription": "Turn your codebase decisions into a living Obsidian knowledge vault.",
+    "longDescription": "Realm persists architectural decisions (ADRs), high-level planning, god-file concierge triage, and organization facts as interlinked nodes in an Obsidian vault.",
+    "developerName": "blackmo",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Knowledge"
+    ],
+    "websiteURL": "https://github.com/blackmo18/realm",
+    "privacyPolicyURL": "https://github.com/blackmo18/realm/blob/main/README.md",
+    "termsOfServiceURL": "https://github.com/blackmo18/realm/blob/main/README.md",
+    "defaultPrompt": [
+      "Bootstrap Realm vault for this project using /realm-forge.",
+      "Recall the auth decisions from the Realm vault using /realm-recall 'why JWT'.",
+      "Plan the new API feature using two-phase /realm-planning.",
+      "Scan oversized god files for triage using /realm-concise."
+    ],
+    "brandColor": "#2F6FED"
+  }
+}

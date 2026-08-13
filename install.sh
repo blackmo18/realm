@@ -82,6 +82,10 @@ case "$AGENT" in
         echo "Planned Codex native agent install:"
         echo "- Copy .codex/agents/*.toml into ~/.codex/agents/"
         echo "- If this script is run remotely, clone https://github.com/${REPO_SLUG}.git into a temp dir first"
+      elif [ "$AGENT" = "gemini" ]; then
+        echo "Planned Gemini native agent install:"
+        echo "- Copy .gemini/agents/*.md into ~/.gemini/agents/"
+        echo "- If this script is run remotely, clone https://github.com/${REPO_SLUG}.git into a temp dir first"
       fi
       echo "Dry run complete."
       exit 0
@@ -94,30 +98,32 @@ case "$AGENT" in
 
     "${CMD[@]}"
 
-    if [ "$AGENT" = "codex" ]; then
-      CODEX_AGENTS_DIR="${HOME}/.codex/agents"
+    if [ "$AGENT" = "codex" ] || [ "$AGENT" = "gemini" ]; then
+      TARGET_DIR="${HOME}/.${AGENT}/agents"
       SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
       AGENTS_SRC=""
       TMP_DIR=""
+      EXT="toml"
+      [ "$AGENT" = "gemini" ] && EXT="md"
 
-      if [ -d "$SCRIPT_DIR/.codex/agents" ]; then
-        AGENTS_SRC="$SCRIPT_DIR/.codex/agents"
+      if [ -d "$SCRIPT_DIR/.$AGENT/agents" ]; then
+        AGENTS_SRC="$SCRIPT_DIR/.$AGENT/agents"
       else
         if ! command -v git >/dev/null 2>&1; then
-          echo "Warning: git is required to install Codex-native Realm agents from a remote install script." >&2
-          echo "Realm skills were installed, but ~/.codex/agents/realm-agent-*.toml was not updated." >&2
-          echo "From a local Realm clone, run: node bin/install.js --agent codex" >&2
+          echo "Warning: git is required to install $AGENT-native Realm agents from a remote install script." >&2
+          echo "Realm skills were installed, but ~/.${AGENT}/agents/*.$EXT was not updated." >&2
+          echo "From a local Realm clone, run: node bin/install.js --agent $AGENT" >&2
         else
           TMP_DIR="$(mktemp -d)"
           git clone --depth 1 "https://github.com/${REPO_SLUG}.git" "$TMP_DIR/realm" >/dev/null 2>&1
-          AGENTS_SRC="$TMP_DIR/realm/.codex/agents"
+          AGENTS_SRC="$TMP_DIR/realm/.$AGENT/agents"
         fi
       fi
 
       if [ -n "$AGENTS_SRC" ] && [ -d "$AGENTS_SRC" ]; then
-        mkdir -p "$CODEX_AGENTS_DIR"
-        cp "$AGENTS_SRC"/realm-agent-*.toml "$CODEX_AGENTS_DIR"/
-        echo "Codex-native Realm agents installed to $CODEX_AGENTS_DIR"
+        mkdir -p "$TARGET_DIR"
+        cp "$AGENTS_SRC"/*."$EXT" "$TARGET_DIR"/
+        echo "$AGENT-native Realm agents installed to $TARGET_DIR"
       fi
 
       if [ -n "$TMP_DIR" ]; then
@@ -132,7 +138,7 @@ Realm is installed for $AGENT.
 Next steps:
 1. Restart $AGENT or open a new session so the new skills are loaded cleanly.
 2. In your project, run /realm-forge to bootstrap the local Realm state.
-3. Then run /realm-phase and /realm-manifest for the first vault sync.
+3. Query with /realm-recall or investigate with /realm-fathom.
 EOF
     ;;
   claude)

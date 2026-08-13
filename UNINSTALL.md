@@ -10,10 +10,11 @@ If you installed Realm with `npx skills add`, remove it with:
 npx skills remove realm
 ```
 
-If you installed Realm for Codex with `install.sh` or `node bin/install.js --agent codex`, also remove Codex-native Realm agents:
+If you installed Realm for Codex or Gemini with `install.sh` or `node bin/install.js`, also remove host-native Realm agents:
 
 ```bash
-rm -f ~/.codex/agents/realm-agent-*.toml
+rm -f ~/.codex/agents/*.toml
+rm -f ~/.gemini/agents/*.toml
 ```
 
 Start a new host session after removal so the old skill set is no longer cached.
@@ -64,8 +65,8 @@ rm -rf .realm/
 
 This removes:
 - `realm-state.json` — pipeline state and vault path
-- `manifest-draft.md` — staged changes (if any)
-- `archive/` — past manifest snapshots
+- `concise-state.json` — god-file concierge triage queue
+- `archive/` — past snapshots
 
 ### 3. (Optional) Remove Project Anchor
 
@@ -95,16 +96,8 @@ Realm adds `.realm/` to `.gitignore`. You can remove that line manually if desir
 If you want to remove them:
 
 1. Open Obsidian
-2. Navigate to `<vault>/projects/<project-slug>/` (the slug is your project name, lowercased)
+2. Navigate to `<vault>/projects/<project-slug>/`
 3. Delete the folder and all its contents
-4. Optional: Also delete `<vault>/_templates/` if no other projects use realm
-
-Or delete from the command line:
-
-```bash
-rm -rf /path/to/your/vault/projects/<project-slug>
-rm -rf /path/to/your/vault/_templates/  # only if no other projects use it
-```
 
 ---
 
@@ -115,12 +108,11 @@ rm -rf /path/to/your/vault/_templates/  # only if no other projects use it
 These skills will no longer work in the host where Realm was removed:
 
 - `/realm-forge` — Bootstrap vault
-- `/realm-phase` — Scan and stage
-- `/realm-manifest` — Write to vault
-- `/realm-flourish` — Incremental update
-- `/realm-convey` — Conversation capture
-- `/realm-recall` — Query vault
+- `/realm-fathom` — Parallel code + vault investigation
+- `/realm-recall` — Query decision vault
 - `/realm-status` — Health check
+- `/realm-planning` — Two-phase architecture and impl planning
+- `/realm-concise` — God-file concierge triage queue
 
 ### Session Hooks
 

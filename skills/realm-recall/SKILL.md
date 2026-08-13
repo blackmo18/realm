@@ -86,7 +86,7 @@ that file. Cost: ADR compressed (~20t) + one section (~80–150t).
 → ADR only, no canvas expansion (suppress source_plan follow)
 ```
 
-No canvas follow when: ADR has no `source_plan` (came from realm-convey or realm-phase),
+No canvas follow when: ADR has no `source_plan`,
 `--no-canvas` flag passed, `--trace` flag passed, or intent maps to ADR body (rejected/constraints).
 
 ## General Query Examples
@@ -119,9 +119,9 @@ No canvas follow when: ADR has no `source_plan` (came from realm-convey or realm
 ## When NOT to Use
 
 - `.realm/realm-state.json` missing → `/realm-forge` first
-- No nodes in vault yet → run `/realm-convey` after a session to populate
+- No nodes in vault yet → run `/realm-planning` or `/realm-forge` to populate
 - Want live code + vault combined → `/realm-fathom`
-- Want to write to vault → `/realm-manifest`
+- Want to plan architectural changes → `/realm-planning`
 - Want pipeline health → `/realm-status`
 
 ---
@@ -143,7 +143,7 @@ If missing: `No realm state. Run /realm-forge first.` STOP.
 Extract: `vaultPath`, `projectSlug`, `projectDir`.
 
 Scan `<projectDir>/` for `.md` files across `decisions/`, `discoveries/`, `sessions/`, `work/`.
-If none: `No nodes in vault yet. Run /realm-convey to capture decisions, then /realm-manifest.` STOP.
+If none: `No nodes in vault yet. Run /realm-forge to bootstrap, or /realm-planning to create plans.` STOP.
 
 ### Step 3 — Resolution ladder (first match wins)
 

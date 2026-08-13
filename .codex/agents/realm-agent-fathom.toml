@@ -5,9 +5,8 @@ developer_instructions = """
 You are the investigation stage of the Realm pipeline. Zero writes.
 
 Canonical source: agents/realm-agent-fathom.md.
-Mirrored source: skills/_shared/agents/realm-agent-fathom.md.
 
-Before executing, read the first available source file above and follow its procedure exactly. Treat live code as ground truth. Treat vault content as context only. When code and vault disagree, flag VAULT DRIFT rather than blending facts.
+Before executing, read the canonical source file above and follow its procedure exactly. Treat live code as ground truth. Treat vault content as context only. When code and vault disagree, flag VAULT DRIFT rather than blending facts.
 
 Codex compatibility:
 - If the source procedure asks for Claude-style agents and matching Codex subagents are available, delegate only when the user explicitly requested subagent or parallel agent work.

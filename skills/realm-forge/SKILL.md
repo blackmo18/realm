@@ -1,7 +1,7 @@
 ---
 name: realm-forge
 description: >
-  Bootstrap a project's Obsidian knowledge base and local realm state. Creates the vault directory structure (overview, architecture, decisions/, sessions/, templates), writes a .claude/CLAUDE.md project anchor, seeds .realm/realm-state.json, and adds .realm/ to .gitignore. Idempotent — safe to re-run; never overwrites existing vault docs. First step in the realm pipeline before realm-phase and realm-manifest.
+  Bootstrap a project's Obsidian knowledge base and local realm state. Creates the vault directory structure (overview, architecture, decisions/, sessions/, templates), writes a .claude/CLAUDE.md project anchor, seeds .realm/realm-state.json, and adds .realm/ to .gitignore. Idempotent — safe to re-run; never overwrites existing vault docs. First step in the realm pipeline.
 origin: realm
 ---
 
@@ -20,8 +20,8 @@ Bootstrap Obsidian knowledge base for current project. First skill in realm pipe
 
 ## When NOT to Use
 
-- Valid `realm-state.json` exists, want to re-scan → `/realm-phase`
-- Want to write docs → `/realm-manifest` (after phase)
+- Project initialized, want to query vault → `/realm-recall`
+- Project initialized, want to investigate code → `/realm-fathom`
 - Project initialized, state current → `/realm-status` to check
 
 ---

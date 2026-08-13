@@ -1,7 +1,7 @@
 ---
 name: realm-fathom
 description: >
-  Deep investigation skill. Accepts abstract input (function name, class, concept, or freeform question) and returns consolidated understanding from two sources: live code via cavecrew-investigator (authoritative for behavior, flow, signatures) and vault via realm-agent-query (authoritative for why, ADRs, architectural intent). Detects and flags vault/code drift explicitly — never blends conflicting sources silently. Vault is optional; degrades gracefully to code-only when unavailable. Zero writes.
+  Deep investigation skill. Accepts abstract input (function name, class, concept, or freeform question) and returns consolidated understanding from two sources: live code (authoritative for behavior, flow, signatures — graphify's cached graph first, `cavecrew-investigator` as backup only when graphify is missing, stale, or thin) and vault via realm-agent-query (authoritative for why, ADRs, architectural intent). Detects and flags vault/code drift explicitly — never blends conflicting sources silently. Vault is optional; degrades gracefully to code-only when unavailable. Zero writes.
 origin: realm
 ---
 
@@ -42,9 +42,17 @@ Investigate anything. Code truth + vault context. Drift flagged.
 
 | Source | Authoritative for |
 |--------|------------------|
-| Live code (`cavecrew-investigator`) | behavior, signatures, flow, callers, current state |
+| Live code — graphify first, `cavecrew-investigator` as backup | behavior, signatures, flow, callers, current state |
 | Vault (`realm-agent-query`) | why, ADR refs, architectural intent, invariant rationale |
 | Conflict | flagged as `VAULT DRIFT` — never silently blended |
+
+Code truth is resolved cheapest-first: graphify's cached graph answers most
+queries for the cost of one `graphify query` call, no subagent spawn. The
+`cavecrew-investigator` crawler only runs as backup — when graphify is
+missing, stale (source files changed since last index), or its match is too
+thin to answer the query. This keeps token cost flat without losing
+context: the report always states which source answered (`graphify` vs
+`investigator`) so nothing is silently degraded.
 
 ## Guards
 
@@ -52,6 +60,9 @@ Investigate anything. Code truth + vault context. Drift flagged.
 |-----------|----------|
 | `.realm/realm-state.json` missing | SOFT — proceed code-only, note vault unavailable |
 | Vault initialized but no nodes match query | Note "no vault nodes" — proceed code-only |
+| `graphify-out/graph.json` missing | SOFT — skip graphify seed, investigator runs cold |
+| Graphify present but stale (files changed since index) | SOFT — investigator runs as backup, seed used as hint only |
+| Graphify present, fresh, seed thin/no match | SOFT — investigator runs as backup |
 | Entity not found in codebase | Flag "cannot locate in codebase" |
 | Vault and code conflict on any fact | Flag `VAULT DRIFT` with both values |
 
@@ -66,9 +77,8 @@ Investigate anything. Code truth + vault context. Drift flagged.
 
 ## When NOT to Use
 
-- Writing to vault → `/realm-flourish` or `/realm-manifest`
-- Vault-only lookup (already documented) → `/realm-recall`
-- Full repo scan for documentation → `/realm-phase`
+- Vault-only decision lookup → `/realm-recall`
+- Planning architectural changes → `/realm-planning`
 - Pipeline health check → `/realm-status`
 
 ---

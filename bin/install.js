@@ -142,12 +142,17 @@ function installForSkillsCli(options, repoRoot) {
   info(`Command: ${command.join(' ')}`);
   if (options.agent === 'codex') {
     info(`Codex agents dir: ${defaultCodexAgentsDir()}`);
+  } else if (options.agent === 'gemini') {
+    info(`Gemini agents dir: ${defaultGeminiAgentsDir()}`);
   }
 
   if (options.dryRun) {
     if (options.agent === 'codex') {
       process.stdout.write('Planned Codex native agent install:\n');
       process.stdout.write(`- Copy .codex/agents/*.toml into ${defaultCodexAgentsDir()}\n`);
+    } else if (options.agent === 'gemini') {
+      process.stdout.write('Planned Gemini native agent install:\n');
+      process.stdout.write(`- Copy .gemini/agents/*.md into ${defaultGeminiAgentsDir()}\n`);
     }
     success('Dry run complete.');
     return;
@@ -167,6 +172,8 @@ function installForSkillsCli(options, repoRoot) {
 
   if (options.agent === 'codex') {
     installCodexAgents(repoRoot);
+  } else if (options.agent === 'gemini') {
+    installGeminiAgents(repoRoot);
   }
 
   process.stdout.write('\n');
@@ -175,7 +182,7 @@ function installForSkillsCli(options, repoRoot) {
     'Next steps:\n' +
     `1. Restart ${agentLabel(options.agent)} or open a new session so the new skills are loaded cleanly.\n` +
     '2. In your project, run /realm-forge to bootstrap the local Realm state.\n' +
-    '3. Then run /realm-phase and /realm-manifest for the first vault sync.\n'
+    '3. Query with /realm-recall or investigate with /realm-fathom.\n'
   );
 }
 
@@ -290,7 +297,7 @@ function installCodexAgents(repoRoot) {
   ensureDir(destinationDir);
 
   for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
-    if (!entry.isFile() || path.extname(entry.name) !== '.toml' || !entry.name.startsWith('realm-agent-')) {
+    if (!entry.isFile() || path.extname(entry.name) !== '.toml') {
       continue;
     }
 
@@ -299,6 +306,31 @@ function installCodexAgents(repoRoot) {
       path.join(destinationDir, entry.name)
     );
     info(`Installed Codex agent: ${path.join(destinationDir, entry.name)}`);
+  }
+}
+
+function installGeminiAgents(repoRoot) {
+  const sourceDir = path.join(repoRoot, '.gemini', 'agents');
+  const destinationDir = defaultGeminiAgentsDir();
+
+  if (!fs.existsSync(sourceDir)) {
+    warn(`Gemini native agents not found at ${sourceDir}`);
+    warn('Realm skills were installed, but Gemini subagent definitions were not copied.');
+    return;
+  }
+
+  ensureDir(destinationDir);
+
+  for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
+    if (!entry.isFile() || path.extname(entry.name) !== '.md') {
+      continue;
+    }
+
+    fs.copyFileSync(
+      path.join(sourceDir, entry.name),
+      path.join(destinationDir, entry.name)
+    );
+    info(`Installed Gemini agent: ${path.join(destinationDir, entry.name)}`);
   }
 }
 
@@ -342,6 +374,10 @@ function defaultClaudePluginDir() {
 
 function defaultCodexAgentsDir() {
   return path.join(os.homedir(), '.codex', 'agents');
+}
+
+function defaultGeminiAgentsDir() {
+  return path.join(os.homedir(), '.gemini', 'agents');
 }
 
 function agentLabel(agent) {

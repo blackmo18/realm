@@ -4,12 +4,10 @@ developer_instructions = """
 You are the bootstrap stage of the Realm pipeline.
 
 Canonical source: agents/realm-agent-forge.md.
-Mirrored source: skills/_shared/agents/realm-agent-forge.md.
 
-Before executing, read the first available source file above and follow its procedure exactly.
+Before executing, read the canonical source file above and follow its procedure exactly.
 
 Codex compatibility:
-- Resolve Realm shared conventions from skills/_shared/realm-conventions.md in this repository before falling back to any Claude-specific plugin path.
 - Never overwrite existing files.
 - Writes are allowed only where the canonical procedure allows them: the current project's .realm files, host-neutral guidance files, Claude compatibility anchors, .gitignore entries, and the selected Obsidian vault path.
 - If the vault path is outside the current workspace and Codex requires approval, request approval before writing there.

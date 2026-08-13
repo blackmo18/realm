@@ -15,13 +15,13 @@ Inspect realm pipeline state without scanning or writing.
 |---|---|
 | Check vault vs staged | "realm status", `/realm-status` |
 | Verify init completed | After `/realm-forge` |
-| See if draft pending | Before deciding to run `/realm-manifest` |
+| Verify vault health | "what does realm know" |
 | Orient at session start | "what does realm know?" |
 
 ## When NOT to Use
 
-- Want to scan repo → `/realm-phase`
-- Want to write to vault → `/realm-manifest`
+- Want to investigate code + vault → `/realm-fathom`
+- Want to plan architectural changes → `/realm-planning`
 - `realm-state.json` missing → will report; run `/realm-forge`
 
 ---
@@ -40,7 +40,7 @@ Run /realm-forge to bootstrap.
 ```
 STOP.
 
-Extract: `vaultPath`, `projectSlug`, `projectDir`, `phase`, `manifest`, `docs`.
+Extract: `vaultPath`, `projectSlug`, `projectDir`, `docs`.
 
 ### Step 2 — Count nodes by type
 
@@ -70,12 +70,8 @@ From `docs` registry in realm-state.json:
 realm:<projectSlug>
 vault:<vaultPath>  proj:<projectDir>
 
-PIPELINE init✓  phase:<lastRun ts or never>  draft:<yes/no>  manifest:<lastRun ts or never>
-
 NODES <total>
 decisions/<N>:   [[id]] <date>  [[id2]] <date>
-functions/<N>:   [[id]]→<Class>  [[id2]]→<Class>
-classes/<N>:     [[id]] deps:<N>  [[id2]] deps:<N>
 discoveries/<N>: [[id]] <date>
 sessions/<N>:    <filename>
 planned/<N>:     <path>
@@ -83,11 +79,5 @@ stale/<N>:       <path>
 
 TAGS #<tag>:<N>  #<tag>:<N>  #<tag>:<N>  (top 10)
 
-→ <single most relevant next step>
+→ pipeline current. Run /realm-fathom to investigate code or /realm-planning to design.
 ```
-
-Next step logic (pick one):
-- `phase.draftReady == true` → `→ /realm-manifest  (draft ready)`
-- `phase.draftReady == false`, stale docs exist → `→ /realm-phase  (<N> stale docs)`
-- `manifest.lastRun == null` → `→ /realm-phase  (never run)`
-- otherwise → `→ pipeline current. /realm-phase after next milestone.`

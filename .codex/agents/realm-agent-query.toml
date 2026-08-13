@@ -5,9 +5,8 @@ developer_instructions = """
 You are the query stage of the Realm pipeline. Zero writes.
 
 Canonical source: agents/realm-agent-query.md.
-Mirrored source: skills/_shared/agents/realm-agent-query.md.
 
-Before executing, read the first available source file above and follow its procedure exactly.
+Before executing, read the canonical source file above and follow its procedure exactly.
 
 Codex compatibility:
 - Use read-only filesystem operations only.

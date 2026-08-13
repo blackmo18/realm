@@ -2,10 +2,10 @@
 
 ## Required
 
-### Supported AI host
-- Install one or more supported hosts: Claude Code, Cursor, Codex, or Gemini.
+### Supported AI Host
+- Install one or more supported hosts: **Claude Code**, **Cursor**, **Codex**, or **Gemini / Antigravity**.
 - Cursor, Codex, and Gemini installs use the Skills CLI through `npx`.
-- Codex full installs also copy native custom-agent TOML files to `~/.codex/agents/` when you use `install.sh` or `node bin/install.js --agent codex`.
+- Codex and Gemini full installs also copy native custom-agent TOML files to `~/.codex/agents/` and `~/.gemini/agents/` when you use `install.sh` or `node bin/install.js --agent <codex|gemini>`.
 - Claude Code installs use the local plugin marketplace path.
 
 Install commands:
@@ -16,42 +16,52 @@ npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
 ```
 
-For Codex native agents, use the installer instead of direct `npx`:
+For Codex and Gemini native agents, use the installer instead of direct `npx`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent codex
+curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent gemini
 # or from a local clone:
 node bin/install.js --agent codex
+node bin/install.js --agent gemini
 ```
 
-### Claude Code CLI
-- Version: latest
-- Install: https://claude.ai/code
-- Used by: Claude Code plugin installs and by Realm's Claude-oriented subagent workflow
+### Python 3.9+
+- Version: Python 3.9 or higher
+- Used by: Realm helper scripts (`scripts/concise.py` for god-file triage, `scripts/forge_init.py` for vault bootstrap, and `scripts/facts_*.py` for team facts).
 
 ### Node.js and npx
-- Version: any recent Node.js release with `npx`
-- Used by: Cursor, Codex, and Gemini installs
+- Version: Any recent Node.js LTS release with `npx`
+- Used by: Skills CLI installer and host plugin management.
 
 ### Obsidian
 - Version: 1.x or later
 - Download: https://obsidian.md
-- Used by: vault storage, graph view, backlinks, tag pane
-- An existing vault must exist before running `/realm-forge`
+- Used by: Vault storage, graph view, backlinks, tag pane.
+- An existing vault directory must exist before running `/realm-forge`.
 
 ### Git
-- Any recent version
-- Used by: `realm-flourish` (git diff to detect changed files since last manifest), and by the remote Codex one-liner to fetch native agent TOML files
-- Not strictly required for `realm-forge`, `realm-phase`, `realm-manifest`, `realm-recall`
+- Version: Any recent version
+- Used by: Remote installer scripts, team facts workflow (`realm-facts`), and repository tracking.
+
+---
+
+## Recommended Tools
+
+### Graphify CLI (Optional / Recommended)
+- Purpose: Fast zero-LLM-token codebase discovery, symbol resolution, and call-graph traversal for `/realm-fathom` and `/realm-planning` (Phase 1).
+- Used by: Realm's code discovery layer when `graphify-out/graph.json` exists.
+- Fallback: If `graphify` is absent, stale, or unavailable, Realm automatically falls back to `cavecrew-investigator`.
+
+---
 
 ## Plugin Dependencies
 
-Realm depends on two skills from the **caveman** plugin:
+Realm depends on the **caveman** plugin for compressed code investigation:
 
-| Skill | Used By | Purpose |
+| Skill / Agent | Used By | Purpose |
 |---|---|---|
-| `cavecrew-investigator` agent | `realm-phase`, `realm-flourish` | Scans repo; outputs caveman-compressed findings |
-| `caveman-compress` skill | `realm-phase`, `realm-manifest` | Compresses node body prose before vault writes |
+| `cavecrew-investigator` agent | `realm-fathom`, `realm-planning` | Deep live code investigation; outputs caveman-compressed findings |
 
 Install caveman first for Claude Code:
 
@@ -59,9 +69,11 @@ Install caveman first for Claude Code:
 /plugin marketplace add ~/.claude/plugins/marketplaces/caveman
 ```
 
+---
+
 ## Obsidian Plugins (Optional)
 
-Enhance graph exploration — not required for realm to function:
+Enhance graph exploration — not required for Realm to function:
 
 | Plugin | Purpose |
 |---|---|
@@ -69,8 +81,10 @@ Enhance graph exploration — not required for realm to function:
 | Graph Analysis | Enhanced backlink traversal |
 | Templater | Use vault templates created by realm-forge |
 
-## File System
+---
+
+## File System Permissions
 
 - Write access to your Obsidian vault directory
 - Write access to project root (for `.realm/` and `.claude/CLAUDE.md`)
-- `.realm/` is local-only — never committed (realm-forge adds it to `.gitignore`)
+- `.realm/` is local-only state — added to `.gitignore` by `/realm-forge`

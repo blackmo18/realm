@@ -82,16 +82,36 @@ CODEX_AGENTS_DST="$HOME/.codex/agents"
 if [ -d "$CODEX_AGENTS_SRC" ]; then
   mkdir -p "$CODEX_AGENTS_DST"
   echo "Syncing Codex realm agents to $CODEX_AGENTS_DST..."
-  for agent_file in "$CODEX_AGENTS_SRC"/realm-agent-*.toml; do
+  for agent_file in "$CODEX_AGENTS_SRC"/*.toml; do
     [ -f "$agent_file" ] || continue
     cp "$agent_file" "$CODEX_AGENTS_DST/"
     echo -e "${GREEN}✓ $(basename "$agent_file")${NC}"
   done
   # Remove scrapped Codex agents
-  for obsolete in realm-agent-scan realm-agent-compress; do
+  for obsolete in realm-agent-scan realm-agent-compress realm-agent-write; do
     if [ -f "$CODEX_AGENTS_DST/${obsolete}.toml" ]; then
       rm -f "$CODEX_AGENTS_DST/${obsolete}.toml"
       echo -e "${YELLOW}  removed obsolete codex agent: ${obsolete}.toml${NC}"
+    fi
+  done
+fi
+
+# Step 5: Sync Gemini native agents to ~/.gemini/agents/
+GEMINI_AGENTS_SRC="${SCRIPT_DIR}/.gemini/agents"
+GEMINI_AGENTS_DST="$HOME/.gemini/agents"
+if [ -d "$GEMINI_AGENTS_SRC" ]; then
+  mkdir -p "$GEMINI_AGENTS_DST"
+  echo "Syncing Gemini realm agents to $GEMINI_AGENTS_DST..."
+  for agent_file in "$GEMINI_AGENTS_SRC"/*.md; do
+    [ -f "$agent_file" ] || continue
+    cp "$agent_file" "$GEMINI_AGENTS_DST/"
+    echo -e "${GREEN}✓ $(basename "$agent_file")${NC}"
+  done
+  # Remove scrapped Gemini agents
+  for obsolete in realm-agent-scan realm-agent-compress realm-agent-write; do
+    if [ -f "$GEMINI_AGENTS_DST/${obsolete}.md" ]; then
+      rm -f "$GEMINI_AGENTS_DST/${obsolete}.md"
+      echo -e "${YELLOW}  removed obsolete gemini agent: ${obsolete}.md${NC}"
     fi
   done
 fi

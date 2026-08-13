@@ -1,7 +1,7 @@
 {
   "name": "realm",
-  "version": "0.1.5",
-  "description": "Obsidian project-knowledge pipeline for Claude Code, Cursor, Codex, and Gemini.",
+  "version": "0.1.6",
+  "description": "Obsidian project-knowledge & decision memory pipeline for Claude Code, Cursor, Codex, and Gemini.",
   "author": {
     "name": "blackmo",
     "url": "https://github.com/blackmo18"
@@ -22,8 +22,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Realm",
-    "shortDescription": "Turn a repo into a living Obsidian knowledge graph.",
-    "longDescription": "Realm maps your codebase into structured Obsidian nodes with a review-first pipeline for scanning, staging, writing, querying, and incremental updates.",
+    "shortDescription": "Turn your codebase decisions into a living Obsidian knowledge vault.",
+    "longDescription": "Realm persists architectural decisions (ADRs), high-level planning, god-file concierge triage, and organization facts as interlinked nodes in an Obsidian vault.",
     "developerName": "blackmo",
     "category": "Productivity",
     "capabilities": [
@@ -35,9 +35,10 @@
     "privacyPolicyURL": "https://github.com/blackmo18/realm/blob/main/README.md",
     "termsOfServiceURL": "https://github.com/blackmo18/realm/blob/main/README.md",
     "defaultPrompt": [
-      "Map this repo into Realm and show the first scan flow.",
-      "Recall the auth subsystem from the Realm vault.",
-      "Use Realm to stage documentation updates after my changes."
+      "Bootstrap Realm vault for this project using /realm-forge.",
+      "Recall the auth decisions from the Realm vault using /realm-recall 'why JWT'.",
+      "Plan the new API feature using two-phase /realm-planning.",
+      "Scan oversized god files for triage using /realm-concise."
     ],
     "brandColor": "#2F6FED"
   }

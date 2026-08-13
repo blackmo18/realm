@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "realm",
-  "description": "Obsidian project-knowledge pipeline for continuous learning, architecture docs, ADRs, and session logs. init → phase (dry) → manifest (write).",
+  "description": "Obsidian project-knowledge & decision memory pipeline for continuous learning, ADRs, architecture planning, and god-file triage.",
   "owner": {
     "name": "blackmo",
     "url": "https://github.com/blackmo18"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "realm",
-      "description": "Living Obsidian vault for project knowledge. Core: forge → phase → manifest. Capture, update, query.",
+      "description": "Living Obsidian vault for project decisions & architecture memory. Core: forge, fathom, recall, status, planning, concise.",
       "source": {
         "source": "url",
         "url": "https://github.com/blackmo18/realm.git",

@@ -2,7 +2,9 @@
 
 See [REQUIREMENTS.md](REQUIREMENTS.md) before proceeding.
 
-Realm supports Claude Code, Cursor, Codex, and Gemini. Use the install path that matches your host.
+Realm supports Claude Code, Cursor, Codex, and Gemini / Antigravity. Use the install path that matches your host.
+
+---
 
 ## Codex, Cursor, and Gemini
 
@@ -14,7 +16,7 @@ curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | b
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent gemini
 ```
 
-For Codex, use the installer path above. It installs both Realm skills and the Codex-native subagent files.
+For Codex and Gemini, the installer copies both Realm skills and the native subagent files into `~/.codex/agents/` and `~/.gemini/agents/`.
 
 ### Skills-only direct install
 
@@ -24,20 +26,19 @@ npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
 ```
 
-The direct `npx` command installs skills only. For Codex, it does not copy Realm's native agent TOML files into `~/.codex/agents/`.
+The direct `npx` command installs skills only. For Codex and Gemini, it does not copy Realm's native agent TOML files into `~/.codex/agents/` or `~/.gemini/agents/`.
 
 What it does:
 
 - Installs Realm's skills into the selected host from `blackmo18/realm`
 - Makes the Realm command set available in new sessions
 - Leaves your current repo untouched until you actually run `/realm-forge`
-- For Codex only: also installs Realm's Codex-native subagent definitions into `~/.codex/agents/`
+- For Codex & Gemini: also installs native subagent definitions when using `install.sh` or `node bin/install.js`
 
-Want to preview before installing?
+Preview before installing:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent codex --dry-run
-curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent cursor --dry-run
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent gemini --dry-run
 ```
 
@@ -45,32 +46,28 @@ After installing:
 
 1. Restart your host or open a new session.
 2. In the project you want to track, run `/realm-forge`.
-3. Continue with the pipeline below.
 
-### Codex local-clone install
+### Local-clone install (Codex & Gemini)
 
-From a local Realm clone, this installs both Skills CLI entries and Codex-native agents:
+From a local Realm clone, this installs both Skills CLI entries and host-native agents:
 
 ```bash
 node bin/install.js --agent codex
+node bin/install.js --agent gemini
 ```
 
 Preview first:
 
 ```bash
 node bin/install.js --agent codex --dry-run
+node bin/install.js --agent gemini --dry-run
 ```
 
-Codex install writes:
-
-- Skills through `npx skills add blackmo18/realm -a codex`
-- Native Realm agent TOML files to `~/.codex/agents/realm-agent-*.toml`
-
-The native agents let Codex resolve agent spawns using Codex's custom-agent format. The skills still work without them; the agents improve Codex-native delegation.
+---
 
 ## Claude Code
 
-Claude Code installs Realm as a local plugin. From a local clone of this repo:
+Claude Code installs Realm as a local or remote plugin. From a local clone of this repo:
 
 ```bash
 # 1. Install caveman plugin (required — provides cavecrew-investigator)
@@ -83,115 +80,94 @@ node bin/install.js --agent claude --force
 /plugin marketplace add ~/.claude/plugins/marketplaces/realm
 ```
 
-Preview the local copy step first:
+---
+
+## Uploading & Publishing to Claude Plugins
+
+To upload, publish, or update Realm on the Claude Code plugin marketplace:
+
+### 1. Structure Requirements
+
+Claude Code plugins require a `.claude-plugin/` metadata folder with two key JSON files:
+- `.claude-plugin/plugin.json`: Defines the plugin name, version, description, and author.
+- `.claude-plugin/marketplace.json`: Defines the plugin marketplace entry, repository URL, commit SHA, and category.
+
+### 2. Update Manifest Files
+
+Before publishing a release:
+
+1. Bump the version in `.claude-plugin/plugin.json`:
+   ```json
+   {
+     "name": "realm",
+     "description": "Obsidian project-knowledge & decision memory pipeline...",
+     "version": "0.1.6",
+     "author": { ... }
+   }
+   ```
+
+2. Get your latest git commit SHA and update `.claude-plugin/marketplace.json`:
+   ```bash
+   git rev-parse HEAD
+   ```
+   Update `plugins[0].source.sha` in `.claude-plugin/marketplace.json`:
+   ```json
+   {
+     "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+     "name": "realm",
+     "description": "Obsidian project-knowledge & decision memory pipeline...",
+     "plugins": [
+       {
+         "name": "realm",
+         "source": {
+           "source": "url",
+           "url": "https://github.com/blackmo18/realm.git",
+           "sha": "<YOUR_COMMIT_SHA>"
+         }
+       }
+     ]
+   }
+   ```
+
+### 3. Push to GitHub
 
 ```bash
-node bin/install.js --agent claude --dry-run
+git add .claude-plugin/plugin.json .claude-plugin/marketplace.json
+git commit -m "chore(release): update plugin manifest and commit SHA"
+git push origin main
 ```
+
+### 4. Register / Add Plugin in Claude Code
+
+Users or team members can now install the plugin directly via GitHub URL or local marketplace path:
+
+```bash
+# From GitHub repository:
+/plugin marketplace add blackmo18/realm
+
+# Or from local clone:
+/plugin marketplace add ~/.claude/plugins/marketplaces/realm
+```
+
+---
 
 ## Pipeline Quick Start
 
-Once Realm is installed in your host, use the same project pipeline everywhere.
-
-### 1. Bootstrap a project
-
-Run once per project. Creates vault structure and local state:
-
 ```bash
+# 1. Bootstrap a project
 /realm-forge
-```
 
-Prompts for your Obsidian vault root if not already configured (e.g. `/Users/you/Documents/obsidian/universe`).
+# 2. Investigate code + vault rationale before changing code
+/realm-fathom function:validateUser
 
-What it creates:
+# 3. Query existing ADR decisions
+/realm-recall "why JWT"
 
-```
-<vault>/projects/<slug>/
-├── overview.md
-├── architecture.md
-├── decisions/
-│   └── ADR-000-index.md
-├── discoveries/
-└── sessions/
-<project-root>/.realm/
-└── realm-state.json         ← pipeline state (gitignored)
-<project-root>/.claude/
-└── CLAUDE.md                ← project anchor (vault path + usage notes)
-```
+# 4. Plan complex architectural changes
+/realm-planning "refactor auth"
 
-### 2. Capture a decision
-
-After a session where you made an architectural choice, capture it:
-
-```bash
-/realm-convey
-```
-
-Realm extracts decisions from the conversation, runs a structured interview per decision (what was decided, what was rejected and why, what constraints it imposes), and stages a manifest draft. No codebase scan.
-
-Review the draft at `.realm/manifest-draft.md`.
-
-### 3. Write to vault
-
-```bash
-/realm-manifest
-```
-
-Writes ADR nodes to vault, generates backlinks, archives the draft.
-
-### 4. Query
-
-```bash
-/realm-recall "why JWT"               # rationale behind a decision
-/realm-recall "what was rejected for auth"   # surfaces rejected alternatives
-/realm-recall "constraint on payments"       # consequences field
-/realm-recall decisions               # all ADR nodes, compressed
-/realm-recall decisions --full        # full prose for all ADRs
-```
-
----
-
-## Optional: Session Hook
-
-Add to `.claude/settings.json` to prompt decision capture at session end:
-
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "command": "echo 'Session ended. Run /realm-convey if you made any architectural decisions.'",
-        "description": "Prompt to capture decisions"
-      }
-    ]
-  }
-}
-```
-
----
-
-## Guards and Error Messages
-
-| Message | Cause | Fix |
-|---|---|---|
-| `No realm state found. Run /realm-forge first.` | `.realm/realm-state.json` missing | `/realm-forge` |
-| `No staged draft. Run /realm-convey first.` | Tried to manifest without convey | `/realm-convey` |
-| `No nodes in vault yet.` | Recalled before first manifest | `/realm-convey` then `/realm-manifest` |
-
----
-
-## Pipeline Order
-
-```
-/realm-forge       ← once per project
-    ↓
-/realm-convey      ← extract decisions from conversation → staged draft
-    ↓
-/realm-manifest    ← write ADR nodes to vault
-    ↓
-/realm-recall      ← query vault anytime (read-only)
-/realm-fathom      ← live code + vault combined (read-only)
-/realm-status      ← health check anytime (read-only)
+# 5. Check god-file tech debt queue
+/realm-concise
 ```
 
 ---
@@ -202,22 +178,7 @@ Add to `.claude/settings.json` to prompt decision capture at session end:
 ./update.sh
 ```
 
-Pulls latest from `main`, syncs skills to the Claude Code plugin path if installed elsewhere, refreshes Codex-native agents, and checks the caveman dependency.
-
-For Cursor or Gemini installs, re-run the matching command:
-
-```bash
-npx skills add blackmo18/realm -a cursor
-npx skills add blackmo18/realm -a gemini
-```
-
-For Codex, re-run the installer so skills and native agents both refresh:
-
-```bash
-node bin/install.js --agent codex
-```
-
-Then restart your host or open a new session so the refreshed skills and agents are loaded.
+Pulls latest from `main`, syncs skills to the Claude Code plugin path, refreshes Codex and Gemini native agents, and checks the caveman dependency.
 
 ---
 
@@ -227,15 +188,11 @@ Cursor, Codex, and Gemini:
 
 ```bash
 npx skills remove realm
+rm -f ~/.codex/agents/realm-agent-*.toml ~/.codex/agents/architect.toml ~/.codex/agents/code-architect.toml
+rm -f ~/.gemini/agents/realm-agent-*.toml ~/.gemini/agents/architect.toml ~/.gemini/agents/code-architect.toml
 ```
 
-Codex native agents:
-
-```bash
-rm -f ~/.codex/agents/realm-agent-*.toml
-```
-
-Claude Code and local project cleanup:
+Claude Code:
 
 ```bash
 ./uninstall.sh

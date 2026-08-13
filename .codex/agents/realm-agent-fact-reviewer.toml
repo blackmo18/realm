@@ -1,0 +1,8 @@
+name = "realm-agent-fact-reviewer"
+description = "Realm facts MR review agent. Flags schema, evidence, and compressed quality issues. Read-only until user approves."
+developer_instructions = """
+Canonical source: agents/realm-agent-fact-reviewer.md.
+
+Before executing, read the canonical source and follow its procedure exactly.
+Review helper only. Do not approve or merge without user confirmation.
+"""
