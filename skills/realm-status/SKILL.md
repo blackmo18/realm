@@ -1,14 +1,14 @@
 ---
 name: realm-status
 description: >
-  Read-only status check for the realm pipeline. Reads .realm/realm-state.json and prints the vault path, project slug, pipeline state (draftReady, last run timestamps), and the full doc registry (committed/planned/stale). No writes. Use to quickly assess what the vault knows vs what's pending.
+  Read-only status check for Realm. Reads .realm/realm-state.json and prints the vault path, project slug, live vault node counts, and the doc registry (committed/planned/stale). No writes. Use to quickly assess what the vault knows vs what's pending.
 ---
 
 # realm-status
 
 Host invocation: Claude Code and Gemini use `/realm-status`; Codex uses `$realm-status`.
 
-Inspect realm pipeline state without scanning or writing.
+Inspect Realm state without writing.
 
 ## When to Use
 
@@ -45,8 +45,10 @@ Extract: `vaultPath`, `projectSlug`, `projectDir`, `docs`.
 
 ### Step 2 — Count nodes by type
 
-If `nodeIndex` present in state: read counts from `state.nodeIndex.counts` (no bash needed).
-Fallback (no nodeIndex): `find <projectDir> -name "*.md" | grep -v "_templates" | sort`
+Read the live vault tree with one bounded command:
+```bash
+find <projectDir> -name "*.md" -not -path "*/_templates/*" | sort
+```
 
 Derive node list from `docs` registry (loaded in Step 1):
 - Group `docs` keys by leading path segment (`decisions/foo.md` → `decisions/`)
@@ -80,5 +82,5 @@ stale/<N>:       <path>
 
 TAGS #<tag>:<N>  #<tag>:<N>  #<tag>:<N>  (top 10)
 
-→ pipeline current. Run /realm-fathom to investigate code or /realm-planning to design.
+→ vault current. Run /realm-fathom to investigate code or /realm-planning to design.
 ```

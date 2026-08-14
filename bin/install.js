@@ -8,8 +8,8 @@ const childProcess = require('child_process');
 
 const DEFAULT_REPO = 'blackmo18/realm';
 const DEFAULT_AGENT = 'codex';
-const SKILLS_CLI_AGENTS = new Set(['codex', 'cursor', 'gemini']);
-const SUPPORTED_AGENTS = new Set(['claude', ...SKILLS_CLI_AGENTS]);
+const SKILLS_CLI_AGENTS = new Set(['cursor', 'gemini']);
+const SUPPORTED_AGENTS = new Set(['claude', 'codex', ...SKILLS_CLI_AGENTS]);
 const INSTALL_EXCLUDES = new Set([
   '.git',
   '.gitignore',
@@ -33,6 +33,11 @@ function main() {
 
   if (options.isLocal) {
     installLocal(options, repoRoot);
+    return;
+  }
+
+  if (options.agent === 'codex') {
+    installForCodex(options, repoRoot);
     return;
   }
 
@@ -126,7 +131,7 @@ Options:
   --agent <agent>          Install target: claude, cursor, codex, gemini. Default: codex
   --local [dir], -l [dir]  Install locally into a project workspace (defaults to current directory)
   --target-dir <dir>       Explicit project destination directory for local installation
-  --repo <owner/repo>      Repo slug used for Skills CLI installs. Default: ${DEFAULT_REPO}
+  --repo <owner/repo>      Repo slug used by remote and Skills CLI installs. Default: ${DEFAULT_REPO}
   --plugin-dir <path>      Claude plugin destination. Default: ${defaultClaudePluginDir()}
   --dry-run                Print planned actions without changing anything
   --force                  Overwrite existing files in local or Claude install
@@ -185,6 +190,11 @@ function installLocal(options, repoRoot) {
     agentsSrc = path.join(repoRoot, '.codex', 'agents');
     targetAgentsDir = path.join(targetDir, '.codex', 'agents');
     agentExt = '.toml';
+    const legacySkillsDir = path.join(targetDir, '.codex', 'skills');
+    if (fs.existsSync(legacySkillsDir)) {
+      warn(`Legacy Codex skill directory detected: ${legacySkillsDir}`);
+      warn('Realm now uses .agents/skills for project-scoped Codex skills; remove old Realm copies after verifying this install.');
+    }
   } else if (agent === 'cursor') {
     targetSkillsDirs.push(path.join(targetDir, '.cursor', 'skills'));
     targetSkillsDirs.push(path.join(targetDir, '.agents', 'skills'));
@@ -276,6 +286,45 @@ function copyDirectoryRecursive(src, dst) {
       fs.copyFileSync(srcPath, dstPath);
     }
   }
+}
+
+function installForCodex(options, repoRoot) {
+  const skillsSrc = path.join(repoRoot, 'skills');
+  const skillsDir = defaultCodexSkillsDir();
+  const agentsDir = defaultCodexAgentsDir();
+
+  info(`Realm install source: ${repoRoot}`);
+  info('Agent: codex');
+  info(`Codex skills dir: ${skillsDir}`);
+  info(`Codex agents dir: ${agentsDir}`);
+
+  const legacySkillsDir = path.join(os.homedir(), '.agents', 'skills');
+  if (fs.existsSync(legacySkillsDir)) {
+    warn(`Legacy Skills CLI directory detected: ${legacySkillsDir}`);
+    warn('If it contains old Realm copies, remove them after confirming the native Codex install.');
+  }
+
+  if (options.dryRun) {
+    process.stdout.write('Planned Codex native install:\n');
+    process.stdout.write(`- Copy skills/* into ${skillsDir}\n`);
+    process.stdout.write(`- Copy .codex/agents/*.toml into ${agentsDir}\n`);
+    success('Dry run complete.');
+    return;
+  }
+
+  ensureDir(skillsDir);
+  copySkillsDir(skillsSrc, skillsDir);
+  info(`Installed Realm skills to ${skillsDir}`);
+  installCodexAgents(repoRoot);
+
+  process.stdout.write('\n');
+  success('Realm is installed globally for Codex.');
+  process.stdout.write(
+    'Next steps:\n' +
+    '1. Restart Codex or open a new session so the new skills are loaded cleanly.\n' +
+    '2. In your project, run $realm-forge to bootstrap the local Realm state.\n' +
+    '3. Query with $realm-recall or investigate with $realm-fathom.\n'
+  );
 }
 
 function installForSkillsCli(options, repoRoot) {
@@ -534,7 +583,17 @@ function defaultClaudePluginDir() {
 }
 
 function defaultCodexAgentsDir() {
-  return path.join(os.homedir(), '.codex', 'agents');
+  return path.join(defaultCodexBaseDir(), 'agents');
+}
+
+function defaultCodexSkillsDir() {
+  return path.join(defaultCodexBaseDir(), 'skills');
+}
+
+function defaultCodexBaseDir() {
+  return process.env.CODEX_HOME
+    ? path.resolve(expandHome(process.env.CODEX_HOME))
+    : path.join(os.homedir(), '.codex');
 }
 
 function defaultGeminiAgentsDir() {

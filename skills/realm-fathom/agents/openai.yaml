@@ -1,0 +1,6 @@
+interface:
+  display_name: "Realm Fathom"
+  short_description: "Investigate live code and vault intent"
+  default_prompt: "Use $realm-fathom to investigate this code path and compare it with Realm vault context."
+policy:
+  allow_implicit_invocation: true

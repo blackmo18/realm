@@ -13,7 +13,7 @@ Shortcut path. Skips Phase 1 architecture ceremony (research, `architect` agent,
 
 ## Step 0 — Enter Plan Mode
 
-Same boundary as full pipeline: `../references/plan-mode-contract.md`. Call `EnterPlanMode` before any context gathering.
+Same boundary as full pipeline: `../references/plan-mode-contract.md`. Enter native planning mode before any context gathering.
 
 ## Step 1 — Graph Precondition (main thread, one Bash call)
 
@@ -53,7 +53,7 @@ Empty Affected/New Files or zero Test Scenarios → say so, do not fabricate to 
 
 ## Step 5 — Exit Plan Mode, Present, Stop
 
-`ExitPlanMode` presents the Scope Summary as the plan. Approval = done — **no `Write` call, regardless of approval.** Lite has nothing to persist (no ADR, no execution file, no contract).
+Present the Scope Summary through the native plan gate. Approval = done — **perform no write, regardless of approval.** Lite has nothing to persist (no ADR, no execution file, no contract).
 
 Escalate if scope grows: "this needs the full pipeline" → `/realm-planning <topic>` (fresh Phase 1) or `/realm-planning <topic> --phase2` (if an approved Phase 1 plan already exists).
 

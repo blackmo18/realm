@@ -100,9 +100,11 @@ Read `.realm/realm-state.json` from current working directory:
 - Missing → set `vaultAvailable: false`
   - Print: `Vault not initialized — proceeding code-only. Run /realm-forge to enable architectural context.`
 
-### Step 2 — Spawn fathom agent
+### Step 2 — Run fathom procedure
 
-Spawn agent `realm-agent-fathom` with this prompt:
+If the host exposes `realm-agent-fathom` and delegation is permitted by the
+current user/session policy, delegate with this prompt. Otherwise execute the
+same investigation inline. Never require delegation for correctness.
 
 ```
 projectRoot: <absolute path to current working directory>
@@ -119,4 +121,4 @@ Investigate the query and return a consolidated fathom report.
 Follow the full procedure in your instructions.
 ```
 
-Wait for completion. Surface the agent's fathom report directly to the user.
+Surface the resulting fathom report directly to the user.

@@ -14,5 +14,5 @@ Codex compatibility:
 - Phase 1 focuses on high-level architecture and ADR direction inside native plan mode.
 - Phase 2 produces code-level implementation blueprints.
 - Strictly adhere to plan mode boundaries — no code writes during plan mode research steps.
-- Output formatted markdown according to the contract in skills/realm-planning/SKILL.md.
+- Output formatted markdown according to the located realm-planning skill contract.
 """

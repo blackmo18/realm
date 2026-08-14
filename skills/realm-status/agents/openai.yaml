@@ -1,0 +1,6 @@
+interface:
+  display_name: "Realm Status"
+  short_description: "Inspect Realm pipeline health"
+  default_prompt: "Use $realm-status to inspect this project's Realm state and vault health."
+policy:
+  allow_implicit_invocation: true

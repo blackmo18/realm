@@ -61,7 +61,7 @@ Load `output-format.md` only when rendering the final response.
 
 **Agent A** (`cavecrew-investigator`) — only if `needsInvestigator: true`. Use selected template, substituting `entityName`, `entityType`, `projectRoot`, `graphifySeed`, `graphifyReason`. This is the fallback crawler: it runs precisely because graphify could not be trusted as-is, so it must verify current file state rather than lean on a possibly-stale seed.
 
-**Vault lane** — if `vaultAvailable: true`, use `realm-state.json.nodeIndex` for exact IDs.
+**Vault lane** — if `vaultAvailable: true`, resolve exact IDs with bounded `grep` against the live vault files.
 For semantic input, grep only `decisions/`, `discoveries/`, and `sessions/` using at most five
 keywords and cap at 20 paths. Load compressed sections plus dependencies. Never spawn a query agent.
 

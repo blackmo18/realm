@@ -12,7 +12,7 @@ description: >
 # realm-planning — Phase 2: Code-Level Plan
 
 Requires approved Phase 1. Phase 2 re-enters plan mode for its own read-only
-work (Steps 1-5) — approval to write is a separate `ExitPlanMode` at Step 6,
+work (Steps 1-5) — approval to write is a separate native plan gate at Step 6,
 distinct from Phase 1's.
 
 **Phase 1 Anchor Set is authoritative for the entire phase** — 1-hop column
@@ -22,7 +22,7 @@ traces back to that one table.
 
 ## Step 0 — Enter Plan Mode
 
-Full boundary + fallback: `../references/plan-mode-contract.md`. `EnterPlanMode` before any other step. Steps 1-5 are read-only. No Write calls until Step 6.
+Full boundary + fallback: `../references/plan-mode-contract.md`. Enter native planning mode before any other step. Steps 1-5 are read-only. Do not write until Step 6.
 
 ## Step 1 — Contract Gate
 
@@ -92,12 +92,12 @@ Skip test types with no coverage surface. Step 4's Test Scenarios checklist stay
 
 ## Step 6 — Exit Plan Mode + Write Execution File
 
-Present full Phase 2 plan to user (Scope Summary + Tasks). `ExitPlanMode` —
+Present the full Phase 2 plan to the user (Scope Summary + Tasks) through the native approval gate —
 approval to write, separate from Phase 1's. No Write calls before this.
 
 Naming, ADR number reservation, frontmatter, `links:` omit rules: `../references/vault-conventions.md` (`write adr` reuses the same number).
 
-Write `<projectDir>/execution/<NNN>-exct-<slug>.md` directly with Write tool (create `execution/` if missing). No manifest pipeline. No agent spawn. Body = full Phase 2 output verbatim, including Scope Summary.
+Write `<projectDir>/execution/<NNN>-exct-<slug>.md` directly with the host write tool (create `execution/` if missing). No agent spawn. Body = full Phase 2 output verbatim, including Scope Summary.
 
 Print: `execution file written: execution/<NNN>-exct-<slug>.md`
 

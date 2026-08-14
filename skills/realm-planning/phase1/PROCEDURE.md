@@ -4,14 +4,14 @@ description: >
   Phase 1 of realm-planning. High-level plan + ADR direction for a topic.
   Enters native plan mode, detects run mode (enhancement / anchored-new /
   greenfield), resolves typed anchors, runs scoped investigation and architect
-  analysis, and produces a plan approved via ExitPlanMode.
+  analysis, and produces a plan approved through the host's native plan gate.
 ---
 
 # realm-planning — Phase 1: High-Level Plan
 
 ## Step 0 — Enter Plan Mode
 
-Full boundary + fallback: `../references/plan-mode-contract.md`. Call `EnterPlanMode` before any context gathering.
+Full boundary + fallback: `../references/plan-mode-contract.md`. Enter native planning mode before any context gathering.
 
 ## Step 1 — Graph Precondition (main thread, one Bash call)
 
@@ -104,9 +104,9 @@ Use `../references/plan-template.md` (Phase 1 section — sections list lives th
 
 Anchor touched ≠ trigger — gate logic, affecting/not-affecting table, ambiguous default: `../references/contract-delta-gate.md`. Single source of truth for the whole contract pipeline (this embed, `write contract`, Phase 2's Contract Gate step) — decide once here, everything downstream trusts it without re-deriving.
 
-## Step 8 — Approval Gate = ExitPlanMode
+## Step 8 — Native approval gate
 
-Present Phase 1 plan via `ExitPlanMode`. Approval exits plan mode = Phase 1 approved.
+Present the Phase 1 plan through the host's native approval mechanism. Approval exits planning mode and marks Phase 1 approved.
 
 - Approved → Phase 2 runs (re-enters its own plan mode per `../references/plan-mode-contract.md`)
 - Rejected → iterate, stay in plan mode

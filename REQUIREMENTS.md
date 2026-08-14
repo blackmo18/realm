@@ -4,19 +4,18 @@
 
 ### Supported AI Host
 - Install one or more supported hosts: **Claude Code**, **Cursor**, **Codex**, or **Gemini / Antigravity**.
-- Cursor, Codex, and Gemini installs use the Skills CLI through `npx`.
-- Codex and Gemini full installs also copy native custom-agent files (Codex: `.toml`, Gemini: `.md`) to `~/.codex/agents/` and `~/.gemini/agents/` when you use `install.sh` or `node bin/install.js --agent <codex|gemini>`.
+- Codex installs directly to `${CODEX_HOME:-$HOME/.codex}/skills` and `${CODEX_HOME:-$HOME/.codex}/agents`.
+- Cursor and Gemini installs use the Skills CLI through `npx`; the Gemini installer also generates native agent adapters under `~/.gemini/agents/`.
 - Claude Code installs use the local plugin marketplace path.
 
 Install commands:
 
 ```bash
-npx skills add blackmo18/realm -a codex
 npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
 ```
 
-For Codex and Gemini native agents, use the installer instead of direct `npx`:
+For Codex skills and agents, or Gemini native agents, use the installer:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent codex
@@ -30,15 +29,15 @@ node bin/install.js --agent gemini
 - Version: Python 3.9 or higher
 - Used by: Realm helper scripts (`skills/realm-concise/scripts/concise.py` for god-file triage, `skills/realm-forge/scripts/forge_init.py` for vault bootstrap, and `skills/realm-facts/scripts/facts.py` for team facts).
 
-### Node.js and npx
-- Version: Any recent Node.js LTS release with `npx`
-- Used by: Skills CLI installer and host plugin management.
+### Node.js
+- Version: Any recent Node.js LTS release; `npx` is additionally required for Cursor and Gemini Skills CLI installs.
+- Used by: Realm's installer and host plugin management.
 
 ### Obsidian
 - Version: 1.x or later
 - Download: https://obsidian.md
 - Used by: Vault storage, graph view, backlinks, tag pane.
-- An existing vault directory must exist before running `/realm-forge`.
+- An existing vault directory must exist before running Realm forge (`$realm-forge` in Codex, `/realm-forge` elsewhere).
 
 ### Git
 - Version: Any recent version

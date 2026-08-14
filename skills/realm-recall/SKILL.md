@@ -100,7 +100,7 @@ Trigger-word table, resolution steps, and worked examples: `references/canvas-ex
 
 ## Procedure
 
-Handle steps 1–5 inline using targeted reads and shell searches. Never spawn an agent for vault lookup; the cached index and bounded semantic fallback are cheaper than a stateless query prompt.
+Handle steps 1–5 inline using targeted reads and bounded shell searches. Never spawn an agent for vault lookup; direct lookup is cheaper than a stateless query prompt.
 
 ### Step 1 — Parse query and flags
 
@@ -125,7 +125,6 @@ Work 3a → 3b → 3c → 3d in order. Stop at first hit.
 
 Applies when: query has no spaces, no `@`/`#` prefix, no natural-language words (why/how/what/does/is/rejected/constraint/tried).
 
-If `state.nodeIndex.ids[<query>]` present → resolve `<projectDir>/<that path>` directly (zero bash). Fallback (no nodeIndex, or id absent from it):
 ```bash
 grep -rl "^id: <query>" <projectDir>/
 ```

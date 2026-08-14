@@ -12,5 +12,5 @@ Codex compatibility:
 - Always run LOC counting, churn lookups, and state mutations through scripts/concise.py.
 - Never hand-edit .realm/concise-state.json or docs/GOD_FILES.md.
 - Require explicit user confirmation before approving or planning any refactor candidate.
-- Delegate approved candidates to /realm-planning; never implement directly from concise.
+- Hand approved candidates to $realm-planning; never implement directly from concise.
 """

@@ -1,17 +1,24 @@
 # Plan Mode Contract
 
-Governs both phases. Each phase runs its own `EnterPlanMode` → work → `ExitPlanMode` cycle — Phase 2's approval is separate from Phase 1's, not inherited.
+Governs both phases. Each phase enters the host's native planning mode, performs
+read-only work, and presents the plan for approval before exiting. Phase 2's
+approval is separate from Phase 1's and is not inherited.
 
 ## Entry
 
-Call `EnterPlanMode` before any context gathering or file selection for that phase. All read/investigate/spawn steps inside the phase run read-only under it.
+Enter native planning mode before context gathering or file selection for that
+phase. Keep all read, investigation, and permitted delegation steps read-only.
 
-**Fallback** — `EnterPlanMode` unavailable (non-interactive harness): prose gate instead. No downstream phase, no writes, until the user types explicit approval text.
+**Fallback** — when native planning mode is unavailable, use a prose approval
+gate. Do not start a downstream phase or write until the user explicitly approves.
 
 ## Write Boundary
 
-No `Write` tool call anywhere in a phase until that phase's `ExitPlanMode` (or prose-gate approval) lands. This includes vault writes (`execution/<NNN>-exct-<slug>.md`, `write adr` files, contract files) — all of them wait for approval, none happen speculatively during exploration.
+Do not write anywhere in a phase until native plan approval (or prose-gate
+approval) lands. This includes vault execution, ADR, and contract files.
 
 ## Triggers That Re-Check This
 
-`write contract` and `write adr` can fire mid-phase (e.g. right after Phase 1 approval, before Phase 2 starts). If plan mode is still active when one of these triggers: call `ExitPlanMode` first with the pending write(s) as the plan, proceed only after approval. Never attempt `Write` inside plan mode regardless of which trigger caused it.
+`write contract` and `write adr` can fire between phases. If planning mode is
+still active, present the pending writes as the plan and exit only after approval.
+Never write while the host still considers the phase read-only.

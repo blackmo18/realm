@@ -9,6 +9,7 @@ NC='\033[0m'
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REALM_PLUGIN_PATH="$HOME/.claude/plugins/marketplaces/realm"
 CAVEMAN_PLUGIN_PATH="$HOME/.claude/plugins/marketplaces/caveman"
+CODEX_BASE_DIR="${CODEX_HOME:-$HOME/.codex}"
 
 echo -e "${GREEN}Realm Update${NC}"
 echo "============"
@@ -76,9 +77,22 @@ if [ -d "$AGENTS_SRC" ]; then
   done
 fi
 
-# Step 4: Sync Codex native agents to ~/.codex/agents/
+# Step 4: Sync Codex skills and native agents.
+CODEX_SKILLS_SRC="${SCRIPT_DIR}/skills"
+CODEX_SKILLS_DST="$CODEX_BASE_DIR/skills"
 CODEX_AGENTS_SRC="${SCRIPT_DIR}/.codex/agents"
-CODEX_AGENTS_DST="$HOME/.codex/agents"
+CODEX_AGENTS_DST="$CODEX_BASE_DIR/agents"
+if [ -d "$CODEX_SKILLS_SRC" ]; then
+  mkdir -p "$CODEX_SKILLS_DST"
+  echo "Syncing Realm skills to $CODEX_SKILLS_DST..."
+  for skill_dir in "$CODEX_SKILLS_SRC"/realm-*; do
+    [ -d "$skill_dir" ] || continue
+    skill_name="$(basename "$skill_dir")"
+    mkdir -p "$CODEX_SKILLS_DST/$skill_name"
+    rsync -a --delete "$skill_dir/" "$CODEX_SKILLS_DST/$skill_name/"
+    echo -e "${GREEN}✓ $skill_name${NC}"
+  done
+fi
 if [ -d "$CODEX_AGENTS_SRC" ]; then
   mkdir -p "$CODEX_AGENTS_DST"
   echo "Syncing Codex realm agents to $CODEX_AGENTS_DST..."

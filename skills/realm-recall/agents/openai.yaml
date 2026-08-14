@@ -1,0 +1,6 @@
+interface:
+  display_name: "Realm Recall"
+  short_description: "Retrieve compressed Realm decisions"
+  default_prompt: "Use $realm-recall to retrieve the decisions and constraints relevant to this topic."
+policy:
+  allow_implicit_invocation: true

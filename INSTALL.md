@@ -9,17 +9,33 @@ Invocation syntax differs by host: Claude Code and Gemini use `/realm-forge`; Co
 
 ---
 
-## Codex, Cursor, and Gemini
+## Codex
 
 ### Recommended install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent codex
+```
+
+This installs Realm skills to `${CODEX_HOME:-$HOME/.codex}/skills` and native
+subagents to `${CODEX_HOME:-$HOME/.codex}/agents`. It does not require the
+third-party Skills CLI.
+
+From a local clone:
+
+```bash
+node bin/install.js --agent codex
+node bin/install.js --agent codex --dry-run
+```
+
+## Cursor and Gemini
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent cursor
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent gemini
 ```
 
-For Codex and Gemini, the installer copies both Realm skills and the native subagent files into `~/.codex/agents/` and `~/.gemini/agents/`.
+The Gemini installer also creates host-native agent adapters under `~/.gemini/agents/`.
 
 Model tiers are adapted per host: planning/architecture use the strongest tier, while deterministic
 query/concierge wrappers use the basic tier. Codex defaults to Sol/Terra/Luna and Claude to
@@ -27,22 +43,21 @@ Opus/Sonnet/Haiku. By explicit policy, Gemini uses 3.1 Pro Preview for both plan
 execution, and 3.6 Flash for mechanical work. Explicit host configuration may override these defaults.
 Gemini adapters omit Claude-specific tool names and inherit the Gemini session's registered tools.
 
-### Skills-only direct install
+### Skills CLI install for Cursor and Gemini
 
 ```bash
-npx skills add blackmo18/realm -a codex
 npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
 ```
 
-The direct `npx` command installs skills only. For Codex and Gemini, it does not copy Realm's native agent TOML files into `~/.codex/agents/` or `~/.gemini/agents/`.
+The direct `npx` command installs skills only and does not install Gemini agent adapters.
 
 What it does:
 
 - Installs Realm's skills into the selected host from `blackmo18/realm`
 - Makes the Realm command set available in new sessions
-- Leaves your current repo untouched until you actually run `/realm-forge`
-- For Codex & Gemini: also installs native subagent definitions when using `install.sh` or `node bin/install.js`
+- Leaves your current repo untouched until you run the host's Realm forge command
+- The recommended Codex and Gemini installers also install their native subagent definitions
 
 Preview before installing:
 
@@ -54,21 +69,19 @@ curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | b
 After installing:
 
 1. Restart your host or open a new session.
-2. In the project you want to track, run `/realm-forge`.
+2. In Codex run `$realm-forge`; in Claude Code or Gemini run `/realm-forge`.
 
-### Global Install (Codex, Cursor, Gemini)
+### Global Install (Cursor and Gemini)
 
 From a local Realm clone, this installs both Skills CLI entries and host-native agents globally to your machine:
 
 ```bash
-node bin/install.js --agent codex
 node bin/install.js --agent gemini
 ```
 
 Preview first:
 
 ```bash
-node bin/install.js --agent codex --dry-run
 node bin/install.js --agent gemini --dry-run
 ```
 
@@ -128,6 +141,9 @@ node bin/install.js --agent claude --force
 
 ## Pipeline Quick Start
 
+Codex uses the same names with a `$` prefix, for example `$realm-forge` and
+`$realm-planning "refactor auth"`. The examples below use Claude/Gemini syntax.
+
 ```bash
 # 1. Bootstrap a project
 /realm-forge
@@ -153,17 +169,34 @@ node bin/install.js --agent claude --force
 ./update.sh
 ```
 
-Pulls latest from `main`, syncs skills to the Claude Code plugin path, refreshes Codex and Gemini native agents, and checks the caveman dependency.
+Pulls latest from `main`, synchronizes Realm skills and agents under `CODEX_HOME`, refreshes Claude/Gemini adapters, and checks the caveman dependency.
 
 ---
 
 ## Uninstalling Realm
 
-Cursor, Codex, and Gemini:
+Codex native install:
+
+```bash
+rm -rf "${CODEX_HOME:-$HOME/.codex}/skills/realm-forge" \
+       "${CODEX_HOME:-$HOME/.codex}/skills/realm-fathom" \
+       "${CODEX_HOME:-$HOME/.codex}/skills/realm-recall" \
+       "${CODEX_HOME:-$HOME/.codex}/skills/realm-status" \
+       "${CODEX_HOME:-$HOME/.codex}/skills/realm-planning" \
+       "${CODEX_HOME:-$HOME/.codex}/skills/realm-concise" \
+       "${CODEX_HOME:-$HOME/.codex}/skills/realm-facts"
+rm -f "${CODEX_HOME:-$HOME/.codex}/agents/architect.toml" \
+      "${CODEX_HOME:-$HOME/.codex}/agents/code-architect.toml" \
+      "${CODEX_HOME:-$HOME/.codex}/agents/realm-agent-concise.toml" \
+      "${CODEX_HOME:-$HOME/.codex}/agents/realm-agent-fathom.toml" \
+      "${CODEX_HOME:-$HOME/.codex}/agents/realm-agent-forge.toml" \
+      "${CODEX_HOME:-$HOME/.codex}/agents/realm-agent-planning.toml"
+```
+
+Cursor and Gemini Skills CLI installs:
 
 ```bash
 npx skills remove realm
-rm -f ~/.codex/agents/realm-agent-*.toml ~/.codex/agents/architect.toml ~/.codex/agents/code-architect.toml
 rm -f ~/.gemini/agents/realm-agent-*.md ~/.gemini/agents/architect.md ~/.gemini/agents/code-architect.md
 ```
 

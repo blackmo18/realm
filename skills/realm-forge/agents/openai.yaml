@@ -1,0 +1,6 @@
+interface:
+  display_name: "Realm Forge"
+  short_description: "Bootstrap Realm vault state safely"
+  default_prompt: "Use $realm-forge to initialize Realm for this project without overwriting existing files."
+policy:
+  allow_implicit_invocation: true

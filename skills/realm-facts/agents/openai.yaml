@@ -1,0 +1,6 @@
+interface:
+  display_name: "Realm Facts"
+  short_description: "Manage reviewed organization facts"
+  default_prompt: "Use $realm-facts to manage or retrieve organization-wide engineering facts."
+policy:
+  allow_implicit_invocation: true

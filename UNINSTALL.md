@@ -2,7 +2,24 @@
 
 This guide covers removing the Realm plugin and associated local state from your system.
 
-## Cursor, Codex, and Gemini Uninstall
+## Codex Uninstall
+
+Remove only Realm-owned skill directories and agent definitions from `CODEX_HOME`:
+
+```bash
+codex_home="${CODEX_HOME:-$HOME/.codex}"
+rm -rf "$codex_home/skills/realm-forge" "$codex_home/skills/realm-fathom" \
+  "$codex_home/skills/realm-recall" "$codex_home/skills/realm-status" \
+  "$codex_home/skills/realm-planning" "$codex_home/skills/realm-concise" \
+  "$codex_home/skills/realm-facts"
+rm -f "$codex_home/agents/architect.toml" "$codex_home/agents/code-architect.toml" \
+  "$codex_home/agents/realm-agent-concise.toml" "$codex_home/agents/realm-agent-fathom.toml" \
+  "$codex_home/agents/realm-agent-forge.toml" "$codex_home/agents/realm-agent-planning.toml"
+```
+
+If Realm was previously installed through `npx skills`, also run `npx skills remove realm`.
+
+## Cursor and Gemini Uninstall
 
 If you installed Realm with `npx skills add`, remove it with:
 
@@ -10,10 +27,9 @@ If you installed Realm with `npx skills add`, remove it with:
 npx skills remove realm
 ```
 
-If you installed Realm for Codex or Gemini with `install.sh` or `node bin/install.js`, also remove host-native Realm agents:
+If you installed Realm for Gemini with `install.sh` or `node bin/install.js`, also remove its host-native Realm agents:
 
 ```bash
-rm -f ~/.codex/agents/realm-agent-*.toml ~/.codex/agents/architect.toml ~/.codex/agents/code-architect.toml
 rm -f ~/.gemini/agents/realm-agent-*.md ~/.gemini/agents/architect.md ~/.gemini/agents/code-architect.md
 ```
 
@@ -105,7 +121,8 @@ If you want to remove them:
 
 ### Realm Skills No Longer Available
 
-These skills will no longer work in the host where Realm was removed:
+These skills will no longer work in the host where Realm was removed. Codex uses
+the same names with a `$` prefix; Claude Code and Gemini use `/`:
 
 - `/realm-forge` — Bootstrap vault
 - `/realm-fathom` — Parallel code + vault investigation
@@ -133,7 +150,7 @@ If you added a Stop hook to remind you to sync the vault (in `.claude/settings.j
 To reinstall realm later:
 
 1. Run the installation steps from [INSTALL.md](INSTALL.md)
-2. If you kept the vault nodes, run `/realm-phase` to detect them
+2. If you kept the vault nodes, run `/realm-forge` to reconnect them
 3. `realm-state.json` will be recreated with the same vault path if `CLAUDE.md` exists
 
 ---

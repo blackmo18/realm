@@ -275,7 +275,7 @@ def write_state(
     project_dir: str,
     docs: dict,
 ) -> str:
-    """Write/merge realm-state.json. Idempotent — preserves pendingDrafts and history."""
+    """Write/merge realm-state.json and remove retired pipeline state."""
     state_path = os.path.join(project_root, ".realm", "realm-state.json")
     if os.path.exists(state_path):
         with open(state_path, "r", encoding="utf-8") as f:
@@ -283,10 +283,8 @@ def write_state(
         state["vaultPath"] = vault_path
         state["projectSlug"] = project_slug
         state["projectDir"] = project_dir
-        state.setdefault("phase", {}).setdefault("lastRun", None)
-        state["phase"].setdefault("draftReady", False)
-        state.setdefault("manifest", {}).setdefault("lastRun", None)
-        state.setdefault("pendingDrafts", [])
+        for retired_key in ("phase", "manifest", "pendingDrafts", "nodeIndex"):
+            state.pop(retired_key, None)
         existing_docs = state.setdefault("docs", {})
         for k, v in docs.items():
             if k not in existing_docs:
@@ -296,9 +294,6 @@ def write_state(
             "vaultPath": vault_path,
             "projectSlug": project_slug,
             "projectDir": project_dir,
-            "phase": {"lastRun": None, "draftReady": False},
-            "manifest": {"lastRun": None},
-            "pendingDrafts": [],
             "docs": docs,
         }
     save_state(state, project_root)

@@ -36,8 +36,8 @@ def now_iso() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Vendored from scripts/realm_lib.py (not installed alongside skills/, so the
-# two helpers this script needs are copied here rather than imported).
+# Local minimal YAML helpers keep this skill self-contained without requiring
+# a third-party YAML package.
 # ---------------------------------------------------------------------------
 
 def split_frontmatter(body: str) -> tuple[str, str]:

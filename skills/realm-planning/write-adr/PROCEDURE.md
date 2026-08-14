@@ -11,9 +11,9 @@ description: >
 
 Trigger: user says `write adr`, `write the adr`, or `commit adr` — after Phase 1 approval or Phase 2 completion.
 
-**All writes are direct to vault using the Write tool. No manifest pipeline. No manifest_write.py. No agent spawn.**
+**Write directly to the vault using the host write tool. Do not spawn an agent.**
 
-Plan-mode write boundary: `../references/plan-mode-contract.md` — if plan mode still active when triggered, `ExitPlanMode` first with pending writes as the plan.
+Plan-mode write boundary: `../references/plan-mode-contract.md` — if planning mode is still active when triggered, present pending writes through the native approval gate first.
 
 ## Step 1 — Load state
 

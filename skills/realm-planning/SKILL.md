@@ -60,7 +60,7 @@ Plan-mode write boundary: `references/plan-mode-contract.md`.
 
 Trigger: user says `write adr`, `write the adr`, or `commit adr` — after Phase 1 approval or Phase 2 completion.
 
-Full logic: `write-adr/PROCEDURE.md` — loads state, reserves ADR number, extracts decision from Phase 1, writes planning file + ADR + index update, all direct Write tool (no manifest pipeline, no agent spawn).
+Full logic: `write-adr/PROCEDURE.md` — loads state, reserves ADR number, extracts the Phase 1 decision, and writes the planning file, ADR, and index update directly without spawning an agent.
 
 Plan-mode write boundary: `references/plan-mode-contract.md`.
 
@@ -91,12 +91,12 @@ Phase 1 discovery defaults to the `graphify` CLI when `graphify-out/graph.json` 
 ```
 /realm-planning <topic>
 P1 (phase1/PROCEDURE.md):
-  ↓ Step 0 EnterPlanMode ──────────────────── read-only zone
+  ↓ Step 0 Enter native planning mode ─────── read-only zone
   Step 1 Graph precondition (fresh | stale | absent)
   → Step 2 Mode detect (graphify query --budget 500, drift-guarded)
   → Step 3 Anchors (graphify explain/affected/path) → [investigator fallback if triggered]
   → Step 4 [Research] → Step 5 Architect → Step 6 [Council] → Step 7 Plan [+ Contract Delta if API-surface anchor changed — proto/REST/GraphQL]
-  ↓ Step 8 ExitPlanMode = Phase 1 approval ─── writes allowed
+  ↓ Step 8 Native approval gate ────────────── writes allowed after approval
 Contract Delta present in plan?
   no  → straight to P2
   yes → "write contract" REQUIRED before P2
@@ -105,12 +105,12 @@ Contract Delta present in plan?
         P2 Step 1 gate checks this file exists; missing → STOPS, tells user to write contract first
   ↓
 P2 (phase2/PROCEDURE.md):
-  ↓ EnterPlanMode (Phase 2's own, separate from Phase 1's) ── read-only zone
+  ↓ Enter native planning mode (separate Phase 2 gate) ─────── read-only zone
   Step 1 Contract Gate (blocks if delta unresolved)
   → Step 2 Rules from layers → Step 3 Code-Architect (Anchor Set verbatim)
   → Step 4 Scope & Test Definition (MANDATORY, always) — Affected Files, New Files, Test Scenarios (must pass)
   → Step 5 Step-by-Step Plan (every task traces to Step 4 entries)
-  ↓ ExitPlanMode = Phase 2 approval ─────────── writes allowed
+  ↓ Native approval gate ────────────────────── writes allowed after approval
   → Step 6 Write execution/<NNN>-exct-<slug>.md (links: planning + contract if applicable; Write tool, no agent; NNN = next ADR number from index)
   ↓
 "write adr"
@@ -119,11 +119,11 @@ P2 (phase2/PROCEDURE.md):
   → Update decisions/ADR-000-index.md (direct)
 
 --lite (lite/PROCEDURE.md):
-  ↓ EnterPlanMode ──────────────────────── read-only zone
+  ↓ Enter native planning mode ─────────── read-only zone
   Step 1 Graph precondition
   → Step 2 Cheap anchor resolution (graphify only; investigator fallback per existing rules)
   → Step 3 API-surface gate (route/API/GraphQL/REST/proto shape-affecting? → STOP + flag, escalate to full pipeline)
   → Step 4 Scope & Test Definition (Affected Files / New Files / Test Scenarios)
-  ↓ ExitPlanMode = present output, no Write
+  ↓ Native approval gate = present output, no write
   (escalate to full /realm-planning <topic> or --phase2 if scope grows, or if Step 3 flagged)
 ```

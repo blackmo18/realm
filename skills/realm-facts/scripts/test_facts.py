@@ -193,8 +193,7 @@ class TestConnectPreservesState:
         state = {
             "vaultPath": "/v", "projectSlug": "p", "projectDir": "/v/projects/p",
             "docs": {"a.md": {"status": "committed", "updated": "2026-01-01T00:00:00+00:00"}},
-            "nodeIndex": {"counts": {}, "ids": {}, "updatedAt": "x"},
-            "pendingDrafts": [],
+            "customState": {"keep": True},
         }
         (realm_dir / "realm-state.json").write_text(json.dumps(state))
 
@@ -203,7 +202,7 @@ class TestConnectPreservesState:
                     "--local-path", "/tmp/facts-repo"])
 
         result = json.loads((realm_dir / "realm-state.json").read_text())
-        for key in ("vaultPath", "projectSlug", "projectDir", "docs", "nodeIndex", "pendingDrafts"):
+        for key in ("vaultPath", "projectSlug", "projectDir", "docs", "customState"):
             assert result[key] == state[key]
         assert result["factsRepo"]["url"] == "https://gitlab.example.com/org/realm-facts.git"
         assert result["factsRepo"]["lastSync"] is None

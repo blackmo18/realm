@@ -157,7 +157,6 @@ curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | b
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent gemini
 
 # Skills-only direct installs
-npx skills add blackmo18/realm -a codex
 npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
 ```
@@ -225,9 +224,11 @@ To publish or update Realm on the Claude Code marketplace:
 ## Uninstallation
 
 ```bash
-# Skills CLI installs (Cursor, Codex, Gemini)
+# Skills CLI installs (Cursor and Gemini)
 npx skills remove realm
 ```
+
+Codex native removal commands are listed in [UNINSTALL.md](UNINSTALL.md).
 
 For Claude Code installs:
 
@@ -240,6 +241,18 @@ Full uninstall guide: [UNINSTALL.md](UNINSTALL.md)
 ---
 
 ## Quick Start
+
+Codex:
+
+```text
+$realm-forge
+$realm-fathom function:validateUser
+$realm-recall "why JWT"
+$realm-planning "refactor payment module"
+$realm-concise
+```
+
+Claude Code and Gemini:
 
 ```bash
 # 1. Bootstrap the vault for your project
@@ -315,7 +328,7 @@ Full uninstall guide: [UNINSTALL.md](UNINSTALL.md)
 | Dependency | Purpose |
 |---|---|
 | Supported host: Claude Code, Cursor, Codex, or Gemini | Runtime for Realm skills |
-| Node.js with `npx` | Installs Realm for Cursor, Codex, and Gemini |
+| Node.js | Runs Realm's installer; `npx` is needed for Cursor and Gemini Skills CLI installs |
 | [Obsidian](https://obsidian.md) 1.x+ | Vault storage, graph view, backlinks |
 | Graphify CLI (optional) | Fast zero-token codebase discovery for `realm-fathom` & `realm-planning` |
 

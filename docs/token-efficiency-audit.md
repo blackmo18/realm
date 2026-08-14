@@ -15,7 +15,7 @@ and a dead-duplication bug found while verifying the original findings).
 | [realm-recall](../skills/realm-recall/SKILL.md) | 214 + 2 fragments | 0–1 (fallback only) | ❌ | ✅ PASS |
 | [realm-concise](../skills/realm-concise/SKILL.md) | routed + 3 procedures | 0 | ✅ `concise.py` | ✅ PASS |
 | [realm-facts](../skills/realm-facts/SKILL.md) | routed + 8 procedures | 0 | ✅ `facts.py` | ✅ PASS |
-| [realm-status](../skills/realm-status/SKILL.md) | inline | 0 | index-first | ✅ PASS |
+| [realm-status](../skills/realm-status/SKILL.md) | inline | 0 | bounded live scan | ✅ PASS |
 | [realm-fathom](../skills/realm-fathom/SKILL.md) | routed + 4 references | 1 only for deep reconciliation | graphify-first | ✅ PASS |
 | [realm-planning](../skills/realm-planning/SKILL.md) | routed procedures | 2 semantic planners | graphify-first | ⚠️ WARN |
 
@@ -57,10 +57,7 @@ and a dead-duplication bug found while verifying the original findings).
 **Clean.** Reads state, counts nodes, prints output. No agent spawn.
 
 - **Anti-Pattern 6**: ✅ Inline execution with Read + grep. No subagent.
-- **Anti-Pattern 11**: ✅ Step 2 checks `nodeIndex` in state first, falls back to `find` only if cache absent.
-
-> [!TIP]
-> **Minor opportunity (LOW):** Step 2 tag-frequency grep (`grep -rh ... | sort | uniq -c | sort -rn`) runs on every invocation. If tag counts were cached in `nodeIndex` by the write script, this grep could be eliminated. Not a blocker — this is a single bash call, ~10 tokens of stdout. Still open.
+- **Anti-Pattern 11**: ✅ Step 2 uses one bounded live-file scan; no stale writer-owned cache.
 
 ---
 
@@ -87,14 +84,11 @@ Verified idempotent: two consecutive runs against a scratch project produce byte
 
 ### ✅ PASS — realm-recall *(fixed 2026-08-14, was ⚠️ WARN)*
 
-Was: 324 lines in one file — the longest SKILL.md in the repo — with Step 3a running
-`grep -rl "^id: <query>"` on every exact-ID query despite `realm-state.json.nodeIndex.ids`
-already providing an id→path map (built by `manifest_write.py:_build_node_index`, already
-consumed directly by realm-recall and realm-fathom).
+Was: 324 lines in one file — the longest SKILL.md in the repo — with canvas expansion and
+output rendering loaded unconditionally.
 
 Fix applied:
-- Step 3a now checks `state.nodeIndex.ids[<query>]` first (zero bash), falls back to `grep -rl`
-  only when the index is absent or the id isn't in it.
+- Step 3a uses a bounded exact-ID grep against live vault files.
 - Extracted `references/canvas-expansion.md` (83 lines: trigger-word table, resolution steps,
   worked examples, Step 4.5 procedure) and `references/output-format.md` (53 lines: Step 5
   rendering templates + Step 6 footer). Both load only when their step actually runs — canvas
@@ -103,9 +97,9 @@ Fix applied:
 
 - **Anti-Pattern 3 (Fat prompt)**: ✅ Fixed. 214 lines, and canvas/format content no longer loads unconditionally.
 - **Anti-Pattern 7 (Monolithic reference)**: ✅ Fixed. Two load-on-demand fragments, matching the realm-concise/realm-facts pattern.
-- **Anti-Pattern 11 (Live scan vs cache)**: ✅ Fixed for 3a (the exact-ID case, the cheapest and most common lookup). 3b (tag) and 3c (filename fuzzy) still grep/glob live — `nodeIndex` has no tag→paths map, only id→path and per-subdir counts. Left as-is: extending the index schema is a `manifest_write.py` change with its own blast radius, not a SKILL.md fix. Track separately if tag lookups become a hot path.
+- **Anti-Pattern 11 (Live scan vs cache)**: ✅ Exact-ID, tag, and filename searches are bounded to the project vault and always reflect current files.
 
-**No findings** (see note above on the intentionally-deferred tag/filename cache).
+**No findings.**
 
 ---
 
@@ -202,9 +196,7 @@ None.
 
 | # | Skill | Action |
 |:---|:---|:---|
-| 2 | **realm-recall** | Extend `nodeIndex` with a tag→paths map so Step 3b (tag cluster) can also skip `grep`. |
 | 3 | **realm-planning** | Convert `plan-template.md` to a script-generated skeleton. |
-| 4 | **realm-status** | Cache tag frequency in `nodeIndex`. |
 
 ---
 
@@ -217,7 +209,7 @@ None.
 | 🛑 BLOCK | 0 |
 
 **No CRITICAL or HIGH anti-pattern remains.** Realm-fathom now uses a sub-80-line semantic agent,
-one small query-specific reference, delayed output-format loading, and indexed vault lookup inline.
+one small query-specific reference, delayed output-format loading, and bounded vault lookup inline.
 The only remaining warning is the planning pipeline's medium-sized reference surface.
 
 ## Spawn Graph and Budgets
@@ -226,7 +218,7 @@ The only remaining warning is the planning pipeline's medium-sized reference sur
 |---|---|---|---:|
 | realm-concise | none; deterministic script | basic | 1 script call per command |
 | realm-facts | none; deterministic script | current session | 1–3 script/git calls |
-| realm-recall/status | none; index-first inline lookup | current session | 1 state read + bounded fallback |
+| realm-recall/status | none; bounded live lookup | current session | 1 state read + bounded scan |
 | realm-forge | realm-agent-forge → forge_init.py | balanced execution | metadata reads + 1 script call |
 | realm-fathom | realm-agent-fathom → optional investigator only | balanced reasoning | graph query + bounded vault lookup; one fallback spawn maximum |
 | realm-planning phase 1 | architect | strongest planning | graph-first bounded reads |

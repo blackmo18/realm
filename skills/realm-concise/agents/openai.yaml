@@ -1,0 +1,6 @@
+interface:
+  display_name: "Realm Concise"
+  short_description: "Triage oversized source files"
+  default_prompt: "Use $realm-concise to scan the refactor queue and recommend the safest oversized file to address."
+policy:
+  allow_implicit_invocation: true

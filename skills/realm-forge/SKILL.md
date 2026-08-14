@@ -29,7 +29,7 @@ Host invocation: Claude Code and Gemini use `/realm-forge`; Codex uses `$realm-f
 
 ## Procedure
 
-This skill handles interactive vault path resolution, then delegates all setup work to `realm-agent-forge`.
+This skill handles interactive vault path resolution, then runs the forge procedure.
 
 ### Step 1 — Resolve vault path and project slug (interactive)
 
@@ -40,9 +40,11 @@ This skill handles interactive vault path resolution, then delegates all setup w
 5. Detect active host as `claude`, `codex`, or `gemini`.
 6. Print `Vault: <path>  Slug: <slug>  Host: <host>` and proceed.
 
-### Step 2 — Spawn forge agent
+### Step 2 — Run forge procedure
 
-Spawn agent `realm-agent-forge` with this prompt:
+If the host exposes `realm-agent-forge` and delegation is permitted by the
+current user/session policy, delegate with this prompt. Otherwise execute the
+same procedure inline. Never require delegation for correctness.
 
 ```
 projectRoot: <absolute path to project root>
@@ -55,4 +57,4 @@ Bootstrap the vault and write realm-state.json.
 Follow the full procedure in your instructions.
 ```
 
-Wait for completion. Surface the agent's summary to the user.
+Surface the resulting summary to the user.
