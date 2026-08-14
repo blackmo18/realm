@@ -17,6 +17,7 @@ Anchor-scoped: Phase 1 detects run mode (enhancement / anchored-new / greenfield
 ```
 /realm-planning <topic>          # Phase 1
 /realm-planning <topic> --phase2 # skip to Phase 2 (plan already approved)
+/realm-planning <topic> --lite   # Scope & Test shortcut only — Affected Files + Test Scenarios, no ADR, no full plan
 ```
 
 ## When to Use
@@ -25,6 +26,7 @@ Anchor-scoped: Phase 1 detects run mode (enhancement / anchored-new / greenfield
 - Architectural direction unclear
 - Spans multiple services/files
 - Need plan ready for coding agent
+- Token-budget constrained, want direction only, will hand-code the implementation yourself, don't need an architecture ADR — use `--lite`
 
 ## Communication Style
 
@@ -34,6 +36,7 @@ Caveman mode active. Drop articles, filler, pleasantries, hedging. Fragments OK.
 
 - Phase 1 → load `phase1/SKILL.md`
 - Phase 2 → load `phase2/SKILL.md`
+- Lite → load `lite/SKILL.md` (`--lite` flag: Scope & Test Definition only, skips architecture + full plan)
 - Contract → load `contract/SKILL.md` (Phase 1 Step 7 `Contract Delta` embed, or explicit `write contract` trigger below)
 - `write adr` → load `write-adr/SKILL.md` (trigger below)
 
@@ -112,4 +115,13 @@ P2 (phase2/SKILL.md):
   → Write planning/<NNN>-plan-<slug>.md   (Phase 1, direct)
   → Write decisions/ADR-NNN.md (compressed decision, direct)
   → Update decisions/ADR-000-index.md (direct)
+
+--lite (lite/SKILL.md):
+  ↓ EnterPlanMode ──────────────────────── read-only zone
+  Step 1 Graph precondition
+  → Step 2 Cheap anchor resolution (graphify only; investigator fallback per existing rules)
+  → Step 3 API-surface gate (route/API/GraphQL/REST/proto shape-affecting? → STOP + flag, escalate to full pipeline)
+  → Step 4 Scope & Test Definition (Affected Files / New Files / Test Scenarios)
+  ↓ ExitPlanMode = present output, no Write
+  (escalate to full /realm-planning <topic> or --phase2 if scope grows, or if Step 3 flagged)
 ```
