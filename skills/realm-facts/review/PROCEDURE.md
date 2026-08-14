@@ -1,5 +1,5 @@
 ---
-name: realm-facts:review
+name: realm-facts-review
 description: >
   Reviewer workflow for a fact MR — the one place this skill does real LLM judgment (is the
   Compressed summary agent-useful, is evidence sufficient). Everything else — mr-ready
@@ -13,7 +13,7 @@ Triggered by: `/realm-facts review <id>`, `/realm-facts review <id> --approve`, 
 ## Step 0 — Guard
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py state --project-root .
+python3 "<realmFactsSkillDir>/scripts/facts.py" state --project-root .
 ```
 
 `FACTS_CONNECTED=false` → `No facts repo connected. Run /realm-facts forge first.` STOP.
@@ -21,7 +21,7 @@ python3 .claude/skills/realm-facts/scripts/facts.py state --project-root .
 ## Step 1 — Load the fact and re-check mr-ready
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py validate --facts-root <local-path> --fact <id> --mr-ready
+python3 "<realmFactsSkillDir>/scripts/facts.py" validate --facts-root <local-path> --fact <id> --mr-ready
 ```
 
 Non-zero exit → this shouldn't happen post-`submit`, but if it does, surface the errors and stop
@@ -45,8 +45,8 @@ which way to go. **Wait for reply.**
 ### 2a — Approve
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py set-status --facts-root <local-path> --fact <id> --status active
-python3 .claude/skills/realm-facts/scripts/facts.py index --facts-root <local-path>
+python3 "<realmFactsSkillDir>/scripts/facts.py" set-status --facts-root <local-path> --fact <id> --status active
+python3 "<realmFactsSkillDir>/scripts/facts.py" index --facts-root <local-path>
 ```
 
 Then follow `../references/mr-flow.md` to `approve_merge_request` + `merge_merge_request` (or

@@ -2,7 +2,7 @@
 name: code-architect
 description: Codebase-aware implementation blueprint subagent used in Phase 2 of realm-planning.
 tools: ["Read", "Bash"]
-model: sonnet
+model: opus
 ---
 
 You are the code-architect subagent for Realm planning.

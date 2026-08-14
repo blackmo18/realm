@@ -1,5 +1,5 @@
 ---
-name: realm-planning:write-adr
+name: realm-planning-write-adr
 description: >
   Commit an approved Phase 1 decision (and Phase 2 execution plan, if run) to
   the vault as an ADR + planning file, update the ADR index. Triggered by

@@ -109,11 +109,11 @@ flowchart LR
 flowchart TD
     FT(["/realm-fathom &lt;query&gt;"]):::cmd --> GV{vault\ninitialized?}
 
-    GV -->|Yes| PAR["parallel read"]:::note
+    GV -->|Yes| PAR["two bounded lanes"]:::note
     GV -->|No| CI2(["cavecrew-investigator"]):::agent
 
     PAR --> CI(["graphify / cavecrew-investigator\n(live code — ground truth)"]):::agent
-    PAR --> RQ(["realm-agent-query\n(vault context)"]):::agent
+    PAR --> RQ["indexed inline lookup\n(vault context)"]:::note
 
     CI  --> CO["code findings\nsignature · flow · callers"]:::out
     RQ  --> VO["vault context\nwhy · rejected · consequences"]:::out

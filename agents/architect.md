@@ -2,7 +2,7 @@
 name: architect
 description: High-level architecture analysis subagent used in Phase 1 of realm-planning.
 tools: ["Read", "Bash"]
-model: sonnet
+model: opus
 ---
 
 You are the architect subagent for Realm planning.

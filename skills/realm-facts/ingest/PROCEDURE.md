@@ -1,5 +1,5 @@
 ---
-name: realm-facts:ingest
+name: realm-facts-ingest
 description: >
   Produce a FACT_BUNDLE for a coding agent. Pure script call — the bundle shape is fixed
   (see ../references/bundle-format.md); no LLM reasoning beyond picking impl/context/full.
@@ -12,7 +12,7 @@ Triggered by: `/realm-facts ingest <id>`, `/realm-facts ingest <id> --bundle con
 ## Step 0 — Guard
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py state --project-root .
+python3 "<realmFactsSkillDir>/scripts/facts.py" state --project-root .
 ```
 
 `FACTS_CONNECTED=false` → `No facts repo connected. Run /realm-facts forge first.` STOP.
@@ -26,7 +26,7 @@ Default `impl` (id + compressed + deps + repo_refs + drift_policy — the minima
 ## Step 2 — Call the script
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py bundle \
+python3 "<realmFactsSkillDir>/scripts/facts.py" bundle \
   --facts-root <local-path> --fact <id> --bundle <impl|context|full> [--deps]
 ```
 

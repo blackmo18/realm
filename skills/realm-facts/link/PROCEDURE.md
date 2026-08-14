@@ -1,5 +1,5 @@
 ---
-name: realm-facts:link
+name: realm-facts-link
 description: >
   Relate two facts (related / depends_on / supersedes). Pure script call — resolves both ids,
   updates the graph edge, and reindexes. No LLM reasoning beyond picking which relation applies.
@@ -12,7 +12,7 @@ Triggered by: `/realm-facts link <id> --related <id2>`, `--depends-on <id2>`, `-
 ## Step 0 — Guard
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py state --project-root .
+python3 "<realmFactsSkillDir>/scripts/facts.py" state --project-root .
 ```
 
 `FACTS_CONNECTED=false` → `No facts repo connected. Run /realm-facts forge first.` STOP.
@@ -28,7 +28,7 @@ If the user just says "link A and B" with no relation named, default to `related
 ## Step 2 — Call the script
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py link \
+python3 "<realmFactsSkillDir>/scripts/facts.py" link \
   --facts-root <local-path> --fact <id> --related <id2>
 # or --depends-on <id2>  /  --supersedes <id2>  (repeatable for --related/--depends-on)
 ```

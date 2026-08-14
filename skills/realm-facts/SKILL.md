@@ -6,13 +6,17 @@ description: >
   parsing, schema validation, facts-index.json/facts-graph.json generation, and the
   factsRepo pointer in a product repo's realm-state.json. LLM only interviews the user for
   new fact content and judges reviewer quality — every write, count, and status transition
-  is a script call. Routes to forge/new/link/submit/review/sync/recall/ingest subskills.
-origin: realm
+  is a script call. Use to connect, create, link, review, synchronize, query, or bundle
+  organization-wide facts. Routes to load-on-demand procedures for each operation.
 ---
 
 # realm-facts
 
 Team knowledge facts, GitLab-reviewed, Teams-notified, agent-ingestable. Script owns state; LLM interviews and judges.
+
+Host invocation: Claude Code and Gemini use `/realm-facts`; Codex uses `$realm-facts`.
+Resolve `realmFactsSkillDir` to the directory containing this `SKILL.md`; every
+fragment uses `<realmFactsSkillDir>/scripts/facts.py` and never assumes a host-specific install root.
 
 ## Syntax
 
@@ -54,14 +58,14 @@ Load only the fragment the trigger matches — never the whole skill.
 
 | Trigger | Load |
 |---|---|
-| `forge`, "connect facts", first run | `forge/SKILL.md` |
-| `new`, "create a fact", "document X" | `new/SKILL.md` |
-| `link`, "relate facts" | `link/SKILL.md` |
-| `submit`, "submit for review" | `submit/SKILL.md` |
-| `review`, `--approve`, `--request-changes` | `review/SKILL.md` |
-| `sync`, "pull latest facts" | `sync/SKILL.md` |
-| `recall`, "what do we know about" | `recall/SKILL.md` |
-| `ingest`, "bundle for agent" | `ingest/SKILL.md` |
+| `forge`, "connect facts", first run | `forge/PROCEDURE.md` |
+| `new`, "create a fact", "document X" | `new/PROCEDURE.md` |
+| `link`, "relate facts" | `link/PROCEDURE.md` |
+| `submit`, "submit for review" | `submit/PROCEDURE.md` |
+| `review`, `--approve`, `--request-changes` | `review/PROCEDURE.md` |
+| `sync`, "pull latest facts" | `sync/PROCEDURE.md` |
+| `recall`, "what do we know about" | `recall/PROCEDURE.md` |
+| `ingest`, "bundle for agent" | `ingest/PROCEDURE.md` |
 
 ## Ground rules (apply across every subskill)
 
@@ -83,7 +87,7 @@ Load only the fragment the trigger matches — never the whole skill.
 ## Guard (every subskill except `forge`)
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py state --project-root .
+python3 "<realmFactsSkillDir>/scripts/facts.py" state --project-root .
 ```
 
 If stdout starts with `FACTS_CONNECTED=false`:

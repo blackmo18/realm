@@ -1,13 +1,14 @@
 ---
 name: realm-fathom
 description: >
-  Deep investigation skill. Accepts abstract input (function name, class, concept, or freeform question) and returns consolidated understanding from two sources: live code (authoritative for behavior, flow, signatures — graphify's cached graph first, `cavecrew-investigator` as backup only when graphify is missing, stale, or thin) and vault via realm-agent-query (authoritative for why, ADRs, architectural intent). Detects and flags vault/code drift explicitly — never blends conflicting sources silently. Vault is optional; degrades gracefully to code-only when unavailable. Zero writes.
-origin: realm
+  Deep investigation skill. Accepts a function, class, concept, or freeform question and consolidates live code with cached vault context. Uses graphify first, a bounded investigator fallback only when needed, and inline indexed vault lookup. Detects code/vault drift explicitly. Use before modifying unfamiliar code or auditing whether documentation matches implementation. Zero writes.
 ---
 
 # realm-fathom
 
 Investigate anything. Code truth + vault context. Drift flagged.
+
+Host invocation: Claude Code and Gemini use `/realm-fathom`; Codex uses `$realm-fathom`.
 
 ## Syntax
 
@@ -43,7 +44,7 @@ Investigate anything. Code truth + vault context. Drift flagged.
 | Source | Authoritative for |
 |--------|------------------|
 | Live code — graphify first, `cavecrew-investigator` as backup | behavior, signatures, flow, callers, current state |
-| Vault (`realm-agent-query`) | why, ADR refs, architectural intent, invariant rationale |
+| Vault (indexed inline lookup) | why, ADR refs, architectural intent, invariant rationale |
 | Conflict | flagged as `VAULT DRIFT` — never silently blended |
 
 Code truth is resolved cheapest-first: graphify's cached graph answers most
@@ -105,6 +106,7 @@ Spawn agent `realm-agent-fathom` with this prompt:
 
 ```
 projectRoot: <absolute path to current working directory>
+realmFathomSkillDir: <directory containing this SKILL.md>
 query: <full original query string, e.g. "function:validateUser" or "how does auth flow work">
 entityType: <function|class|system|freeform>
 entityName: <extracted name, or empty string if freeform>

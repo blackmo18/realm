@@ -122,10 +122,10 @@ if [ "$IS_LOCAL" = true ]; then
     case "$AGENT" in
       gemini)
         echo "- Copy skills -> $TARGET_DIR/.agents/skills"
-        echo "- Copy .gemini/agents/*.md -> $TARGET_DIR/.gemini/agents"
+        echo "- Copy agents/*.md -> $TARGET_DIR/.gemini/agents"
         ;;
       codex)
-        echo "- Copy skills -> $TARGET_DIR/.agents/skills and $TARGET_DIR/.codex/skills"
+        echo "- Copy skills -> $TARGET_DIR/.agents/skills"
         echo "- Copy .codex/agents/*.toml -> $TARGET_DIR/.codex/agents"
         ;;
       cursor)
@@ -148,12 +148,18 @@ if [ "$IS_LOCAL" = true ]; then
     gemini)
       mkdir -p "$TARGET_DIR/.agents/skills" "$TARGET_DIR/.gemini/agents"
       cp -r "$SOURCE_DIR"/skills/* "$TARGET_DIR/.agents/skills/"
-      cp "$SOURCE_DIR"/.gemini/agents/*.md "$TARGET_DIR/.gemini/agents/"
+      for agent_file in "$SOURCE_DIR"/agents/*.md; do
+        [ -f "$agent_file" ] || continue
+        sed -e '/^tools: \[/d' \
+            -e 's/^model: opus$/model: gemini-3.1-pro-preview/' \
+            -e 's/^model: sonnet$/model: gemini-3.1-pro-preview/' \
+            -e 's/^model: haiku$/model: gemini-3.6-flash/' \
+            "$agent_file" > "$TARGET_DIR/.gemini/agents/$(basename "$agent_file")"
+      done
       ;;
     codex)
-      mkdir -p "$TARGET_DIR/.agents/skills" "$TARGET_DIR/.codex/skills" "$TARGET_DIR/.codex/agents"
+      mkdir -p "$TARGET_DIR/.agents/skills" "$TARGET_DIR/.codex/agents"
       cp -r "$SOURCE_DIR"/skills/* "$TARGET_DIR/.agents/skills/"
-      cp -r "$SOURCE_DIR"/skills/* "$TARGET_DIR/.codex/skills/"
       cp "$SOURCE_DIR"/.codex/agents/*.toml "$TARGET_DIR/.codex/agents/"
       ;;
     cursor)
@@ -175,8 +181,10 @@ if [ "$IS_LOCAL" = true ]; then
   echo ""
   echo "Next steps:"
   echo "1. Open $TARGET_DIR in $AGENT."
-  echo "2. Run /realm-forge to bootstrap local Realm vault state for this project."
-  echo "3. Query with /realm-recall or investigate with /realm-fathom."
+  SKILL_PREFIX="/"
+  [ "$AGENT" = "codex" ] && SKILL_PREFIX='$'
+  echo "2. Run ${SKILL_PREFIX}realm-forge to bootstrap local Realm vault state for this project."
+  echo "3. Query with ${SKILL_PREFIX}realm-recall or investigate with ${SKILL_PREFIX}realm-fathom."
   exit 0
 fi
 
@@ -195,7 +203,7 @@ case "$AGENT" in
         echo "- If this script is run remotely, clone https://github.com/${REPO_SLUG}.git into a temp dir first"
       elif [ "$AGENT" = "gemini" ]; then
         echo "Planned Gemini native agent install:"
-        echo "- Copy .gemini/agents/*.md into ~/.gemini/agents/"
+        echo "- Copy agents/*.md into ~/.gemini/agents/"
         echo "- If this script is run remotely, clone https://github.com/${REPO_SLUG}.git into a temp dir first"
       fi
       echo "Dry run complete."
@@ -215,25 +223,41 @@ case "$AGENT" in
       git clone --depth 1 "https://github.com/${REPO_SLUG}.git" "$TMP_DIR/realm" >/dev/null 2>&1
       AGENTS_SRC="$TMP_DIR/realm/.$AGENT/agents"
       EXT="toml"
-      [ "$AGENT" = "gemini" ] && EXT="md"
+      if [ "$AGENT" = "gemini" ]; then
+        AGENTS_SRC="$TMP_DIR/realm/agents"
+        EXT="md"
+      fi
 
       if [ -n "$AGENTS_SRC" ] && [ -d "$AGENTS_SRC" ]; then
         mkdir -p "$TARGET_DIR"
-        cp "$AGENTS_SRC"/*."$EXT" "$TARGET_DIR"/
+        if [ "$AGENT" = "gemini" ]; then
+          for agent_file in "$AGENTS_SRC"/*.md; do
+            [ -f "$agent_file" ] || continue
+            sed -e '/^tools: \[/d' \
+                -e 's/^model: opus$/model: gemini-3.1-pro-preview/' \
+                -e 's/^model: sonnet$/model: gemini-3.1-pro-preview/' \
+                -e 's/^model: haiku$/model: gemini-3.6-flash/' \
+                "$agent_file" > "$TARGET_DIR/$(basename "$agent_file")"
+          done
+        else
+          cp "$AGENTS_SRC"/*."$EXT" "$TARGET_DIR"/
+        fi
         echo "$AGENT-native Realm agents installed to $TARGET_DIR"
       fi
 
       rm -rf "$TMP_DIR"
     fi
 
+    SKILL_PREFIX="/"
+    [ "$AGENT" = "codex" ] && SKILL_PREFIX='$'
     cat <<EOF
 
 Realm is installed globally for $AGENT.
 
 Next steps:
 1. Restart $AGENT or open a new session so the new skills are loaded cleanly.
-2. In your project, run /realm-forge to bootstrap the local Realm state.
-3. Query with /realm-recall or investigate with /realm-fathom.
+2. In your project, run ${SKILL_PREFIX}realm-forge to bootstrap the local Realm state.
+3. Query with ${SKILL_PREFIX}realm-recall or investigate with ${SKILL_PREFIX}realm-fathom.
 EOF
     ;;
   claude)
@@ -299,4 +323,3 @@ EOF
     exit 1
     ;;
 esac
-

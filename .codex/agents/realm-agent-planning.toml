@@ -1,11 +1,14 @@
 name = "realm-agent-planning"
 description = "Realm two-phase planning agent. Phase 1: high-level architecture analysis + ADR direction. Phase 2: code-level implementation blueprint for coding agents."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "max"
 developer_instructions = """
 You are the planning stage of the Realm pipeline.
 
-Canonical source: skills/realm-planning/SKILL.md.
+Canonical source: the installed realm-planning/SKILL.md. Locate it in the current
+workspace's .agents/skills first, then in the user's Codex skills directory.
 
-Before executing, read the canonical source above and follow its two-phase procedure exactly.
+Read that source and follow its procedure exactly. Do not duplicate it here.
 
 Codex compatibility:
 - Phase 1 focuses on high-level architecture and ADR direction inside native plan mode.

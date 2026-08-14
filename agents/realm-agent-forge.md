@@ -1,8 +1,8 @@
 ---
 name: realm-agent-forge
-description: realm pipeline agent — vault bootstrap and init. Scaffolds Obsidian vault directories, writes templates, seeds overview.md, ADR index, CLAUDE.md anchor, updates .gitignore, detects existing docs, and writes realm-state.json. Idempotent — never overwrites existing files. Run after the skill resolves the vault path interactively.
+description: Realm vault bootstrap agent. Runs the deterministic scaffold, writes the active host's guidance anchor, and never overwrites existing files.
 tools: ["Read", "Write", "Bash"]
-model: haiku
+model: sonnet
 ---
 
 ## Prompt Defense Baseline
@@ -19,6 +19,8 @@ Received in prompt:
 - `projectRoot` — absolute path to project directory
 - `vaultPath` — absolute path to Obsidian vault root
 - `projectSlug` — kebab-case project slug
+- `host` — `claude`, `codex`, or `gemini`
+- `realmForgeSkillDir` — absolute directory containing the installed realm-forge `SKILL.md`
 
 Derived: `projectDir` = `<vaultPath>/projects/<projectSlug>`
 
@@ -33,37 +35,25 @@ Read from `projectRoot` (skip if missing):
 
 Extract: project name, one-line description, tech stack, milestones.
 
-### Step 2 — Run forge_init.py (scaffold + state)
+### Step 2 — Run forge_init.py (scaffold + templates + anchor + state)
 
 ```bash
-python3 "${HOME}/.claude/plugins/marketplaces/realm/scripts/forge_init.py" \
+python3 "REALM_FORGE_SKILL_DIR/scripts/forge_init.py" \
   --project-root "PROJECT_ROOT" \
   --vault-path "VAULT_PATH" \
-  --project-slug "PROJECT_SLUG"
+  --project-slug "PROJECT_SLUG" \
+  --host "HOST" \
+  --project-name "NAME_FROM_STEP_1" \
+  --description "ONE_LINE_DESCRIPTION_FROM_STEP_1" \
+  --stack "TECH_STACK_FROM_STEP_1" \
+  --milestones "MILESTONES_FROM_STEP_1"
 ```
 
-Surface stdout verbatim. If exit code non-zero: surface error, STOP.
+Script handles dirs, `.gitignore`, the 5 node templates, ADR index stub, `.claude/CLAUDE.md`
+anchor, `overview.md`, doc scan, and `realm-state.json` — all skip-if-exists. Surface stdout
+verbatim. If exit code non-zero: surface error, STOP.
 
-### Step 3 — Write vault templates (only if missing)
-
-Write standard node templates to `<vaultPath>/_templates/` (skip any file that already exists):
-`Decision-Node.md`, `Function-Node.md`, `Class-Node.md`, `Discovery-Note.md`, `Session-Log.md`
-
-### Step 4 — Seed overview.md (only if missing)
-
-Write `<projectDir>/overview.md` using metadata from Step 1. Standard structure:
-frontmatter (`tags: [project]`, `status: active`, `repo: <projectRoot>`), `# <name>`, `## Stack`, `## Milestones`, `## Knowledge` (links to architecture, ADR index), `## Key Source Files`.
-
-### Step 5 — Write ADR index stub (only if missing)
-
-Write `<projectDir>/decisions/ADR-000-index.md` with standard header table:
-`| # | Title | Status | Date |` with separator row.
-
-### Step 6 — Write CLAUDE.md anchor (only if missing)
-
-Write `<projectRoot>/.claude/CLAUDE.md` with project name, one-line description, vault path, and key vault dirs (`overview.md`, `architecture.md`, `decisions/`, `sessions/`). Create `.claude/` dir first if missing.
-
-### Step 7 — Print summary
+### Step 3 — Print summary
 
 ```
 realm-forge complete
@@ -72,8 +62,6 @@ realm-forge complete
   state:    <projectRoot>/.realm/realm-state.json
 
   vault docs registered: <N from forge_init output>
-  templates:  <created|already existed>
-  .gitignore: <result from forge_init output>
 
 Next step: /realm-recall (query vault) or /realm-fathom (investigate code)
 ```

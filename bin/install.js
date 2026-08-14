@@ -177,12 +177,11 @@ function installLocal(options, repoRoot) {
 
   if (agent === 'gemini') {
     targetSkillsDirs.push(path.join(targetDir, '.agents', 'skills'));
-    agentsSrc = path.join(repoRoot, '.gemini', 'agents');
+    agentsSrc = path.join(repoRoot, 'agents');
     targetAgentsDir = path.join(targetDir, '.gemini', 'agents');
     agentExt = '.md';
   } else if (agent === 'codex') {
     targetSkillsDirs.push(path.join(targetDir, '.agents', 'skills'));
-    targetSkillsDirs.push(path.join(targetDir, '.codex', 'skills'));
     agentsSrc = path.join(repoRoot, '.codex', 'agents');
     targetAgentsDir = path.join(targetDir, '.codex', 'agents');
     agentExt = '.toml';
@@ -223,10 +222,13 @@ function installLocal(options, repoRoot) {
     ensureDir(targetAgentsDir);
     for (const entry of fs.readdirSync(agentsSrc, { withFileTypes: true })) {
       if (entry.isFile() && entry.name.endsWith(agentExt)) {
-        fs.copyFileSync(
-          path.join(agentsSrc, entry.name),
-          path.join(targetAgentsDir, entry.name)
-        );
+        const sourcePath = path.join(agentsSrc, entry.name);
+        const targetPath = path.join(targetAgentsDir, entry.name);
+        if (agent === 'gemini') {
+          writeGeminiAgent(sourcePath, targetPath);
+        } else {
+          fs.copyFileSync(sourcePath, targetPath);
+        }
         info(`Installed agent: ${path.join(targetAgentsDir, entry.name)}`);
       }
     }
@@ -237,8 +239,8 @@ function installLocal(options, repoRoot) {
   process.stdout.write(
     'Next steps:\n' +
     `1. Open ${targetDir} in ${agentLabel(agent)}.\n` +
-    '2. Run /realm-forge to bootstrap local Realm vault state for this project.\n' +
-    '3. Query with /realm-recall or investigate with /realm-fathom.\n'
+    `2. Run ${skillCommand(agent, 'realm-forge')} to bootstrap local Realm vault state for this project.\n` +
+    `3. Query with ${skillCommand(agent, 'realm-recall')} or investigate with ${skillCommand(agent, 'realm-fathom')}.\n`
   );
 }
 
@@ -297,7 +299,7 @@ function installForSkillsCli(options, repoRoot) {
       process.stdout.write(`- Copy .codex/agents/*.toml into ${defaultCodexAgentsDir()}\n`);
     } else if (options.agent === 'gemini') {
       process.stdout.write('Planned Gemini native agent install:\n');
-      process.stdout.write(`- Copy .gemini/agents/*.md into ${defaultGeminiAgentsDir()}\n`);
+      process.stdout.write(`- Copy agents/*.md into ${defaultGeminiAgentsDir()}\n`);
     }
     success('Dry run complete.');
     return;
@@ -326,8 +328,8 @@ function installForSkillsCli(options, repoRoot) {
   process.stdout.write(
     'Next steps:\n' +
     `1. Restart ${agentLabel(options.agent)} or open a new session so the new skills are loaded cleanly.\n` +
-    '2. In your project, run /realm-forge to bootstrap the local Realm state.\n' +
-    '3. Query with /realm-recall or investigate with /realm-fathom.\n'
+    `2. In your project, run ${skillCommand(options.agent, 'realm-forge')} to bootstrap the local Realm state.\n` +
+    `3. Query with ${skillCommand(options.agent, 'realm-recall')} or investigate with ${skillCommand(options.agent, 'realm-fathom')}.\n`
   );
 }
 
@@ -455,7 +457,7 @@ function installCodexAgents(repoRoot) {
 }
 
 function installGeminiAgents(repoRoot) {
-  const sourceDir = path.join(repoRoot, '.gemini', 'agents');
+  const sourceDir = path.join(repoRoot, 'agents');
   const destinationDir = defaultGeminiAgentsDir();
 
   if (!fs.existsSync(sourceDir)) {
@@ -471,12 +473,26 @@ function installGeminiAgents(repoRoot) {
       continue;
     }
 
-    fs.copyFileSync(
+    writeGeminiAgent(
       path.join(sourceDir, entry.name),
       path.join(destinationDir, entry.name)
     );
     info(`Installed Gemini agent: ${path.join(destinationDir, entry.name)}`);
   }
+}
+
+function writeGeminiAgent(sourcePath, destinationPath) {
+  const modelMap = {
+    opus: 'gemini-3.1-pro-preview',
+    sonnet: 'gemini-3.1-pro-preview',
+    haiku: 'gemini-3.6-flash',
+  };
+  const source = fs.readFileSync(sourcePath, 'utf8');
+  const adapted = source.replace(/^tools:\s*\[[^\n]*\]\s*\n/m, '').replace(
+    /^model:\s*(opus|sonnet|haiku)\s*$/m,
+    (_match, tier) => `model: ${modelMap[tier]}`
+  );
+  fs.writeFileSync(destinationPath, adapted);
 }
 
 function ensureDir(targetDir) {
@@ -535,6 +551,10 @@ function agentLabel(agent) {
   return labels[agent] || agent;
 }
 
+function skillCommand(agent, skillName) {
+  return `${agent === 'codex' ? '$' : '/'}${skillName}`;
+}
+
 function info(message) {
   process.stdout.write(`${message}\n`);
 }
@@ -553,4 +573,3 @@ function fail(message) {
 }
 
 main();
-

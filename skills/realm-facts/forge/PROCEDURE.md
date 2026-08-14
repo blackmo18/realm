@@ -1,5 +1,5 @@
 ---
-name: realm-facts:forge
+name: realm-facts-forge
 description: >
   Connect this repo to a central facts repo. Interactively resolves the facts-repo URL and
   local clone path, then delegates all mechanical work — layout bootstrap, factsRepo pointer
@@ -13,7 +13,7 @@ Triggered by: `/realm-facts forge`, "connect facts", first `/realm-facts` invoca
 ## Step 1 — Check existing connection
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py state --project-root .
+python3 "<realmFactsSkillDir>/scripts/facts.py" state --project-root .
 ```
 
 If `FACTS_CONNECTED=true`: print the existing `FACTS_URL`/`FACTS_LOCAL_PATH` and ask
@@ -37,7 +37,7 @@ merge here, that's `sync`'s job.
 ## Step 4 — Bootstrap layout (idempotent)
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py init --facts-root <local-path>
+python3 "<realmFactsSkillDir>/scripts/facts.py" init --facts-root <local-path>
 ```
 
 Safe to re-run against an existing facts repo — never overwrites a fact file, only ensures
@@ -46,7 +46,7 @@ Safe to re-run against an existing facts repo — never overwrites a fact file, 
 ## Step 5 — Write the factsRepo pointer
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py connect \
+python3 "<realmFactsSkillDir>/scripts/facts.py" connect \
   --project-root . --facts-url <url> --local-path <local-path> --branch main
 ```
 

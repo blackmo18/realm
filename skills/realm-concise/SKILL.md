@@ -5,16 +5,19 @@ description: >
   source files over a LOC threshold, scores them by blast radius / test
   safety / churn, and keeps a persistent refactor queue in
   .realm/concise-state.json plus a committed docs/GOD_FILES.md ledger.
-  Recommends the lowest-impact next refactor, delegates approved work to
-  /realm-planning, and records outcomes back to memory. Never approves,
-  plans, or implements without explicit user confirmation.
-origin: realm
+  Use to scan for oversized files, inspect the refactor queue, recommend the
+  lowest-impact candidate, or hand approved work to realm-planning. Never
+  approves, plans, or implements without explicit user confirmation.
 ---
 
 # realm-concise
 
 Persistent god-file triage. Crawler finds candidates, script remembers the
 queue, LLM only reasons about the one file being actively reviewed.
+
+Host invocation: Claude Code and Gemini use `/realm-concise`; Codex uses `$realm-concise`.
+Resolve `realmConciseSkillDir` to the directory containing this `SKILL.md`; use
+`<realmConciseSkillDir>/scripts/concise.py` for every script call.
 
 ## When to Use
 
@@ -38,7 +41,7 @@ queue, LLM only reasons about the one file being actively reviewed.
 
 1. **Script does the counting.** Every LOC count, fan-in resolution, churn lookup, and state mutation goes through `scripts/concise.py`. Never hand-count lines or hand-edit `.realm/concise-state.json`.
 2. **Two active projects, always pass `--root`.** Default targets are `knowledge-craft` and `backoffice-main` (per workspace `CLAUDE.md`). A subcommand naming a file infers the project from the path prefix.
-3. **Gate keeping is not optional.** `approve`, `plan`, and `done` all require the user to explicitly name the file and the action in the same turn — enforced in detail by `lifecycle/SKILL.md`.
+3. **Gate keeping is not optional.** `approve`, `plan`, and `done` all require the user to explicitly name the file and the action in the same turn — enforced in detail by `lifecycle/PROCEDURE.md`.
 4. **`plan` never implements.** It hands off to `/realm-planning` and stops once a plan returns. Implementation is a separate, later, separately-approved action.
 
 ## Syntax
@@ -60,9 +63,9 @@ queue, LLM only reasons about the one file being actively reviewed.
 
 Each subskill is a self-contained procedure — load only the one the trigger matches, not the others.
 
-- `scan` / `next` / `show` → load `query/SKILL.md`
-- `recommend <file>` → load `recommend/SKILL.md`
-- `approve` / `plan` / `done` / `ignore` → load `lifecycle/SKILL.md`
+- `scan` / `next` / `show` → load `query/PROCEDURE.md`
+- `recommend <file>` → load `recommend/PROCEDURE.md`
+- `approve` / `plan` / `done` / `ignore` → load `lifecycle/PROCEDURE.md`
 
 ---
 

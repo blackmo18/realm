@@ -1,5 +1,5 @@
 ---
-name: realm-planning:phase1
+name: realm-planning-phase1
 description: >
   Phase 1 of realm-planning. High-level plan + ADR direction for a topic.
   Enters native plan mode, detects run mode (enhancement / anchored-new /
@@ -27,7 +27,7 @@ Record `Graph: fresh | stale | absent` — carried into the Step 7 plan header.
 
 Resolve topic against cheap indexes:
 1. CLAUDE.md key-files map
-2. `.claude/rules/reuse-existing-utils.md` need-location table
+2. Repository-specific reuse guidance from `AGENTS.md`, `CLAUDE.md`, or host rules
 3. Vault node paths (`classes/`, `functions/`, execution nodes)
 4. Graph present → `graphify query "<topic>" --budget 500`. Graph absent → one `grep -ril "<topic keywords>" src/`.
 
@@ -39,7 +39,7 @@ Graph path reads the `Traversal:` header, not the NODE body:
 | `Start:` seeds hit only neighbor systems (auth, repo, route, API client), no topic-named node | **anchored-new** |
 | No meaningful seed match after one vocab retry | **greenfield** |
 
-**Drift guard:** seeding is label string match — a topic whose words aren't node labels drifts silently (top-ranked NODE lines can be wholly unrelated files). Seeds semantically unrelated to the topic = drift, NOT greenfield. Before concluding greenfield, retry once with the vocab-expansion recipe in `.claude/skills/graphify/references/query.md` (dump node-label vocab, pick ≤12 real vocab tokens, re-query with those). Only conclude greenfield after that retry still misses.
+**Drift guard:** seeding is label string match — a topic whose words aren't node labels drifts silently (top-ranked NODE lines can be wholly unrelated files). Seeds semantically unrelated to the topic = drift, NOT greenfield. Before concluding greenfield, retry once with graphify's installed vocab-expansion guidance when available (dump node-label vocab, pick ≤12 real vocab tokens, re-query with those). Only conclude greenfield after that retry still misses.
 
 Legacy (grep) evidence table:
 

@@ -4,6 +4,9 @@ See [REQUIREMENTS.md](REQUIREMENTS.md) before proceeding.
 
 Realm supports Claude Code, Cursor, Codex, and Gemini / Antigravity. Use the install path that matches your host.
 
+Invocation syntax differs by host: Claude Code and Gemini use `/realm-forge`; Codex uses
+`$realm-forge`. The same rule applies to every Realm skill name.
+
 ---
 
 ## Codex, Cursor, and Gemini
@@ -17,6 +20,12 @@ curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | b
 ```
 
 For Codex and Gemini, the installer copies both Realm skills and the native subagent files into `~/.codex/agents/` and `~/.gemini/agents/`.
+
+Model tiers are adapted per host: planning/architecture use the strongest tier, while deterministic
+query/concierge wrappers use the basic tier. Codex defaults to Sol/Terra/Luna and Claude to
+Opus/Sonnet/Haiku. By explicit policy, Gemini uses 3.1 Pro Preview for both planning and semantic
+execution, and 3.6 Flash for mechanical work. Explicit host configuration may override these defaults.
+Gemini adapters omit Claude-specific tool names and inherit the Gemini session's registered tools.
 
 ### Skills-only direct install
 
@@ -92,7 +101,7 @@ node bin/install.js --agent codex --local /path/to/my-project
 
 ### What Local Install Does:
 - **Gemini / Antigravity**: Copies skills into `<project>/.agents/skills/` and agent definitions into `<project>/.gemini/agents/`.
-- **Codex**: Copies skills into `<project>/.codex/skills/` & `<project>/.agents/skills/`, and agent definitions into `<project>/.codex/agents/`.
+- **Codex**: Copies skills into `<project>/.agents/skills/` and agent definitions into `<project>/.codex/agents/`.
 - **Cursor**: Copies skills into `<project>/.cursor/skills/` & `<project>/.agents/skills/`.
 - **Claude Code**: Copies skills into `<project>/.claude/skills/` and agent definitions into `<project>/.claude/agents/`.
 - **Zero Global State**: Leaves your `~` user home directory completely untouched.
@@ -155,7 +164,7 @@ Cursor, Codex, and Gemini:
 ```bash
 npx skills remove realm
 rm -f ~/.codex/agents/realm-agent-*.toml ~/.codex/agents/architect.toml ~/.codex/agents/code-architect.toml
-rm -f ~/.gemini/agents/realm-agent-*.toml ~/.gemini/agents/architect.toml ~/.gemini/agents/code-architect.toml
+rm -f ~/.gemini/agents/realm-agent-*.md ~/.gemini/agents/architect.md ~/.gemini/agents/code-architect.md
 ```
 
 Claude Code:

@@ -1,11 +1,12 @@
 name = "realm-agent-concise"
 description = "Realm god-file concierge agent. Deterministic crawler (scripts/concise.py) finds oversized source files, scores blast radius, and manages refactor queue."
+model = "gpt-5.6-luna"
+model_reasoning_effort = "low"
 developer_instructions = """
 You are the god-file triage concierge for Realm.
 
-Canonical source: skills/realm-concise/SKILL.md.
-
-Before executing, read skills/realm-concise/SKILL.md and follow its routing and rules.
+Canonical source: the installed realm-concise/SKILL.md. Locate project
+.agents/skills first, then the user's Codex skills directory.
 
 Codex compatibility:
 - Always run LOC counting, churn lookups, and state mutations through scripts/concise.py.

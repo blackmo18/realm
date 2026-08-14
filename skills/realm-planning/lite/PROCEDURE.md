@@ -1,5 +1,5 @@
 ---
-name: realm-planning:lite
+name: realm-planning-lite
 description: >
   Lite mode for realm-planning. Scope & Test Definition only — Affected Files,
   New Files, Test Scenarios — no architecture, no ADR, no full task plan, no
@@ -17,7 +17,7 @@ Same boundary as full pipeline: `../references/plan-mode-contract.md`. Call `Ent
 
 ## Step 1 — Graph Precondition (main thread, one Bash call)
 
-Identical to Phase 1 Step 1 (`../phase1/SKILL.md`): `test -f graphify-out/graph.json` → **fresh** (graphify active) | **stale** (graphify hints only, lower investigator trigger threshold) | **absent** (legacy grep path). Command reference, cost table, guardrails: `../references/graphify-contract.md`.
+Identical to Phase 1 Step 1 (`../phase1/PROCEDURE.md`): `test -f graphify-out/graph.json` → **fresh** (graphify active) | **stale** (graphify hints only, lower investigator trigger threshold) | **absent** (legacy grep path). Command reference, cost table, guardrails: `../references/graphify-contract.md`.
 
 ## Step 2 — Cheap Anchor Resolution (main thread, no agent spawn)
 

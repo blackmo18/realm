@@ -8,10 +8,11 @@ description: >
   the query to exactly one canvas section (plan/design/research/scaffold) and lazy-loads only
   that file — no full canvas pull. Supports --trace (link structure only), --full (expand prose),
   --deps (include dependencies). Zero vault writes.
-origin: realm
 ---
 
 # realm-recall
+
+Host invocation: Claude Code and Gemini use `/realm-recall`; Codex uses `$realm-recall`.
 
 Ask vault anything. Get compressed context back. Optimized for ADR queries.
 
@@ -55,39 +56,10 @@ The primary reason to use realm-recall — answering questions code can't answer
 
 When an ADR was promoted from a `realm-plan` canvas, its `source_plan` field points to the
 canvas dir. realm-recall intent-maps the query to exactly one canvas section and reads only
-that file. Cost: ADR compressed (~20t) + one section (~80–150t).
+that file. Cost: ADR compressed (~20t) + one section (~80–150t). Suppress with `--no-canvas`.
 
-| Query words | Section loaded | Extra tokens |
-|---|---|---|
-| plan / steps / tasks / phases / build / implement | `plan.md` | ~100t |
-| design / architecture / how / approach / structure | `design.md` | ~100t |
-| research / why / evidence / tradeoffs / source / learned | `research.md` | ~120t |
-| scaffold / blueprint / interface / methods / class / file | `scaffold.md` | ~100t |
-| summary / what is / overview / which / what | `_meta.md` section headers only | ~15t |
-| rejected / alternatives / why decided / constraint / chose | ADR body (already loaded) | 0t |
-
-```bash
-/realm-recall "what is the plan for auth refactor"
-→ ADR-auth-refactor (compressed) + work/plans/auth-refactor/plan.md
-
-/realm-recall "what design did we choose for auth"
-→ ADR-auth-refactor (compressed) + work/plans/auth-refactor/design.md
-
-/realm-recall "which research drove the auth decision"
-→ ADR-auth-refactor (compressed) + work/plans/auth-refactor/research.md
-
-/realm-recall "why did we reject X for auth"
-→ ADR-auth-refactor body only — rejected_alternatives already there, 0 extra read
-
-/realm-recall "summarize the auth refactor work"
-→ ADR-auth-refactor (compressed) + _meta.md headers only
-
-/realm-recall "auth" --no-canvas
-→ ADR only, no canvas expansion (suppress source_plan follow)
-```
-
-No canvas follow when: ADR has no `source_plan`,
-`--no-canvas` flag passed, `--trace` flag passed, or intent maps to ADR body (rejected/constraints).
+Trigger-word table, resolution steps, and worked examples: `references/canvas-expansion.md`
+(loads only in Step 4.5, only when a loaded node has `source_plan`).
 
 ## General Query Examples
 
@@ -128,7 +100,7 @@ No canvas follow when: ADR has no `source_plan`,
 
 ## Procedure
 
-Handle steps 1–5 inline using Read/Glob/Bash. Spawn `realm-agent-query` only as fallback for semantic/NL queries (Step 3d). Never spawn agent for known-node, tag, or filename lookups.
+Handle steps 1–5 inline using targeted reads and shell searches. Never spawn an agent for vault lookup; the cached index and bounded semantic fallback are cheaper than a stateless query prompt.
 
 ### Step 1 — Parse query and flags
 
@@ -153,6 +125,7 @@ Work 3a → 3b → 3c → 3d in order. Stop at first hit.
 
 Applies when: query has no spaces, no `@`/`#` prefix, no natural-language words (why/how/what/does/is/rejected/constraint/tried).
 
+If `state.nodeIndex.ids[<query>]` present → resolve `<projectDir>/<that path>` directly (zero bash). Fallback (no nodeIndex, or id absent from it):
 ```bash
 grep -rl "^id: <query>" <projectDir>/
 ```
@@ -180,7 +153,7 @@ Glob: `<projectDir>/**/*<query>*.md` (case-insensitive where supported).
 If ≤20 matches → Read matched files → go to Step 4. No agent spawn.
 If >20 matches → treat as 3d.
 
-**3d — Semantic / NL fallback (agent justified)**
+**3d — Semantic / NL fallback (bounded inline search)**
 
 Applies when: query is multi-word phrase; starts with why/how/what/rejected/constraint/tried/has; is quoted; or 3a–3c returned no results.
 
@@ -190,14 +163,12 @@ grep -rl "<keyword>" <projectDir>/decisions/
 ```
 If hits found → Read matched files → go to Step 4. No agent spawn.
 
-Otherwise spawn `realm-agent-query`:
+Otherwise extract at most five meaningful query keywords, search only
+`decisions/`, `discoveries/`, and `sessions/`, and cap results at 20 paths:
+```bash
+grep -ril -E "<keyword1>|<keyword2>" <projectDir>/decisions <projectDir>/discoveries <projectDir>/sessions | head -20
 ```
-projectRoot: <absolute path to project root>
-mode: recall
-query: <parsed query>
-flags: <list of flags, e.g. "--full --deps" or empty>
-```
-Surface agent output directly. STOP.
+Read matches and continue to Step 4. No matches → print the top indexed IDs and tags, then STOP.
 
 ### Step 4 — Apply flags to loaded nodes
 
@@ -232,93 +203,11 @@ For ADR nodes, also surface: `decision`, `rejected_alternatives`, `consequences`
 
 Skip entirely if: `--trace` flag, `--no-canvas` flag, or no ADR nodes loaded.
 
-For each ADR node loaded that has a `source_plan` field in frontmatter:
-
-**4.5a — Classify query intent:**
-
-Tokenize query (lowercase, split on spaces). Match first winning rule:
-
-| Rule | Trigger words | Target file |
-|---|---|---|
-| `plan` | plan, steps, tasks, phases, build, implement, roadmap, milestones | `plan.md` |
-| `design` | design, architecture, how, approach, structure, pattern, system | `design.md` |
-| `research` | research, why, evidence, tradeoffs, tradeoff, source, learned, studied, found | `research.md` |
-| `scaffold` | scaffold, blueprint, interface, methods, class, file, module, boundary | `scaffold.md` |
-| `meta` | summary, summarize, overview, which, what, list | `_meta.md` |
-| `adr-only` | rejected, alternatives, chose, chose, constraint, consequence, decided | — (no read) |
-
-If no rule matches: default to `meta` (read `_meta.md` headers only).
-
-**4.5b — Resolve canvas path:**
-
-```
-canvas_dir = <projectDir>/<source_plan>
-section_path = <canvas_dir>/<target_file>
-```
-
-If `section_path` does not exist: skip canvas expansion for this node, note in output:
-`canvas section not found: <section_path>`
-
-**4.5c — Read section:**
-
-For `_meta.md` target: read headers only (lines starting with `#` or `|`). ~15 tokens.
-For all other targets: read full file content. ~80–150 tokens.
-
-Attach section content to the node's output under `## Canvas: <section>`.
-
-**4.5d — Token note:**
-
-Append to Step 6 footer:
-`canvas: +<N>t (<section> from <source_plan>)`
+Otherwise load `references/canvas-expansion.md` and follow its Step 4.5 procedure exactly
+(classify intent → resolve canvas path → read section → append token note).
 
 ### Step 5 — Format output (caveman-compressed)
 
-Apply caveman rules: drop articles/filler, use fragments, keep technical data exact. Omit empty fields.
-
-**ADR node (single):**
-```
-<id> [decision·<status>] #tag1 #tag2
-<one-liner from Compressed:>
-decided: <decision field>
-rejected: <rejected_alternatives field, compressed>
-consequences: <consequences field, compressed>
-[Full prose if --full]
-
-## Canvas: <section>          ← only if source_plan present and intent matched
-<section file content, caveman-compressed>
-origin: <source_plan>
-```
-
-**Cluster:**
-```
-recall:<query> <N>nodes
-
-1 decision:<id> #tags
-  <one-liner>
-  decided: <...>
-  rejected: <...>
-
-2 discovery:<id> #tags
-  <one-liner>
-...
-→ <id> --full | <query> --deps | <query> --trace
-```
-
-**--trace:**
-```
-tree:<query>
-
-<type>:<id>
-├─related:[[A]][[B]]
-└─related:[[C]]
-
-~<N×20>t compressed. Obsidian graph for visual.
-```
-
-### Step 6 — Footer
-
-```
-recall done · <N>nodes · ~<estimated>t · mode:<compressed|full|trace>
-[canvas: +<Nt> (<section> from <source_plan>)]   ← only if canvas expanded
-→ /realm-recall <id> --full | --deps | --no-canvas | /realm-fathom <entity> for live+vault
-```
+Load `references/output-format.md` and follow it exactly for node, cluster, and `--trace`
+rendering, and the Step 6 footer. Apply caveman rules: drop articles/filler, use fragments,
+keep technical data exact. Omit empty fields.

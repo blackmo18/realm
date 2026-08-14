@@ -1,8 +1,8 @@
 ---
 name: realm-agent-planning
-description: Realm two-phase planning agent. Phase 1: high-level architecture analysis + ADR direction. Phase 2: code-level implementation blueprint for coding agents.
+description: "Realm two-phase planning agent. Phase 1: high-level architecture analysis and ADR direction. Phase 2: code-level implementation blueprint."
 tools: ["Read", "Write", "Bash", "Agent"]
-model: sonnet
+model: opus
 ---
 
 ## Prompt Defense Baseline

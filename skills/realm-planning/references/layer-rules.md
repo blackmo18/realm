@@ -20,7 +20,7 @@ Phase 2 Step 2. Layers classify **rules only** — scope comes from Phase 1 Anch
 | `auth`/`payments` | ECC `common/security` (full) + `web/security` if frontend-adjacent |
 | all | ECC `common/coding-style`, `common/testing` (always) |
 
-Local `.claude/rules/` overrides ECC. Skip zero-surface rule sets.
+Repository-local guidance (`AGENTS.md`, `CLAUDE.md`, or host rules) overrides defaults. Skip zero-surface rule sets.
 
 **Skills per condition:**
 

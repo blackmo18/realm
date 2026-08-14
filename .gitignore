@@ -16,4 +16,5 @@ Thumbs.db
 
 # Local state
 .claude/
+.gemini/
 .realm/

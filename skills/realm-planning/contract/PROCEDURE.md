@@ -1,5 +1,5 @@
 ---
-name: realm-planning:contract
+name: realm-planning-contract
 description: >
   Draft/write a readable API contract file for an API surface (proto/Connect-RPC
   service, REST route group, or GraphQL schema) that is new or changing in the
@@ -24,7 +24,7 @@ must not assume that. Same steps, different resolution table in Step 1.
 
 ## Trigger
 
-Gate already decided in `phase1/SKILL.md` Step 7 (`../references/contract-delta-gate.md`) — trust it, don't re-derive.
+Gate already decided in `phase1/PROCEDURE.md` Step 7 (`../references/contract-delta-gate.md`) — trust it, don't re-derive.
 No `## Contract Delta` in the approved plan → this fragment never runs.
 
 - `## Contract Delta` present → user says `write contract` / `draft contract`

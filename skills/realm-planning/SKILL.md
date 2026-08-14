@@ -1,12 +1,14 @@
 ---
 name: realm-planning
 description: >
-  Two-phase planning skill. Phase 1: high-level plan + ADR direction. Phase 2: code-level implementation plan for a coding agent.
+  Two-phase architecture and implementation planning with ADR direction, affected files, and must-pass test scenarios. Use for architectural changes, cross-module work, unclear design direction, implementation blueprints, or explicit write-contract/write-ADR requests. Supports a lite scope-and-tests route.
 ---
 
 # realm-planning
 
 Two-phase planning. P1 = high-level + ADR direction. P2 = code-level impl plan.
+
+Host invocation: Claude Code and Gemini use `/realm-planning`; Codex uses `$realm-planning`.
 
 Runs inside native plan mode — each phase has its own Enter/Exit cycle, approval is per-phase, not inherited. Boundary + fallback: `references/plan-mode-contract.md`.
 
@@ -34,21 +36,21 @@ Caveman mode active. Drop articles, filler, pleasantries, hedging. Fragments OK.
 
 ## Routing
 
-- Phase 1 → load `phase1/SKILL.md`
-- Phase 2 → load `phase2/SKILL.md`
-- Lite → load `lite/SKILL.md` (`--lite` flag: Scope & Test Definition only, skips architecture + full plan)
-- Contract → load `contract/SKILL.md` (Phase 1 Step 7 `Contract Delta` embed, or explicit `write contract` trigger below)
-- `write adr` → load `write-adr/SKILL.md` (trigger below)
+- Phase 1 → load `phase1/PROCEDURE.md`
+- Phase 2 → load `phase2/PROCEDURE.md`
+- Lite → load `lite/PROCEDURE.md` (`--lite` flag: Scope & Test Definition only, skips architecture + full plan)
+- Contract → load `contract/PROCEDURE.md` (Phase 1 Step 7 `Contract Delta` embed, or explicit `write contract` trigger below)
+- `write adr` → load `write-adr/PROCEDURE.md` (trigger below)
 
 ---
 
 ## "write contract" — Draft API Contract to Vault
 
-Trigger: user says `write contract` or `draft contract` — any time after Phase 1 approval, before Phase 2. Does not depend on `write adr` (that can come later) — but if `## Contract Delta` is present, Phase 2 depends on **this**: `phase2/SKILL.md` Step 1 refuses to start until the contract file exists. Ordering enforced: **Phase 1 → contract (if applicable) → Phase 2.**
+Trigger: user says `write contract` or `draft contract` — any time after Phase 1 approval, before Phase 2. Does not depend on `write adr` (that can come later) — but if `## Contract Delta` is present, Phase 2 depends on **this**: `phase2/PROCEDURE.md` Step 1 refuses to start until the contract file exists. Ordering enforced: **Phase 1 → contract (if applicable) → Phase 2.**
 
-Only fires when Phase 1 plan output includes a `## Contract Delta` section (see `phase1/SKILL.md` Step 7, gate logic in `references/contract-delta-gate.md`). No delta → nothing to write, say so, and Phase 2's gate is a no-op for this topic.
+Only fires when Phase 1 plan output includes a `## Contract Delta` section (see `phase1/PROCEDURE.md` Step 7, gate logic in `references/contract-delta-gate.md`). No delta → nothing to write, say so, and Phase 2's gate is a no-op for this topic.
 
-Full logic: `contract/SKILL.md`. Writes `<projectDir>/contracts/<slug>-api-contracts.md` using `references/contract-template.md`.
+Full logic: `contract/PROCEDURE.md`. Writes `<projectDir>/contracts/<slug>-api-contracts.md` using `references/contract-template.md`.
 
 Plan-mode write boundary: `references/plan-mode-contract.md`.
 
@@ -58,7 +60,7 @@ Plan-mode write boundary: `references/plan-mode-contract.md`.
 
 Trigger: user says `write adr`, `write the adr`, or `commit adr` — after Phase 1 approval or Phase 2 completion.
 
-Full logic: `write-adr/SKILL.md` — loads state, reserves ADR number, extracts decision from Phase 1, writes planning file + ADR + index update, all direct Write tool (no manifest pipeline, no agent spawn).
+Full logic: `write-adr/PROCEDURE.md` — loads state, reserves ADR number, extracts decision from Phase 1, writes planning file + ADR + index update, all direct Write tool (no manifest pipeline, no agent spawn).
 
 Plan-mode write boundary: `references/plan-mode-contract.md`.
 
@@ -66,7 +68,7 @@ Plan-mode write boundary: `references/plan-mode-contract.md`.
 
 ## Graphify Contract
 
-Phase 1 discovery defaults to the `graphify` CLI when `graphify-out/graph.json` exists — pure graph traversal, zero LLM tokens, far cheaper than an investigator spawn. Command reference, cost table, and guardrails: `references/graphify-contract.md` (loaded by `phase1/SKILL.md` where these commands actually run).
+Phase 1 discovery defaults to the `graphify` CLI when `graphify-out/graph.json` exists — pure graph traversal, zero LLM tokens, far cheaper than an investigator spawn. Command reference, cost table, and guardrails: `references/graphify-contract.md` (loaded by `phase1/PROCEDURE.md` where these commands actually run).
 
 ## Agents & Skills Used
 
@@ -81,14 +83,14 @@ Phase 1 discovery defaults to the `graphify` CLI when `graphify-out/graph.json` 
 | `deep-research` skill | Deep synthesis on new/unknown topics |
 | `council` skill | Structured tradeoff analysis when paths tie |
 | `tdd-workflow` skill | Test plan generation |
-| `contract/SKILL.md` fragment | Draft + write API contract file — Phase 1 Step 7 embed (`Contract Delta`), `write contract` trigger |
-| `write-adr/SKILL.md` fragment | Commit decision to vault — ADR + planning file + index update, `write adr` trigger |
+| `contract/PROCEDURE.md` fragment | Draft + write API contract file — Phase 1 Step 7 embed (`Contract Delta`), `write contract` trigger |
+| `write-adr/PROCEDURE.md` fragment | Commit decision to vault — ADR + planning file + index update, `write adr` trigger |
 
 ## Flow
 
 ```
 /realm-planning <topic>
-P1 (phase1/SKILL.md):
+P1 (phase1/PROCEDURE.md):
   ↓ Step 0 EnterPlanMode ──────────────────── read-only zone
   Step 1 Graph precondition (fresh | stale | absent)
   → Step 2 Mode detect (graphify query --budget 500, drift-guarded)
@@ -98,11 +100,11 @@ P1 (phase1/SKILL.md):
 Contract Delta present in plan?
   no  → straight to P2
   yes → "write contract" REQUIRED before P2
-          → contract/SKILL.md → Write contracts/<slug>-api-contracts.md (direct)
+          → contract/PROCEDURE.md → Write contracts/<slug>-api-contracts.md (direct)
              consumer can start now — does not wait on write adr or P2
         P2 Step 1 gate checks this file exists; missing → STOPS, tells user to write contract first
   ↓
-P2 (phase2/SKILL.md):
+P2 (phase2/PROCEDURE.md):
   ↓ EnterPlanMode (Phase 2's own, separate from Phase 1's) ── read-only zone
   Step 1 Contract Gate (blocks if delta unresolved)
   → Step 2 Rules from layers → Step 3 Code-Architect (Anchor Set verbatim)
@@ -116,7 +118,7 @@ P2 (phase2/SKILL.md):
   → Write decisions/ADR-NNN.md (compressed decision, direct)
   → Update decisions/ADR-000-index.md (direct)
 
---lite (lite/SKILL.md):
+--lite (lite/PROCEDURE.md):
   ↓ EnterPlanMode ──────────────────────── read-only zone
   Step 1 Graph precondition
   → Step 2 Cheap anchor resolution (graphify only; investigator fallback per existing rules)

@@ -1,5 +1,5 @@
 ---
-name: realm-facts:sync
+name: realm-facts-sync
 description: >
   Pull the latest approved facts from the central repo, reindex, and stamp lastSync. Pure
   script/git flow — no LLM reasoning.
@@ -12,7 +12,7 @@ Triggered by: `/realm-facts sync`, "pull latest facts", after a Teams approval n
 ## Step 0 — Guard
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py state --project-root .
+python3 "<realmFactsSkillDir>/scripts/facts.py" state --project-root .
 ```
 
 `FACTS_CONNECTED=false` → `No facts repo connected. Run /realm-facts forge first.` STOP.
@@ -27,13 +27,13 @@ git -C <local-path> pull origin <branch>
 ## Step 2 — Reindex
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py index --facts-root <local-path>
+python3 "<realmFactsSkillDir>/scripts/facts.py" index --facts-root <local-path>
 ```
 
 ## Step 3 — Stamp lastSync
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py state --project-root . --stamp-sync
+python3 "<realmFactsSkillDir>/scripts/facts.py" state --project-root . --stamp-sync
 ```
 
 ## Step 4 — Print summary

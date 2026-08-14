@@ -1,5 +1,5 @@
 ---
-name: realm-concise:recommend
+name: realm-concise-recommend
 description: >
   The one semantic step in realm-concise. Reads a single candidate file,
   checks graphify for callers/neighbors, checks reuse-existing-utils.md for
@@ -17,10 +17,10 @@ This is the only realm-concise flow that reads source. Every other flow is a scr
 
 Follow `../references/recommend-rubric.md` exactly:
 
-1. `python3 ../scripts/concise.py show --root <projectDir> <file>` for metrics (loc, fanIn, hasTest, churn, score, tier).
+1. `python3 "<realmConciseSkillDir>/scripts/concise.py" show --root <projectDir> <file>` for metrics (loc, fanIn, hasTest, churn, score, tier).
 2. `graphify explain "<file>"` for callers/neighbors — mandatory before any raw read per this workspace's graphify-first rule.
 3. Read the file in full.
-4. Duplicate check against `.claude/rules/reuse-existing-utils.md` before proposing any new utility — never recommend recreating `formatCurrency`, `slugify`, sanitize-html, the logger, the rate limiter, or the Hostinger fetch wrapper.
+4. Check the repository's applicable host guidance (`AGENTS.md`, `CLAUDE.md`, or host rules) before proposing any new utility — never recreate an existing domain utility.
 5. Emit the seam list (`extract-to-existing-util` / `extract-to-new-module` / `split-component` / `move-to-repository`) + verdict, in the rubric's output shape.
 
 ## Boundaries

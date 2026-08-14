@@ -1,5 +1,5 @@
 ---
-name: realm-concise:lifecycle
+name: realm-concise-lifecycle
 description: >
   Gated status transitions for realm-concise candidates — approve, plan,
   done, ignore. Every transition requires the user to explicitly name the
@@ -18,12 +18,12 @@ Triggered by: `/realm-concise approve <file>`, `/realm-concise plan <file>`, `/r
 ## `approve <file>`
 
 ```bash
-python3 ../scripts/concise.py set-status --root <projectDir> <file> --status approved
+python3 "<realmConciseSkillDir>/scripts/concise.py" set-status --root <projectDir> <file> --status approved
 ```
 
 ## `plan <file>`
 
-**Gate:** `python3 ../scripts/concise.py show --root <projectDir> <file>`. If `status` is not `approved`, refuse:
+**Gate:** `python3 "<realmConciseSkillDir>/scripts/concise.py" show --root <projectDir> <file>`. If `status` is not `approved`, refuse:
 
 ```
 plan: <file> is status:<current>, not approved.
@@ -41,19 +41,19 @@ If approved:
 Only on explicit user confirmation the refactor landed — never inferred from a plan completing:
 
 ```bash
-python3 ../scripts/concise.py complete --root <projectDir> <file> [--new-files a,b] [--adr ADR-0NN-slug]
+python3 "<realmConciseSkillDir>/scripts/concise.py" complete --root <projectDir> <file> [--new-files a,b] [--adr ADR-0NN-slug]
 ```
 
 Then offer — don't auto-run — `write adr` via `/realm-planning` so the rationale lands in the vault. If taken and an ADR gets written but wasn't passed to `complete` already, feed the id back:
 
 ```bash
-python3 ../scripts/concise.py set-status --root <projectDir> <file> --status refactored --adr ADR-0NN-slug
+python3 "<realmConciseSkillDir>/scripts/concise.py" set-status --root <projectDir> <file> --status refactored --adr ADR-0NN-slug
 ```
 
 ## `ignore <file> --reason "..."`
 
 ```bash
-python3 ../scripts/concise.py set-status --root <projectDir> <file> --status ignored --reason "<reason>"
+python3 "<realmConciseSkillDir>/scripts/concise.py" set-status --root <projectDir> <file> --status ignored --reason "<reason>"
 ```
 
 Script refuses without `--reason` — don't strip it even if the user's reason is short.

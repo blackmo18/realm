@@ -14,6 +14,6 @@ This is the single source of truth for the whole contract pipeline (this gate, `
 
 Ambiguous → default **not affecting** (false negative just delays to a later `write contract`; false positive churns a needless file).
 
-Yes → add `## Contract Delta` to the Phase 1 plan: protocol, module(s), new/changed endpoints, consumers — resolution = `contract/SKILL.md` Steps 1-2. Protocol-agnostic (proto/Connect-RPC, REST, GraphQL).
+Yes → add `## Contract Delta` to the Phase 1 plan: protocol, module(s), new/changed endpoints, consumers — resolution = `contract/PROCEDURE.md` Steps 1-2. Protocol-agnostic (proto/Connect-RPC, REST, GraphQL).
 
 No, or no anchor of that kind → omit the section, skip contract entirely.

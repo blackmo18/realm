@@ -1,12 +1,12 @@
 ---
-name: realm-planning:phase2
+name: realm-planning-phase2
 description: >
   Phase 2 of realm-planning. Code-level implementation plan for a coding agent.
   Requires approved Phase 1. Re-enters plan mode for its own read-only work.
   Consumes Phase 1 Anchor Set as authoritative file list — no layer-based
   re-scan. Always defines Affected Files, New Files, and Test Scenarios
   (must-pass) before the step-by-step plan, then writes
-  execution/<NNN>-exct-<slug>.md to vault.
+  an execution document to the vault using the Realm execution naming convention.
 ---
 
 # realm-planning — Phase 2: Code-Level Plan

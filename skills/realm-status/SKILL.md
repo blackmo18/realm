@@ -2,10 +2,11 @@
 name: realm-status
 description: >
   Read-only status check for the realm pipeline. Reads .realm/realm-state.json and prints the vault path, project slug, pipeline state (draftReady, last run timestamps), and the full doc registry (committed/planned/stale). No writes. Use to quickly assess what the vault knows vs what's pending.
-origin: realm
 ---
 
 # realm-status
+
+Host invocation: Claude Code and Gemini use `/realm-status`; Codex uses `$realm-status`.
 
 Inspect realm pipeline state without scanning or writing.
 

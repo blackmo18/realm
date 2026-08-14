@@ -7,7 +7,7 @@ Loaded only for `/realm-concise recommend <file>`. Every other subcommand is a s
 1. `concise.py show <file>` — loc, fanIn, hasTest, churn, score, tier. One small stdout.
 2. `graphify explain "<file>"` — callers, neighbors, community. Mandatory before any raw read per this workspace's CLAUDE.md.
 3. Read the target file in full.
-4. Duplicate check — before proposing *any* new utility, grep the domain's existing home per `.claude/rules/reuse-existing-utils.md`:
+4. Duplicate check — before proposing any new utility, inspect the repository's applicable host guidance (`AGENTS.md`, `CLAUDE.md`, or host rules) and search the domain's existing utility home:
 
    | Concern in the file | Check first |
    |---|---|

@@ -1,5 +1,5 @@
 ---
-name: realm-facts:recall
+name: realm-facts-recall
 description: >
   Query facts by domain, tag, status, or free-text. Reads facts-index.json only — never a live
   scan of the fact tree. LLM ranks/formats results; the script does the filtering.
@@ -12,7 +12,7 @@ Triggered by: `/realm-facts recall <query>`, `/realm-facts recall <query> --doma
 ## Step 0 — Guard
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py state --project-root .
+python3 "<realmFactsSkillDir>/scripts/facts.py" state --project-root .
 ```
 
 `FACTS_CONNECTED=false` → `No facts repo connected. Run /realm-facts forge first.` STOP.
@@ -20,7 +20,7 @@ python3 .claude/skills/realm-facts/scripts/facts.py state --project-root .
 ## Step 1 — Search
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py search \
+python3 "<realmFactsSkillDir>/scripts/facts.py" search \
   --facts-root <local-path> --query "<query>" [--domain <d>] [--tag <t>] [--status <s>]
 ```
 

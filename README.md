@@ -6,6 +6,10 @@
 
 **Decision capture & knowledge pipeline for Claude Code, Cursor, Codex, and Gemini.** Persists the WHY behind your code — decisions made, alternatives rejected, constraints imposed — as interlinked ADR nodes in an Obsidian vault.
 
+Realm keeps one host-neutral Markdown skill source. Invoke skills with `/realm-*` in
+Claude Code and Gemini, or `$realm-*` in Codex. Host-native agent files contain only
+model, sandbox, and delegation adapters; workflow procedures stay in `skills/`.
+
 ---
 
 ## Table of Contents

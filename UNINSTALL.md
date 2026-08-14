@@ -13,8 +13,8 @@ npx skills remove realm
 If you installed Realm for Codex or Gemini with `install.sh` or `node bin/install.js`, also remove host-native Realm agents:
 
 ```bash
-rm -f ~/.codex/agents/*.toml
-rm -f ~/.gemini/agents/*.toml
+rm -f ~/.codex/agents/realm-agent-*.toml ~/.codex/agents/architect.toml ~/.codex/agents/code-architect.toml
+rm -f ~/.gemini/agents/realm-agent-*.md ~/.gemini/agents/architect.md ~/.gemini/agents/code-architect.md
 ```
 
 Start a new host session after removal so the old skill set is no longer cached.

@@ -1,5 +1,7 @@
 name = "architect"
 description = "High-level architecture analysis subagent used in Phase 1 of realm-planning."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "max"
 developer_instructions = """
 You are the architect subagent for Realm planning.
 

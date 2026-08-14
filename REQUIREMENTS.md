@@ -5,7 +5,7 @@
 ### Supported AI Host
 - Install one or more supported hosts: **Claude Code**, **Cursor**, **Codex**, or **Gemini / Antigravity**.
 - Cursor, Codex, and Gemini installs use the Skills CLI through `npx`.
-- Codex and Gemini full installs also copy native custom-agent TOML files to `~/.codex/agents/` and `~/.gemini/agents/` when you use `install.sh` or `node bin/install.js --agent <codex|gemini>`.
+- Codex and Gemini full installs also copy native custom-agent files (Codex: `.toml`, Gemini: `.md`) to `~/.codex/agents/` and `~/.gemini/agents/` when you use `install.sh` or `node bin/install.js --agent <codex|gemini>`.
 - Claude Code installs use the local plugin marketplace path.
 
 Install commands:
@@ -28,7 +28,7 @@ node bin/install.js --agent gemini
 
 ### Python 3.9+
 - Version: Python 3.9 or higher
-- Used by: Realm helper scripts (`skills/realm-concise/scripts/concise.py` for god-file triage, `scripts/forge_init.py` for vault bootstrap, and `skills/realm-facts/scripts/facts.py` for team facts).
+- Used by: Realm helper scripts (`skills/realm-concise/scripts/concise.py` for god-file triage, `skills/realm-forge/scripts/forge_init.py` for vault bootstrap, and `skills/realm-facts/scripts/facts.py` for team facts).
 
 ### Node.js and npx
 - Version: Any recent Node.js LTS release with `npx`

@@ -1,5 +1,5 @@
 ---
-name: realm-facts:new
+name: realm-facts-new
 description: >
   Interactively author a new fact. Interviews the user for the compressed summary, evidence,
   owners, reviewers, and tags, then hands the write, validation, and reindex to scripts/facts.py.
@@ -13,7 +13,7 @@ Triggered by: `/realm-facts new <domain> <id>`, "create a fact", "document X".
 ## Step 0 — Guard
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py state --project-root .
+python3 "<realmFactsSkillDir>/scripts/facts.py" state --project-root .
 ```
 
 `FACTS_CONNECTED=false` → `No facts repo connected. Run /realm-facts forge first.` STOP.
@@ -40,7 +40,7 @@ Load `../references/fact-schema.md` for the field contract before asking.
 ## Step 3 — Write, validate, index (mechanical)
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py new \
+python3 "<realmFactsSkillDir>/scripts/facts.py" new \
   --facts-root <local-path> --domain <domain> --id <id> \
   --title "<title>" --summary "<compressed>" \
   --owners "<owner1,owner2>" --reviewers "<reviewer1,reviewer2>" --tags "<tag1,tag2>" \
@@ -52,7 +52,7 @@ separate `validate` call needed here, but run it anyway if the interview allowed
 edge cases you're unsure about:
 
 ```bash
-python3 .claude/skills/realm-facts/scripts/facts.py validate --facts-root <local-path> --fact <id>
+python3 "<realmFactsSkillDir>/scripts/facts.py" validate --facts-root <local-path> --fact <id>
 ```
 
 Non-zero exit → surface the `<path>:<field>: <problem>` lines verbatim and ask the user to fix

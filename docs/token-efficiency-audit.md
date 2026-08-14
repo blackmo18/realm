@@ -1,8 +1,9 @@
 # Realm Skills — Token Efficiency Audit
 
-Evaluated against [agent-token-efficiency.md](.claude/rules/agent-token-efficiency.md).
+Evaluated against [agent-token-efficiency.md](../.claude/rules/agent-token-efficiency.md).
 
-Audit date: 2026-08-14
+Audit date: 2026-08-14. Re-baselined: 2026-08-14 (same-day pass fixed realm-forge, realm-recall,
+and a dead-duplication bug found while verifying the original findings).
 
 ---
 
@@ -10,13 +11,13 @@ Audit date: 2026-08-14
 
 | Skill | Lines | Agent Spawns | Scripts? | Verdict |
 |:---|:---:|:---:|:---:|:---:|
-| [realm-forge](skills/realm-forge/SKILL.md) | 54 | 1 (`realm-agent-forge`) | ❌ | ⚠️ WARN |
-| [realm-fathom](skills/realm-fathom/SKILL.md) | 120 | 1 (`realm-agent-fathom`) | ❌ | ⚠️ WARN |
-| [realm-recall](skills/realm-recall/SKILL.md) | 324 | 0–1 (fallback only) | ❌ | ⚠️ WARN |
-| [realm-planning](skills/realm-planning/SKILL.md) | 115 + 4 fragments | 2 (`architect`, `code-architect`) | ❌ | ⚠️ WARN |
-| [realm-concise](skills/realm-concise/SKILL.md) | 73 + 3 fragments | 0 | ✅ `concise.py` | ✅ PASS |
-| [realm-facts](skills/realm-facts/SKILL.md) | 110 + 8 fragments | 0 | ✅ `facts.py` | ✅ PASS |
-| [realm-status](skills/realm-status/SKILL.md) | 83 | 0 | ❌ | ✅ PASS |
+| [realm-forge](../skills/realm-forge/SKILL.md) | 54 | 1 (`realm-agent-forge`, 64 lines) | ✅ `forge_init.py` | ✅ PASS |
+| [realm-recall](../skills/realm-recall/SKILL.md) | 214 + 2 fragments | 0–1 (fallback only) | ❌ | ✅ PASS |
+| [realm-concise](../skills/realm-concise/SKILL.md) | routed + 3 procedures | 0 | ✅ `concise.py` | ✅ PASS |
+| [realm-facts](../skills/realm-facts/SKILL.md) | routed + 8 procedures | 0 | ✅ `facts.py` | ✅ PASS |
+| [realm-status](../skills/realm-status/SKILL.md) | inline | 0 | index-first | ✅ PASS |
+| [realm-fathom](../skills/realm-fathom/SKILL.md) | routed + 4 references | 1 only for deep reconciliation | graphify-first | ✅ PASS |
+| [realm-planning](../skills/realm-planning/SKILL.md) | routed procedures | 2 semantic planners | graphify-first | ⚠️ WARN |
 
 ---
 
@@ -59,61 +60,68 @@ Audit date: 2026-08-14
 - **Anti-Pattern 11**: ✅ Step 2 checks `nodeIndex` in state first, falls back to `find` only if cache absent.
 
 > [!TIP]
-> **Minor opportunity (LOW):** Step 2 tag-frequency grep (`grep -rh ... | sort | uniq -c | sort -rn`) runs on every invocation. If tag counts were cached in `nodeIndex` by the write script, this grep could be eliminated. Not a blocker — this is a single bash call, ~10 tokens of stdout.
+> **Minor opportunity (LOW):** Step 2 tag-frequency grep (`grep -rh ... | sort | uniq -c | sort -rn`) runs on every invocation. If tag counts were cached in `nodeIndex` by the write script, this grep could be eliminated. Not a blocker — this is a single bash call, ~10 tokens of stdout. Still open.
 
 ---
 
-### ⚠️ WARN — realm-recall
+### ✅ PASS — realm-forge *(fixed 2026-08-14, was ⚠️ WARN)*
 
-| # | Anti-Pattern | Severity | Finding |
-|:---|:---|:---:|:---|
-| 3 | **Fat prompt** | HIGH | 324 lines — the longest SKILL.md in the entire repo. Loaded into context on every recall invocation. |
-| 7 | **Monolithic reference** | MEDIUM | Unlike realm-concise and realm-facts, realm-recall has **no** sub-fragments or `references/` directory. The full 324-line procedure, canvas lazy-load logic, and output formatting are all in one file. |
-| 11 | **Live scan replacing cacheable index** | MEDIUM | Step 3a/3b/3c use `grep -rl` and glob over `<projectDir>/` on every invocation. If the write script cached a `nodeIndex` (id→path, tag→paths maps) in `realm-state.json`, these could be simple JSON lookups. |
+Was: `realm-agent-forge` (79 lines) did all mechanical work itself — mkdir, template writes,
+ADR index stub, host guidance anchor, overview.md, `.gitignore`, `realm-state.json` — as a chain of
+Write/Bash tool calls.
 
-**What's good:**
-- Resolution ladder (3a→3b→3c→3d) minimizes agent spawns — only 3d (semantic NL fallback) spawns `realm-agent-query`.
-- `--count` and `--trace` flags are token-efficient by design.
-- Canvas lazy-load intent-mapping is well-designed (deterministic word-match, not LLM reasoning).
+Fix applied: `skills/realm-forge/scripts/forge_init.py` now owns the entire bootstrap — `scaffold_dirs`,
+`update_gitignore`, `write_templates`, `write_adr_index`, `write_host_anchor`, `write_overview`,
+`scan_existing_docs`, `write_state` — all skip-if-exists, one `python3 forge_init.py` call.
+`agents/realm-agent-forge.md` shrank 79 → 64 lines and now does only Step 1 (parse
+package.json/README/plan metadata — genuine judgement) and Step 3 (print the script's summary).
+Verified idempotent: two consecutive runs against a scratch project produce byte-identical output
+(`md5sum` match across every written file, including `realm-state.json`).
 
-**Recommendations:**
-1. **Split into fragments** (HIGH): Move Steps 4.5 (canvas expansion) and Step 5 (output formatting) into `references/canvas-expansion.md` and `references/output-format.md`. Root SKILL.md becomes ~130 lines — a routing + procedure skeleton. Canvas and format rules load on-demand.
-2. **Cache a node index** (MEDIUM): Have the vault write script (realm-forge, write-adr) maintain `nodeIndex: { byId: {}, byTag: {}, counts: {} }` in `realm-state.json`. Steps 3a/3b become JSON key lookups instead of grep.
+- **Anti-Pattern 1**: ✅ Fixed. Zero mechanical Write calls remain in the agent.
+- **Anti-Pattern 6**: ✅ Fixed. ~10 tool calls collapsed into 1 bash call.
 
----
-
-### ⚠️ WARN — realm-forge
-
-| # | Anti-Pattern | Severity | Finding |
-|:---|:---|:---:|:---|
-| 1 | **LLM doing mechanical work** | HIGH | `realm-agent-forge` (79 lines) creates directories, writes template files, seeds `realm-state.json`, and appends `.gitignore`. These are all deterministic operations with exactly one correct output. |
-| 6 | **Mid-chain tool accumulation** | MEDIUM | The forge agent likely emits 8–12+ tool calls (mkdir, write overview.md, write architecture.md, write ADR index, write state JSON, append .gitignore, etc.) — each result accumulates in context. |
-
-**What's good:**
-- SKILL.md is slim (54 lines) and cleanly separates interactive (vault path resolution) from mechanical (agent spawn).
-- Idempotent design is correct.
-
-**Recommendations:**
-1. **Move to a script** (HIGH): Create `scripts/forge.sh` or `scripts/forge.py` that accepts `--vault-path` and `--project-slug` arguments. Handles all directory creation, template writing, state seeding, and .gitignore mutation in one invocation. The skill SKILL.md handles the interactive Step 1 (vault path resolution with user), then runs the script instead of spawning an agent.
-2. This collapses ~10 tool calls into 1 bash call with small stdout.
+**No findings.**
 
 ---
 
-### ⚠️ WARN — realm-fathom
+### ✅ PASS — realm-recall *(fixed 2026-08-14, was ⚠️ WARN)*
+
+Was: 324 lines in one file — the longest SKILL.md in the repo — with Step 3a running
+`grep -rl "^id: <query>"` on every exact-ID query despite `realm-state.json.nodeIndex.ids`
+already providing an id→path map (built by `manifest_write.py:_build_node_index`, already
+consumed directly by realm-recall and realm-fathom).
+
+Fix applied:
+- Step 3a now checks `state.nodeIndex.ids[<query>]` first (zero bash), falls back to `grep -rl`
+  only when the index is absent or the id isn't in it.
+- Extracted `references/canvas-expansion.md` (83 lines: trigger-word table, resolution steps,
+  worked examples, Step 4.5 procedure) and `references/output-format.md` (53 lines: Step 5
+  rendering templates + Step 6 footer). Both load only when their step actually runs — canvas
+  expansion only fires when a loaded node has `source_plan`.
+- Root SKILL.md: 324 → 214 lines.
+
+- **Anti-Pattern 3 (Fat prompt)**: ✅ Fixed. 214 lines, and canvas/format content no longer loads unconditionally.
+- **Anti-Pattern 7 (Monolithic reference)**: ✅ Fixed. Two load-on-demand fragments, matching the realm-concise/realm-facts pattern.
+- **Anti-Pattern 11 (Live scan vs cache)**: ✅ Fixed for 3a (the exact-ID case, the cheapest and most common lookup). 3b (tag) and 3c (filename fuzzy) still grep/glob live — `nodeIndex` has no tag→paths map, only id→path and per-subdir counts. Left as-is: extending the index schema is a `manifest_write.py` change with its own blast radius, not a SKILL.md fix. Track separately if tag lookups become a hot path.
+
+**No findings** (see note above on the intentionally-deferred tag/filename cache).
+
+---
+
+### ✅ PASS — realm-fathom
 
 | # | Anti-Pattern | Severity | Finding |
 |:---|:---|:---:|:---|
-| 3 | **Fat agent prompt** | HIGH | `realm-agent-fathom` is 81 lines + it loads `realm-agent-fathom-templates` (134 lines) for output formatting. That's 215 lines of system prompt on every spawn. |
-| 9 | **Over-strong model** | MEDIUM | Fathom always spawns a full agent to do graphify query + vault lookup + drift detection. For simple named-entity queries (`function:validateUser`), the skill itself could run `graphify query validateUser`, read the vault via inline grep, and only spawn the agent for complex freeform questions. |
+| 3 | **Fat agent prompt** | FIXED | Agent wrapper is under 80 lines. It loads one small entity-specific reference and delays output-format loading until render time. |
+| 9 | **Model tier** | INTENTIONAL | Codex uses balanced Terra and Claude uses Sonnet. Gemini execution uses the latest Pro model by explicit policy; mechanical work remains on Flash. Mechanical vault lookup stays inline and index-first. |
 
 **What's good:**
 - Source hierarchy is well-defined (graphify → investigator fallback → vault).
 - Drift detection is genuine LLM reasoning work — correctly assigned to an agent.
 - Guards degrade gracefully (code-only when vault absent).
 
-**Recommendations:**
-1. **Split fathom-templates** (HIGH): The 134-line template file is loaded every spawn regardless of query type. Split into per-output-type fragments so only the relevant template loads.
-2. **Inline simple entity lookups** (MEDIUM): For `function:X` or `class:X` queries where graphify exists and is fresh, the skill can run `graphify query X` inline, grep the vault, and only spawn the agent if: graphify is absent/stale, the query is freeform, or drift is detected. This avoids an agent spawn for the 80% case.
+No HIGH finding remains. Investigator templates are split by query type; vault lookup no longer spawns a second agent.
 
 ---
 
@@ -125,14 +133,39 @@ Audit date: 2026-08-14
 | 3a | **Fat-prompt regression risk** | MEDIUM | 10 reference files totaling ~465 lines. Well-fragmented *now*, but high risk of regrowth — each new feature (contract delta, anchor resolution, logging plan) added a new reference. |
 
 **What's good:**
-- **Best-in-class fragmentation**: Root SKILL.md (115 lines) routes to 4 sub-skills + 10 reference fragments. Only the triggered path loads.
-- **Correct agent usage**: `architect` (13 lines) and `code-architect` (13 lines) are ultra-slim agent definitions — genuine reasoning work, not mechanical.
+- **Best-in-class fragmentation**: Root SKILL.md (127 lines) routes to 4 sub-skills + 10 reference fragments. Only the triggered path loads.
+- **Correct agent usage**: `architect` (20 lines) and `code-architect` (13 lines) are ultra-slim agent definitions — genuine reasoning work, not mechanical.
 - **Contract gate pattern**: Enforces ordering without LLM coordination — structural, not prompt-based.
 - **Graphify-first design**: Deterministic graph traversal before any agent spawn.
 
-**Recommendations:**
-1. **Templatize plan output** (MEDIUM): `plan-template.md` (133 lines) could become a script that emits the skeleton file, with the agent filling only the semantic sections. Currently the agent reads the full template and hand-assembles the output.
+**Recommendations (deferred — low return relative to churn; `plan-template.md` only loads in phase2, not by default):**
+1. **Templatize plan output** (MEDIUM): `plan-template.md` (133 lines) could become a script that emits the skeleton file, with the agent filling only the semantic sections.
 2. **Monitor reference growth** (LOW): 10 fragments / 465 lines is approaching the boundary. Track total reference line count as a metric — if it exceeds ~600 lines, audit for consolidation.
+
+---
+
+## Anti-Pattern 10 finding (outside SKILL.md scope, found during re-verification)
+
+Verifying the original audit's "no dead duplication" claim against the live tree turned up a real
+hit: `.gemini/agents/*.md` were hand-maintained byte copies of `agents/*.md`, committed separately.
+Seven of eight were identical; `.gemini/agents/architect.md` had **drifted** — missing the
+"Tool discipline (keep token spend low)" block present in `agents/architect.md`, meaning Gemini
+users got an architect agent without the graphify-first / grep-before-read discipline the other
+hosts had. `.claude/agents/*.md` already avoided this — it's gitignored and generated at
+install/update time from `agents/*.md`, never committed.
+
+**Fixed 2026-08-14**: `.gemini/agents/*.md` removed from git, `.gemini/` added to `.gitignore`,
+and `bin/install.js` / `install.sh` / `update.sh` now copy Gemini's native agent files straight
+from `agents/*.md` (mirroring the existing Claude branch), so `agents/` is the single source of
+truth and this class of drift is now structurally impossible. Verified: a scratch local install
+(`node bin/install.js --agent gemini --local <dir>`) derives every agent from `agents/` and changes
+only the host-specific model identifier while removing Claude-only tool names so Gemini inherits
+its registered host tools. Also fixed adjacent doc/uninstall bugs where `INSTALL.md`/`UNINSTALL.md`/`REQUIREMENTS.md`
+told users to `rm -f ~/.gemini/agents/*.toml` — Gemini agents are `.md`, not `.toml`; that glob
+matched nothing and left stale agent files behind on uninstall.
+
+This wasn't in the original rubric's per-skill scope (it's install-tooling, not a SKILL.md), but
+it's the same category (10 — dead duplication) and cost real correctness, not just tokens.
 
 ---
 
@@ -140,19 +173,22 @@ Audit date: 2026-08-14
 
 | Anti-Pattern | realm-forge | realm-fathom | realm-recall | realm-planning | realm-concise | realm-facts | realm-status |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| 1 — LLM mechanical work | 🔴 HIGH | — | — | — | ✅ | ✅ | ✅ |
+| 1 — LLM mechanical work | ✅ | — | — | — | ✅ | ✅ | ✅ |
 | 1a — Shared-state lifecycle | — | — | — | — | ✅ | ✅ | — |
 | 2 — Redundant cross-stage | — | — | — | — | — | — | — |
-| 3 — Fat prompt | — | 🔴 HIGH | 🔴 HIGH | — | ✅ | ✅ | ✅ |
+| 3 — Fat prompt | — | ✅ | ✅ | — | ✅ | ✅ | ✅ |
 | 3a — Fat-prompt regression | — | — | — | 🟡 MED | — | — | — |
 | 4 — Whole-file reads | — | — | — | — | — | ✅ | — |
 | 5 — Read-modify-write churn | — | — | — | — | — | — | — |
-| 6 — Tool accumulation | 🟡 MED | — | — | — | ✅ | — | ✅ |
-| 7 — Monolithic reference | — | 🟡 MED | 🟡 MED | 🟡 MED | ✅ | — | — |
+| 6 — Tool accumulation | ✅ | — | — | — | ✅ | — | ✅ |
+| 7 — Monolithic reference | — | ✅ | ✅ | 🟡 MED | ✅ | — | — |
 | 8 — Variable data early | — | — | — | — | — | — | — |
-| 9 — Over-strong model | — | 🟡 MED | — | — | — | — | — |
+| 9 — Over-strong model | — | ✅ | — | — | ✅ | ✅ | — |
 | 10 — Dead duplication | — | — | — | — | — | — | — |
-| 11 — Live scan vs cache | — | — | 🟡 MED | — | ✅ | ✅ | 🟢 LOW |
+| 11 — Live scan vs cache | — | — | 🟡 partial (3b/3c) | — | ✅ | ✅ | 🟢 LOW |
+
+(`agents/*.md` vs `.gemini/agents/*.md` duplication is tracked separately above — it isn't a
+per-skill row since it spans install tooling, not a single SKILL.md.)
 
 ---
 
@@ -160,19 +196,15 @@ Audit date: 2026-08-14
 
 ### HIGH — Fix before next release
 
-| # | Skill | Action | Est. Savings |
-|:---|:---|:---|:---|
-| 1 | **realm-forge** | Replace `realm-agent-forge` with `scripts/forge.sh`. Skill handles interactive vault path, script handles all writes. | ~8–12 tool calls → 1 bash call. ~5k tokens/run saved. |
-| 2 | **realm-recall** | Split SKILL.md (324→~130 lines) into root + `references/canvas-expansion.md` + `references/output-format.md`. | ~190 lines removed from default load. |
-| 3 | **realm-fathom** | Split `fathom-templates.md` (134 lines) into per-type fragments. Inline simple entity lookups for the graphify-present case. | ~134 lines removed from default agent prompt. Avoid agent spawn for 80% of queries. |
+None.
 
 ### MEDIUM — Fix when practical
 
 | # | Skill | Action |
 |:---|:---|:---|
-| 4 | **realm-recall** | Cache `nodeIndex` (id→path, tag→paths) in `realm-state.json`, refreshed by write operations. Steps 3a/3b become JSON lookups. |
-| 5 | **realm-planning** | Convert `plan-template.md` to a script-generated skeleton. |
-| 6 | **realm-status** | Cache tag frequency in `nodeIndex`. |
+| 2 | **realm-recall** | Extend `nodeIndex` with a tag→paths map so Step 3b (tag cluster) can also skip `grep`. |
+| 3 | **realm-planning** | Convert `plan-template.md` to a script-generated skeleton. |
+| 4 | **realm-status** | Cache tag frequency in `nodeIndex`. |
 
 ---
 
@@ -180,10 +212,26 @@ Audit date: 2026-08-14
 
 | Category | Count |
 |:---|:---:|
-| ✅ PASS | 3 (realm-concise, realm-facts, realm-status) |
-| ⚠️ WARN | 4 (realm-forge, realm-fathom, realm-recall, realm-planning) |
+| ✅ PASS | 6 (realm-concise, realm-facts, realm-status, realm-forge, realm-recall, realm-fathom) |
+| ⚠️ WARN | 1 (realm-planning) |
 | 🛑 BLOCK | 0 |
 
-**No CRITICAL anti-patterns remain** (realm-forge's mechanical-work issue is HIGH, not CRITICAL, because the agent prompt is slim at 79 lines and the tool chain is bounded). **Overall: the pipeline is shippable** but has clear optimization headroom in the four WARN skills.
+**No CRITICAL or HIGH anti-pattern remains.** Realm-fathom now uses a sub-80-line semantic agent,
+one small query-specific reference, delayed output-format loading, and indexed vault lookup inline.
+The only remaining warning is the planning pipeline's medium-sized reference surface.
 
-The two newest skills (realm-concise, realm-facts) demonstrate the correct pattern: **script owns state, LLM only reasons**. The older skills (forge, fathom, recall) predate the efficiency rules and would benefit from the same treatment.
+## Spawn Graph and Budgets
+
+| Entry | Delegation | Model class | Expected tool budget |
+|---|---|---|---:|
+| realm-concise | none; deterministic script | basic | 1 script call per command |
+| realm-facts | none; deterministic script | current session | 1–3 script/git calls |
+| realm-recall/status | none; index-first inline lookup | current session | 1 state read + bounded fallback |
+| realm-forge | realm-agent-forge → forge_init.py | balanced execution | metadata reads + 1 script call |
+| realm-fathom | realm-agent-fathom → optional investigator only | balanced reasoning | graph query + bounded vault lookup; one fallback spawn maximum |
+| realm-planning phase 1 | architect | strongest planning | graph-first bounded reads |
+| realm-planning phase 2 | code-architect | strongest planning | at most 3 graph gap-fill calls |
+
+Agent prompt sizes: architect 20 lines, code-architect 13, concise 22, fathom 70,
+forge 65, planning 22. Query agent removed. Host adapters select the cheapest tier that
+holds the quality bar; deterministic work remains in scripts.
