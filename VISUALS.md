@@ -44,7 +44,7 @@ Structured planning operating inside native plan mode:
 ```mermaid
 flowchart TD
     PL(["/realm-planning &lt;topic&gt;"]):::cmd --> P1["Phase 1: High-Level Architecture & ADR Direction"]:::step
-    P1 -->|"graphify / cavecrew-investigator search"| ARCH(["architect agent"]):::agent
+    P1 -->|"graphify / cavecrew-investigator search"| ARCH(["realm-agent-architect"]):::agent
     ARCH --> P1OUT["Phase 1 Plan Output"]:::file
 
     P1OUT --> CD{Contract Delta?}:::choice
@@ -52,7 +52,7 @@ flowchart TD
     CD -->|No| P2
 
     WC --> P2["Phase 2: Code-Level Implementation Blueprint"]:::step
-    P2 --> CARCH(["code-architect agent"]):::agent
+    P2 --> CARCH(["realm-agent-code-architect"]):::agent
     CARCH --> P2OUT["Phase 2 Implementation Blueprint"]:::file
 
     P2OUT --> ADR["write adr\ndecisions/ADR-NNN.md"]:::vault

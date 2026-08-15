@@ -1,12 +1,12 @@
-# orchestrate-plan — Canonical Block Contracts
+# realm-orchestrate — Canonical Block Contracts
 
 Single source of truth for every block exchanged in this pipeline. Phase files cite
 this — do not re-copy filled templates elsewhere. Field meaning only, no duplication.
 
-## 1. DISPATCH — orchestrator → `plan-implementor` (first attempt)
+## 1. DISPATCH — orchestrator → `realm-agent-plan-implementor` (first attempt)
 
 ```
-You are a plan-implementor. Implement only this bundle.
+You are realm-agent-plan-implementor. Implement only this bundle.
 
 Use TDD:
 1. Write or update tests for the requested behavior.
@@ -40,7 +40,7 @@ ON_AMBIGUITY: BLOCKED — do not guess
 `UPSTREAM_EXPORTS` replaces prose `PREVIOUS_OUTPUTS` — it is the prior bundle's
 `RESULT.EXPORTS` relayed verbatim, not a summary the implementor must parse.
 
-## 2. FIX_DISPATCH — orchestrator → `plan-implementor` (re-dispatch, attempt 2)
+## 2. FIX_DISPATCH — orchestrator → `realm-agent-plan-implementor` (re-dispatch, attempt 2)
 
 Prepend to the DISPATCH block above (same bundle, `ATTEMPT: 2 of 2`):
 
@@ -54,10 +54,10 @@ REVIEW_FINDINGS:
 DO_NOT_REDO: <task ids already satisfied — leave their code alone>
 ```
 
-Attempt 2 of a MECHANICAL bundle drops the Haiku override (see `../dispatch/SKILL.md`
+Attempt 2 of a MECHANICAL bundle drops the Haiku override (see `../dispatch/PROCEDURE.md`
 escalation rule) — inherit chat model instead.
 
-## 3. RESULT — `plan-implementor` → orchestrator
+## 3. RESULT — `realm-agent-plan-implementor` → orchestrator
 
 ```
 ---RESULT---

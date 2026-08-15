@@ -17,17 +17,24 @@ PUBLIC_SKILLS = {
     "realm-facts",
     "realm-fathom",
     "realm-forge",
+    "realm-orchestrate",
     "realm-planning",
     "realm-recall",
     "realm-status",
 }
 AGENT_MODELS = {
-    "architect.toml": ("gpt-5.6-sol", "max"),
-    "code-architect.toml": ("gpt-5.6-sol", "max"),
+    "realm-agent-architect.toml": ("gpt-5.6-sol", "max"),
+    "realm-agent-code-architect.toml": ("gpt-5.6-sol", "max"),
+    "realm-agent-plan-implementor.toml": ("gpt-5.6-terra", "high"),
     "realm-agent-planning.toml": ("gpt-5.6-sol", "max"),
     "realm-agent-fathom.toml": ("gpt-5.6-terra", "high"),
     "realm-agent-forge.toml": ("gpt-5.6-terra", "medium"),
     "realm-agent-concise.toml": ("gpt-5.6-luna", "low"),
+}
+LEGACY_AGENT_FILES = {
+    "architect.toml",
+    "code-architect.toml",
+    "plan-implementor.toml",
 }
 
 
@@ -142,16 +149,32 @@ printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
         actual = {path.name for path in agent_dir.glob("*.toml")}
         self.assertEqual(actual, set(AGENT_MODELS))
         for filename, (model, effort) in AGENT_MODELS.items():
-            content = (agent_dir / filename).read_text(encoding="utf-8")
+            path = agent_dir / filename
+            content = path.read_text(encoding="utf-8")
+            self.assertIn(f'name = "{path.stem}"', content)
             self.assertIn(f'model = "{model}"', content)
             self.assertIn(f'model_reasoning_effort = "{effort}"', content)
             self.assertRegex(content, r'(?m)^developer_instructions = """')
             self.assertNotIn("/realm-", content)
             self.assertNotIn("skills/realm-", content)
 
+    def test_shared_agents_use_realm_agent_namespace(self):
+        for path in (ROOT / "agents").glob("*.md"):
+            self.assertTrue(path.stem.startswith("realm-agent-"), path.name)
+            content = path.read_text(encoding="utf-8")
+            self.assertRegex(
+                content,
+                rf"(?m)^name:\s*{re.escape(path.stem)}\s*$",
+                path.name,
+            )
+
     def test_global_codex_install_respects_codex_home(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             codex_home = Path(temp_dir) / "custom-codex"
+            agents_dir = codex_home / "agents"
+            agents_dir.mkdir(parents=True)
+            for filename in LEGACY_AGENT_FILES:
+                (agents_dir / filename).write_text("legacy", encoding="utf-8")
             env = os.environ.copy()
             env["CODEX_HOME"] = str(codex_home)
             result = run_installer("--agent", "codex", env=env)
@@ -160,6 +183,8 @@ printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
                 self.assertTrue((codex_home / "skills" / name / "SKILL.md").is_file())
             for filename in AGENT_MODELS:
                 self.assertTrue((codex_home / "agents" / filename).is_file())
+            for filename in LEGACY_AGENT_FILES:
+                self.assertFalse((codex_home / "agents" / filename).exists())
 
     def test_local_codex_install_uses_shared_skill_directory(self):
         with tempfile.TemporaryDirectory() as temp_dir:

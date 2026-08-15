@@ -128,7 +128,7 @@ No HIGH finding remains. Investigator templates are split by query type; vault l
 
 **What's good:**
 - **Best-in-class fragmentation**: Root SKILL.md (127 lines) routes to 4 sub-skills + 10 reference fragments. Only the triggered path loads.
-- **Correct agent usage**: `architect` (20 lines) and `code-architect` (13 lines) are ultra-slim agent definitions — genuine reasoning work, not mechanical.
+- **Correct agent usage**: `realm-agent-architect` (20 lines) and `realm-agent-code-architect` (13 lines) are ultra-slim agent definitions — genuine reasoning work, not mechanical.
 - **Contract gate pattern**: Enforces ordering without LLM coordination — structural, not prompt-based.
 - **Graphify-first design**: Deterministic graph traversal before any agent spawn.
 
@@ -142,9 +142,9 @@ No HIGH finding remains. Investigator templates are split by query type; vault l
 
 Verifying the original audit's "no dead duplication" claim against the live tree turned up a real
 hit: `.gemini/agents/*.md` were hand-maintained byte copies of `agents/*.md`, committed separately.
-Seven of eight were identical; `.gemini/agents/architect.md` had **drifted** — missing the
-"Tool discipline (keep token spend low)" block present in `agents/architect.md`, meaning Gemini
-users got an architect agent without the graphify-first / grep-before-read discipline the other
+Seven of eight were identical; `.gemini/agents/realm-agent-architect.md` had **drifted** — missing the
+"Tool discipline (keep token spend low)" block present in `agents/realm-agent-architect.md`, meaning Gemini
+users got a realm-agent-architect without the graphify-first / grep-before-read discipline the other
 hosts had. `.claude/agents/*.md` already avoided this — it's gitignored and generated at
 install/update time from `agents/*.md`, never committed.
 
@@ -221,9 +221,9 @@ The only remaining warning is the planning pipeline's medium-sized reference sur
 | realm-recall/status | none; bounded live lookup | current session | 1 state read + bounded scan |
 | realm-forge | realm-agent-forge → forge_init.py | balanced execution | metadata reads + 1 script call |
 | realm-fathom | realm-agent-fathom → optional investigator only | balanced reasoning | graph query + bounded vault lookup; one fallback spawn maximum |
-| realm-planning phase 1 | architect | strongest planning | graph-first bounded reads |
-| realm-planning phase 2 | code-architect | strongest planning | at most 3 graph gap-fill calls |
+| realm-planning phase 1 | realm-agent-architect | strongest planning | graph-first bounded reads |
+| realm-planning phase 2 | realm-agent-code-architect | strongest planning | at most 3 graph gap-fill calls |
 
-Agent prompt sizes: architect 20 lines, code-architect 13, concise 22, fathom 70,
+Agent prompt sizes: realm-agent-architect 20 lines, realm-agent-code-architect 13, concise 22, fathom 70,
 forge 65, planning 22. Query agent removed. Host adapters select the cheapest tier that
 holds the quality bar; deterministic work remains in scripts.

@@ -1,6 +1,6 @@
 # Logging Plan Requirements
 
-`code-architect` (Phase 2 Step 3) must produce this for every impl task. Existing logging framework if present; otherwise name the injection point (middleware/wrapper/decorator).
+`realm-agent-code-architect` (Phase 2 Step 3) must produce this for every impl task. Existing logging framework if present; otherwise name the injection point (middleware/wrapper/decorator).
 
 | Rule | Requirement |
 |------|-------------|

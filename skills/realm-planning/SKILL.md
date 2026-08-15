@@ -74,8 +74,8 @@ Phase 1 discovery defaults to the `graphify` CLI when `graphify-out/graph.json` 
 
 | Component | Role |
 |-----------|------|
-| `architect` agent | High-level architecture analysis (Phase 1) |
-| `code-architect` agent | Codebase-aware impl blueprint + logging plan (Phase 2) |
+| `realm-agent-architect` | High-level architecture analysis (Phase 1) |
+| `realm-agent-code-architect` | Codebase-aware impl blueprint + logging plan (Phase 2) |
 | `graphify` CLI | Primary code discovery — mode detect, anchor resolution, 1-hop (Phase 1) |
 | `cavecrew-investigator` agent | Fallback code search when graphify misses or graph absent (Phase 1) |
 | `realm-recall` skill | Pull vault ADRs and prior decisions |

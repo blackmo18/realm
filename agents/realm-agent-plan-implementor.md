@@ -1,5 +1,5 @@
 ---
-name: plan-implementor
+name: realm-agent-plan-implementor
 description: Coding agent for the realm-orchestrate skill. Receives one bundle of related/dependency-ordered tasks, implements them with TDD, runs the test suite, self-validates that all tests pass, and returns a structured RESULT block. Reports BLOCKED when stuck or a required detail is missing. Never touches files listed in PEER_FILES. Use ONLY via the realm-orchestrate skill.
 tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash"]
 ---
@@ -32,7 +32,7 @@ and no scope changes — return BLOCKED instead.
 ## Input Contract
 
 Filled template is canonical in the orchestrator's
-`.claude/skills/orchestrate-plan/references/contracts.md` §1 (DISPATCH) and §2
+`.claude/skills/realm-orchestrate/references/contracts.md` §1 (DISPATCH) and §2
 (FIX_DISPATCH) — read it there if a field's meaning is unclear. Field summary:
 
 | Field | Meaning |

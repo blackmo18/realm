@@ -69,7 +69,7 @@ if [ -d "$AGENTS_SRC" ]; then
     echo -e "${GREEN}✓ $(basename "$agent_file")${NC}"
   done
   # Remove scrapped agents (scan pipeline removed in ADR-focused refactor)
-  for obsolete in realm-manifest-compress realm-manifest-write realm-agent-scan realm-agent-scan-full realm-agent-scan-targeted realm-agent-compress realm-agent-query; do
+  for obsolete in architect code-architect plan-implementor realm-manifest-compress realm-manifest-write realm-agent-scan realm-agent-scan-full realm-agent-scan-targeted realm-agent-compress realm-agent-query; do
     if [ -f "$AGENTS_DST/${obsolete}.md" ]; then
       rm -f "$AGENTS_DST/${obsolete}.md"
       echo -e "${YELLOW}  removed obsolete: ${obsolete}.md${NC}"
@@ -102,7 +102,7 @@ if [ -d "$CODEX_AGENTS_SRC" ]; then
     echo -e "${GREEN}✓ $(basename "$agent_file")${NC}"
   done
   # Remove scrapped Codex agents
-  for obsolete in realm-agent-scan realm-agent-compress realm-agent-write realm-agent-query; do
+  for obsolete in architect code-architect plan-implementor realm-agent-scan realm-agent-compress realm-agent-write realm-agent-query; do
     if [ -f "$CODEX_AGENTS_DST/${obsolete}.toml" ]; then
       rm -f "$CODEX_AGENTS_DST/${obsolete}.toml"
       echo -e "${YELLOW}  removed obsolete codex agent: ${obsolete}.toml${NC}"
@@ -126,7 +126,7 @@ if [ -d "$GEMINI_AGENTS_SRC" ]; then
     echo -e "${GREEN}✓ $(basename "$agent_file")${NC}"
   done
   # Remove scrapped Gemini agents
-  for obsolete in realm-agent-scan realm-agent-compress realm-agent-write realm-agent-query; do
+  for obsolete in architect code-architect plan-implementor realm-agent-scan realm-agent-compress realm-agent-write realm-agent-query; do
     if [ -f "$GEMINI_AGENTS_DST/${obsolete}.md" ]; then
       rm -f "$GEMINI_AGENTS_DST/${obsolete}.md"
       echo -e "${YELLOW}  removed obsolete gemini agent: ${obsolete}.md${NC}"

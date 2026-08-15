@@ -25,9 +25,9 @@ Store per bundle: `B1:MECHANICAL B2:COMPLEX …` (part of the WAVE LEDGER, see
 
 | Spawn | `model` param | When |
 |-------|---------------|------|
-| `plan-implementor` (MECHANICAL, attempt 1) | `"claude-haiku-4-5-20251001"` | Additive/new files, fully spec'd, no integration |
-| `plan-implementor` (MECHANICAL, attempt 2 — retry) | omit (inherit) | Escalation exception — see `../dispatch/SKILL.md` |
-| `plan-implementor` (COMPLEX, any attempt) | omit (inherit) | Edits existing code, integration, transactions, auth |
+| `realm-agent-plan-implementor` (MECHANICAL, attempt 1) | `"claude-haiku-4-5-20251001"` | Additive/new files, fully spec'd, no integration |
+| `realm-agent-plan-implementor` (MECHANICAL, attempt 2 — retry) | omit (inherit) | Escalation exception — see `../dispatch/PROCEDURE.md` |
+| `realm-agent-plan-implementor` (COMPLEX, any attempt) | omit (inherit) | Edits existing code, integration, transactions, auth |
 | `cavecrew-builder` | omit (inherit) | Always inherit — already cheap |
 | `cavecrew-reviewer` | frontmatter pins `model: haiku` | Frontmatter overrides Task inheritance — this is intended, not a bug |
 | `cavecrew-investigator` | omit (inherit) | Always inherit |

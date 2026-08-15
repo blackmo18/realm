@@ -1,0 +1,6 @@
+interface:
+  display_name: "Realm Orchestrate"
+  short_description: "Execute implementation plans with agent teams"
+  default_prompt: "Use $realm-orchestrate to execute this implementation plan with appropriately routed agents."
+policy:
+  allow_implicit_invocation: false

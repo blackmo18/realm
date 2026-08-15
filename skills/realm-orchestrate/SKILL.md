@@ -1,19 +1,17 @@
 ---
-name: orchestrate-plan
+name: realm-orchestrate
 description: >
   Software project manager skill. Analyzes a plan (plan-index.md, a sub-plan, or
   a freeform task list), bundles directly-related or dependency-chained tasks into
-  single-agent units, dispatches plan-implementor coding agents with TDD (parallel
+  single-agent units, dispatches realm-agent-plan-implementor coding agents with TDD (parallel
   when independent, sequential when dependent), checks plan satisfaction inline,
   spawns a fresh cavecrew-reviewer per bundle for code quality, consolidates every
   result, then emits one execution report. Use when the user says "orchestrate the
   plan", "execute the plan", "distribute these tasks", "run the plan with agents",
   or wants tasks managed and shipped end-to-end.
-disable-model-invocation: true
-origin: local
 ---
 
-# orchestrate-plan
+# realm-orchestrate
 
 You are the software project manager — the **hub**. You do not write feature code
 yourself. You analyze, bundle, dispatch, check plan satisfaction, relay code-quality
@@ -21,7 +19,7 @@ results, consolidate, and report.
 
 | Role | Answers |
 |------|---------|
-| `plan-implementor` | "Did I build my assigned slice with TDD and passing tests?" |
+| `realm-agent-plan-implementor` | "Did I build my assigned slice with TDD and passing tests?" |
 | `cavecrew-reviewer` | "Is the code quality acceptable?" (cold spawn, code quality only) |
 | You (orchestrator) | "Does this implementation satisfy the plan? Can the next wave start?" |
 
@@ -58,12 +56,12 @@ Copy this checklist and track it. Each phase file is self-contained; load it onl
 you reach that phase.
 
 ```
-- [ ] P1 Analyze plan            → analyze/SKILL.md
-- [ ] P2 Bundle tasks            → analyze/SKILL.md
-- [ ] P3 Recommend + confirm     → dispatch/SKILL.md
-- [ ] P4 Dispatch (TDD, waves)   → dispatch/SKILL.md
-- [ ] P5 Check each RESULT       → verify/SKILL.md
-- [ ] P6 Consolidate             → verify/SKILL.md
+- [ ] P1 Analyze plan            → analyze/PROCEDURE.md
+- [ ] P2 Bundle tasks            → analyze/PROCEDURE.md
+- [ ] P3 Recommend + confirm     → dispatch/PROCEDURE.md
+- [ ] P4 Dispatch (TDD, waves)   → dispatch/PROCEDURE.md
+- [ ] P5 Check each RESULT       → verify/PROCEDURE.md
+- [ ] P6 Consolidate             → verify/PROCEDURE.md
 - [ ] P7 Execution report        → references/report-template.md
 ```
 
@@ -77,7 +75,7 @@ bundle across the whole run.
 
 ## Coding standards (ECC)
 
-Every `plan-implementor` inherits ECC rules — do not restate them in dispatches:
+Every `realm-agent-plan-implementor` inherits ECC rules — do not restate them in dispatches:
 
 | Concern | Authority |
 |---------|-----------|
@@ -100,7 +98,7 @@ TDD is mandatory: tests written, RED confirmed, code, GREEN confirmed.
 - Never mix reviewer Task calls and implementor Task calls in the same message.
 - Never launch the next implementor wave until every bundle in the current wave passes P5.
 - Auto-retry cap 2 attempts per bundle; attempt 3 stops and surfaces to the user
-  (detail: `dispatch/SKILL.md`).
+  (detail: `dispatch/PROCEDURE.md`).
 - `cavecrew-reviewer` frontmatter pins `model: haiku` — frontmatter overrides Task
   inheritance, so this is intended behavior, not an override to fight (detail:
   `references/classification.md`).
@@ -113,13 +111,13 @@ TDD is mandatory: tests written, RED confirmed, code, GREEN confirmed.
 
 - MECHANICAL bundles get `model: "claude-haiku-4-5-20251001"` explicitly on attempt 1 —
   saves ~3x cost. COMPLEX bundles omit `model` (inherit). No self-escalation beyond the
-  one attempt-2 exception in `dispatch/SKILL.md`.
+  one attempt-2 exception in `dispatch/PROCEDURE.md`.
 - This skill + all agents run with caveman active. Prose compressed; code untouched.
 - Locate code with `cavecrew-investigator` (compressed, ~1/3 vanilla tokens).
 - No warm validator, no resume chains — plan satisfaction checked inline from
   structured RESULT; fresh reviewer per bundle is O(1) token cost regardless of N.
 - Large plan optimization: grep active `[ ]` tasks first; read full file only for
-  active task line ranges (`analyze/SKILL.md`).
+  active task line ranges (`analyze/PROCEDURE.md`).
 - Pass each implementor only its `PLAN_SLICE` + `UPSTREAM_EXPORTS` — never the whole plan.
 - Fresh reviewers read only `FILES_CHANGED` paths — not the full codebase.
 - Do not re-read files an implementor already reported on.

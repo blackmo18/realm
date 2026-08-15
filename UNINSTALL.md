@@ -11,8 +11,10 @@ codex_home="${CODEX_HOME:-$HOME/.codex}"
 rm -rf "$codex_home/skills/realm-forge" "$codex_home/skills/realm-fathom" \
   "$codex_home/skills/realm-recall" "$codex_home/skills/realm-status" \
   "$codex_home/skills/realm-planning" "$codex_home/skills/realm-concise" \
-  "$codex_home/skills/realm-facts"
-rm -f "$codex_home/agents/architect.toml" "$codex_home/agents/code-architect.toml" \
+  "$codex_home/skills/realm-facts" "$codex_home/skills/realm-orchestrate"
+rm -f "$codex_home/agents/realm-agent-architect.toml" \
+  "$codex_home/agents/realm-agent-code-architect.toml" \
+  "$codex_home/agents/realm-agent-plan-implementor.toml" \
   "$codex_home/agents/realm-agent-concise.toml" "$codex_home/agents/realm-agent-fathom.toml" \
   "$codex_home/agents/realm-agent-forge.toml" "$codex_home/agents/realm-agent-planning.toml"
 ```
@@ -30,7 +32,7 @@ npx skills remove realm
 If you installed Realm for Gemini with `install.sh` or `node bin/install.js`, also remove its host-native Realm agents:
 
 ```bash
-rm -f ~/.gemini/agents/realm-agent-*.md ~/.gemini/agents/architect.md ~/.gemini/agents/code-architect.md
+rm -f ~/.gemini/agents/realm-agent-*.md
 ```
 
 Start a new host session after removal so the old skill set is no longer cached.

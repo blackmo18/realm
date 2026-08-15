@@ -3,7 +3,7 @@ name: realm-planning-phase1
 description: >
   Phase 1 of realm-planning. High-level plan + ADR direction for a topic.
   Enters native plan mode, detects run mode (enhancement / anchored-new /
-  greenfield), resolves typed anchors, runs scoped investigation and architect
+  greenfield), resolves typed anchors, runs scoped investigation and realm-agent-architect
   analysis, and produces a plan approved through the host's native plan gate.
 ---
 
@@ -88,7 +88,7 @@ Skip when topic already in codebase. Otherwise:
 
 ## Step 5 — Architect Analysis
 
-`architect` agent has no Bash — it cannot run graphify itself. Spawn `architect` with: topic + requirements, vault context, research findings, and the resolved discovery table (graphify anchor table + `affected` output when graph present, investigator `file:line` table when it ran as fallback or graph absent) fed in by the main thread.
+`realm-agent-architect` has no Bash — it cannot run graphify itself. Spawn `realm-agent-architect` with: topic + requirements, vault context, research findings, and the resolved discovery table (graphify anchor table + `affected` output when graph present, investigator `file:line` table when it ran as fallback or graph absent) fed in by the main thread.
 
 Returns: approach, alternatives, constraints, risks.
 

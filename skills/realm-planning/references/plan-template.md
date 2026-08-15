@@ -29,7 +29,7 @@ Used by the `realm-planning` skill. Phase 1 produces the ADR section. Phase 2 ap
 
 `Source` ∈ `graphify:query` \| `graphify:explain` \| `graphify:affected` \| `graphify:path` \| `vault` \| `investigator` \| `convention`.
 
-<!-- Handoff artifact: Phase 2 passes this table verbatim, including the 1-hop column, to code-architect — no re-derivation. -->
+<!-- Handoff artifact: Phase 2 passes this table verbatim, including the 1-hop column, to realm-agent-code-architect — no re-derivation. -->
 <!-- greenfield: no anchors — replace table with one-paragraph conventions summary (stack, structure, patterns found in shallow pass). -->
 
 ## High-Level Direction
@@ -66,7 +66,7 @@ Used by the `realm-planning` skill. Phase 1 produces the ADR section. Phase 2 ap
 
 ```markdown
 ## Implementation Plan
-**Validated by**: code-architect (against Phase 1 Anchor Set + 1-hop imports — no layer re-scan)
+**Validated by**: realm-agent-code-architect (against Phase 1 Anchor Set + 1-hop imports — no layer re-scan)
 **Active Layers**: [frontend | backend | data | auth | payments | infra — rule selection only, not scope]
 **ECC Rules Loaded**: [only rules selected in Phase 2 Step 2 — not the full ECC set]
 **Skills Loaded**: [only skills selected in Phase 2 Step 2]

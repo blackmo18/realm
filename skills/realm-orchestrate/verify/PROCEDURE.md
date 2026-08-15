@@ -1,14 +1,3 @@
----
-name: orchestrate-plan-verify
-description: >
-  P5-P6 of orchestrate-plan. Checks plan satisfaction inline from the RESULT block,
-  spawns a fresh cavecrew-reviewer per bundle for code quality, then consolidates
-  every result before the P7 report. Loaded by the orchestrate-plan hub — not
-  invoked directly.
-disable-model-invocation: true
-origin: local
----
-
 # verify — P5 Check each RESULT, P6 Consolidate
 
 ## P5 — Check each RESULT (two sub-steps, separate messages)
@@ -27,10 +16,10 @@ For each task in PLAN_SLICE:
 
 If `STATUS` is `BLOCKED` or `PARTIAL` → surface `BLOCKER_NEEDS` to user verbatim. Do
 not proceed to Step B. Do not mark that bundle done. Decide: provide missing detail and
-re-dispatch (`../dispatch/SKILL.md` Retry / fix-dispatch), or pause.
+re-dispatch (`../dispatch/PROCEDURE.md` Retry / fix-dispatch), or pause.
 
 If plan satisfaction fails → re-dispatch as FIX_DISPATCH in the next P4 wave
-(`../references/contracts.md` §2, retry cap in `../dispatch/SKILL.md`). Never amend a
+(`../references/contracts.md` §2, retry cap in `../dispatch/PROCEDURE.md`). Never amend a
 failed run silently.
 
 ### Step B — Code quality (fresh cavecrew-reviewer, cold spawn)

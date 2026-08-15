@@ -1,13 +1,3 @@
----
-name: orchestrate-plan-analyze
-description: >
-  P1-P2 of orchestrate-plan. Reads the plan, extracts tasks, bundles them into
-  agent-sized units, classifies each bundle MECHANICAL/COMPLEX. Loaded by the
-  orchestrate-plan hub — not invoked directly.
-disable-model-invocation: true
-origin: local
----
-
 # analyze — P1 Analyze plan, P2 Bundle tasks
 
 ## P1 — Analyze plan

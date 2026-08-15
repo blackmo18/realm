@@ -46,13 +46,13 @@ Document selected rules + skills before Step 3.
 
 ## Step 3 — Codebase Validation
 
-Spawn `code-architect` with: Phase 1 plan, active rules/skills, **Phase 1 Anchor Set table verbatim** — pass as-is, do not re-derive.
+Spawn `realm-agent-code-architect` with: Phase 1 plan, active rules/skills, **Phase 1 Anchor Set table verbatim** — pass as-is, do not re-derive.
 
-Gap-fill escape: an anchor's 1-hop cell is empty (fallback investigator path didn't collect it) → `code-architect` has Bash, may run `graphify affected "<file>" --depth 1` to fill it. Cap **3** graphify calls. Never grep.
+Gap-fill escape: an anchor's 1-hop cell is empty (fallback investigator path didn't collect it) → `realm-agent-code-architect` has Bash, may run `graphify affected "<file>" --depth 1` to fill it. Cap **3** graphify calls. Never grep.
 
 Greenfield exception: no file list exists → pass Phase 1 conventions summary instead.
 
-**Failure mode**: code-architect returns an empty or unusable file list on a non-greenfield run → surface the gap, ask user whether to re-run Phase 1 anchor resolution or narrow scope. Never fabricate a file list to keep moving.
+**Failure mode**: realm-agent-code-architect returns an empty or unusable file list on a non-greenfield run → surface the gap, ask user whether to re-run Phase 1 anchor resolution or narrow scope. Never fabricate a file list to keep moving.
 
 Returns: conflicts with existing code, existing vs new files, patterns to follow, logging plan (requirements: `../references/logging-plan.md`).
 

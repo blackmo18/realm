@@ -17,6 +17,16 @@ const INSTALL_EXCLUDES = new Set([
   '.realm',
   'node_modules',
 ]);
+const LEGACY_SHARED_AGENT_FILES = [
+  'architect.md',
+  'code-architect.md',
+  'plan-implementor.md',
+];
+const LEGACY_CODEX_AGENT_FILES = [
+  'architect.toml',
+  'code-architect.toml',
+  'plan-implementor.toml',
+];
 
 function main() {
   const options = parseArgs(process.argv.slice(2));
@@ -242,6 +252,10 @@ function installLocal(options, repoRoot) {
         info(`Installed agent: ${path.join(targetAgentsDir, entry.name)}`);
       }
     }
+    removeLegacyAgentFiles(
+      targetAgentsDir,
+      agentExt === '.toml' ? LEGACY_CODEX_AGENT_FILES : LEGACY_SHARED_AGENT_FILES
+    );
   }
 
   process.stdout.write('\n');
@@ -478,6 +492,8 @@ function copyAgentFiles(sourceDir, destinationDir) {
       path.join(destinationDir, entry.name)
     );
   }
+
+  removeLegacyAgentFiles(destinationDir, LEGACY_SHARED_AGENT_FILES);
 }
 
 function installCodexAgents(repoRoot) {
@@ -503,6 +519,8 @@ function installCodexAgents(repoRoot) {
     );
     info(`Installed Codex agent: ${path.join(destinationDir, entry.name)}`);
   }
+
+  removeLegacyAgentFiles(destinationDir, LEGACY_CODEX_AGENT_FILES);
 }
 
 function installGeminiAgents(repoRoot) {
@@ -527,6 +545,19 @@ function installGeminiAgents(repoRoot) {
       path.join(destinationDir, entry.name)
     );
     info(`Installed Gemini agent: ${path.join(destinationDir, entry.name)}`);
+  }
+
+  removeLegacyAgentFiles(destinationDir, LEGACY_SHARED_AGENT_FILES);
+}
+
+function removeLegacyAgentFiles(destinationDir, filenames) {
+  for (const filename of filenames) {
+    const legacyPath = path.join(destinationDir, filename);
+    if (!fs.existsSync(legacyPath)) {
+      continue;
+    }
+    fs.rmSync(legacyPath, { force: true });
+    info(`Removed legacy agent: ${legacyPath}`);
   }
 }
 

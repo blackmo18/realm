@@ -9,7 +9,7 @@ description: >
 
 # realm-planning — Lite: Scope & Test Definition Only
 
-Shortcut path. Skips Phase 1 architecture ceremony (research, `architect` agent, council) and Phase 2 heavier scaffolding (contract gate, rule selection, full task plan, execution-file write). Produces exactly one thing — the Scope Summary block: Affected Files, New Files, Test Scenarios — then stops.
+Shortcut path. Skips Phase 1 architecture ceremony (research, `realm-agent-architect`, council) and Phase 2 heavier scaffolding (contract gate, rule selection, full task plan, execution-file write). Produces exactly one thing — the Scope Summary block: Affected Files, New Files, Test Scenarios — then stops.
 
 ## Step 0 — Enter Plan Mode
 
@@ -21,7 +21,7 @@ Identical to Phase 1 Step 1 (`../phase1/PROCEDURE.md`): `test -f graphify-out/gr
 
 ## Step 2 — Cheap Anchor Resolution (main thread, no agent spawn)
 
-No `architect`, no `code-architect`. Resolve affected files directly:
+No `realm-agent-architect`, no `realm-agent-code-architect`. Resolve affected files directly:
 
 - Graph present: `graphify query "<topic>" --budget 500` → `graphify affected "<X>" --depth 1` / `graphify explain "<X>"` per anchor kind, table in `../references/anchor-resolution.md`.
 - Graph absent: `grep -ril "<topic keywords>" src/`.

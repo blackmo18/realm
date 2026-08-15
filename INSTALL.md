@@ -184,9 +184,11 @@ rm -rf "${CODEX_HOME:-$HOME/.codex}/skills/realm-forge" \
        "${CODEX_HOME:-$HOME/.codex}/skills/realm-status" \
        "${CODEX_HOME:-$HOME/.codex}/skills/realm-planning" \
        "${CODEX_HOME:-$HOME/.codex}/skills/realm-concise" \
-       "${CODEX_HOME:-$HOME/.codex}/skills/realm-facts"
-rm -f "${CODEX_HOME:-$HOME/.codex}/agents/architect.toml" \
-      "${CODEX_HOME:-$HOME/.codex}/agents/code-architect.toml" \
+       "${CODEX_HOME:-$HOME/.codex}/skills/realm-facts" \
+       "${CODEX_HOME:-$HOME/.codex}/skills/realm-orchestrate"
+rm -f "${CODEX_HOME:-$HOME/.codex}/agents/realm-agent-architect.toml" \
+      "${CODEX_HOME:-$HOME/.codex}/agents/realm-agent-code-architect.toml" \
+      "${CODEX_HOME:-$HOME/.codex}/agents/realm-agent-plan-implementor.toml" \
       "${CODEX_HOME:-$HOME/.codex}/agents/realm-agent-concise.toml" \
       "${CODEX_HOME:-$HOME/.codex}/agents/realm-agent-fathom.toml" \
       "${CODEX_HOME:-$HOME/.codex}/agents/realm-agent-forge.toml" \
@@ -197,7 +199,7 @@ Cursor and Gemini Skills CLI installs:
 
 ```bash
 npx skills remove realm
-rm -f ~/.gemini/agents/realm-agent-*.md ~/.gemini/agents/architect.md ~/.gemini/agents/code-architect.md
+rm -f ~/.gemini/agents/realm-agent-*.md
 ```
 
 Claude Code:

@@ -1,7 +1,7 @@
 {
   "name": "realm",
   "description": "Obsidian project-knowledge & decision memory pipeline. Seven-skill system: realm-forge (bootstrap), realm-fathom (investigate), realm-recall (query), realm-status (health), realm-planning (two-phase architecture plan), realm-concise (god-file concierge), realm-facts (team facts: GitLab MR review + Microsoft Teams notifications, agent-ingestable).",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "author": {
     "name": "blackmo",
     "url": "https://github.com/blackmo18"
