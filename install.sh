@@ -3,7 +3,10 @@ set -euo pipefail
 
 # Local clones and remote curl|bash installs both delegate to bin/install.js so
 # installation behavior has one authoritative implementation.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)"
+SCRIPT_DIR=""
+if [ -n "${BASH_SOURCE[0]-}" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)"
+fi
 if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/bin/install.js" ]; then
   exec node "$SCRIPT_DIR/bin/install.js" "$@"
 fi

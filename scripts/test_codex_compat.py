@@ -4,6 +4,7 @@
 import json
 import os
 import re
+import stat
 import subprocess
 import tempfile
 import unittest
@@ -42,6 +43,67 @@ def run_installer(*args, env=None):
 
 
 class CodexCompatibilityTests(unittest.TestCase):
+    def test_piped_bootstrap_uses_github_clone_not_current_checkout(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            mock_bin = root / "bin"
+            log_dir = root / "log"
+            mock_bin.mkdir()
+            log_dir.mkdir()
+
+            git_mock = mock_bin / "git"
+            git_mock.write_text(
+                """#!/bin/sh
+set -eu
+test "$1" = "clone"
+test "$2" = "--depth"
+test "$3" = "1"
+mkdir -p "$5/bin"
+: > "$5/bin/install.js"
+printf '%s\\n' "$4" > "$REALM_TEST_LOG/git-url"
+printf '%s\\n' "$5" > "$REALM_TEST_LOG/clone-dir"
+""",
+                encoding="utf-8",
+            )
+            node_mock = mock_bin / "node"
+            node_mock.write_text(
+                """#!/bin/sh
+set -eu
+printf '%s\\n' "$1" > "$REALM_TEST_LOG/node-script"
+printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
+""",
+                encoding="utf-8",
+            )
+            git_mock.chmod(git_mock.stat().st_mode | stat.S_IXUSR)
+            node_mock.chmod(node_mock.stat().st_mode | stat.S_IXUSR)
+
+            env = os.environ.copy()
+            env["PATH"] = f"{mock_bin}{os.pathsep}{env['PATH']}"
+            env["REALM_TEST_LOG"] = str(log_dir)
+            result = subprocess.run(
+                ["bash", "-s", "--", "--agent", "codex"],
+                cwd=str(ROOT),
+                env=env,
+                input=(ROOT / "install.sh").read_text(encoding="utf-8"),
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+
+            clone_dir = Path(
+                (log_dir / "clone-dir").read_text(encoding="utf-8").strip()
+            )
+            node_script = Path(
+                (log_dir / "node-script").read_text(encoding="utf-8").strip()
+            )
+            self.assertEqual(
+                (log_dir / "git-url").read_text(encoding="utf-8").strip(),
+                "https://github.com/blackmo18/realm.git",
+            )
+            self.assertEqual(node_script, clone_dir / "bin" / "install.js")
+            self.assertNotEqual(node_script, ROOT / "bin" / "install.js")
+            self.assertNotIn("BASH_SOURCE", result.stderr)
+
     def test_only_public_skills_are_discoverable(self):
         discovered = {
             path.parent.name
