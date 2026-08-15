@@ -172,7 +172,19 @@ printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
         with tempfile.TemporaryDirectory() as temp_dir:
             codex_home = Path(temp_dir) / "custom-codex"
             agents_dir = codex_home / "agents"
+            stale_helper = (
+                codex_home
+                / "skills"
+                / "realm-orchestrate"
+                / "analyze"
+                / "SKILL.md"
+            )
+            unrelated_skill = codex_home / "skills" / "user-owned-skill" / "SKILL.md"
             agents_dir.mkdir(parents=True)
+            stale_helper.parent.mkdir(parents=True)
+            stale_helper.write_text("stale", encoding="utf-8")
+            unrelated_skill.parent.mkdir(parents=True)
+            unrelated_skill.write_text("user-owned", encoding="utf-8")
             for filename in LEGACY_AGENT_FILES:
                 (agents_dir / filename).write_text("legacy", encoding="utf-8")
             env = os.environ.copy()
@@ -185,6 +197,11 @@ printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
                 self.assertTrue((codex_home / "agents" / filename).is_file())
             for filename in LEGACY_AGENT_FILES:
                 self.assertFalse((codex_home / "agents" / filename).exists())
+            self.assertFalse(stale_helper.exists())
+            self.assertEqual(
+                unrelated_skill.read_text(encoding="utf-8"),
+                "user-owned",
+            )
 
     def test_local_codex_install_uses_shared_skill_directory(self):
         with tempfile.TemporaryDirectory() as temp_dir:

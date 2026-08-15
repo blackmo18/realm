@@ -278,6 +278,9 @@ function copySkillsDir(sourceDir, destinationDir) {
     const dstPath = path.join(destinationDir, entry.name);
 
     if (entry.isDirectory()) {
+      if (fs.existsSync(dstPath)) {
+        fs.rmSync(dstPath, { recursive: true, force: true });
+      }
       copyDirectoryRecursive(srcPath, dstPath);
     } else if (entry.isFile()) {
       fs.copyFileSync(srcPath, dstPath);
