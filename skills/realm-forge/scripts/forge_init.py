@@ -6,7 +6,7 @@ Owns all deterministic bootstrap work: directories, templates, host guidance,
 overview, document scan, and realm-state.json.
 
 Usage:
-    python3 forge_init.py --project-root <abs> --vault-path <abs> --project-slug <slug> --host <claude|codex|gemini>
+    python3 forge_init.py --project-root <abs> --vault-path <abs> --project-slug <slug> --host <claude|cursor|codex|gemini>
 
 Exit codes:
     0  success
@@ -18,7 +18,6 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timezone
 
 VAULT_SUBDIRS = [
     "decisions", "functions", "classes", "systems", "discoveries", "sessions",
@@ -181,6 +180,7 @@ def write_host_anchor(project_root: str, vault_path: str, project_dir: str, proj
     """Write the active host's project guidance file if missing."""
     relative_paths = {
         "claude": os.path.join(".claude", "CLAUDE.md"),
+        "cursor": "AGENTS.md",
         "codex": "AGENTS.md",
         "gemini": "GEMINI.md",
     }
@@ -247,33 +247,11 @@ repo: {project_root}
     return "created"
 
 
-def scan_existing_docs(project_dir: str) -> dict:
-    """Scan projectDir recursively for .md files. Return docs registry."""
-    docs = {}
-    now = datetime.now(timezone.utc).isoformat()
-    if not os.path.isdir(project_dir):
-        return docs
-    for root, _, files in os.walk(project_dir):
-        for fname in files:
-            if not fname.endswith(".md") or fname.startswith("_"):
-                continue
-            full = os.path.join(root, fname)
-            rel = os.path.relpath(full, project_dir).replace(os.sep, "/")
-            try:
-                mtime = os.path.getmtime(full)
-                updated = datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat()
-            except OSError:
-                updated = now
-            docs[rel] = {"status": "committed", "updated": updated}
-    return docs
-
-
 def write_state(
     project_root: str,
     vault_path: str,
     project_slug: str,
     project_dir: str,
-    docs: dict,
 ) -> str:
     """Write/merge realm-state.json and remove retired pipeline state."""
     state_path = os.path.join(project_root, ".realm", "realm-state.json")
@@ -283,18 +261,13 @@ def write_state(
         state["vaultPath"] = vault_path
         state["projectSlug"] = project_slug
         state["projectDir"] = project_dir
-        for retired_key in ("phase", "manifest", "pendingDrafts", "nodeIndex"):
+        for retired_key in ("phase", "manifest", "pendingDrafts", "nodeIndex", "docs"):
             state.pop(retired_key, None)
-        existing_docs = state.setdefault("docs", {})
-        for k, v in docs.items():
-            if k not in existing_docs:
-                existing_docs[k] = v
     else:
         state = {
             "vaultPath": vault_path,
             "projectSlug": project_slug,
             "projectDir": project_dir,
-            "docs": docs,
         }
     save_state(state, project_root)
     return state_path
@@ -306,7 +279,11 @@ def main() -> None:
     parser.add_argument("--vault-path", required=True)
     parser.add_argument("--project-slug", required=True)
     parser.add_argument("--project-name", default=None, help="Defaults to project-slug")
-    parser.add_argument("--host", choices=("claude", "codex", "gemini"), default="claude")
+    parser.add_argument(
+        "--host",
+        choices=("claude", "cursor", "codex", "gemini"),
+        default="claude",
+    )
     parser.add_argument("--description", default="<one-line project description>")
     parser.add_argument("--stack", default="", help="Tech stack summary, freeform")
     parser.add_argument("--milestones", default="", help="Milestone list, freeform")
@@ -348,12 +325,8 @@ def main() -> None:
     overview_result = write_overview(project_dir, project_root, project_name, args.description, args.stack, args.milestones)
     print(f"  overview.md: {overview_result}")
 
-    # Step 8: scan existing docs
-    docs = scan_existing_docs(project_dir)
-    print(f"  vault docs found: {len(docs)}")
-
-    # Step 9: write/merge realm-state.json
-    state_path = write_state(project_root, vault_path, project_slug, project_dir, docs)
+    # Step 8: write/merge realm-state.json
+    state_path = write_state(project_root, vault_path, project_slug, project_dir)
     print(f"  state: {state_path}")
 
 

@@ -1,7 +1,7 @@
 ---
 name: realm-status
 description: >
-  Read-only status check for Realm. Reads .realm/realm-state.json and prints the vault path, project slug, live vault node counts, and the doc registry (committed/planned/stale). No writes. Use to quickly assess what the vault knows vs what's pending.
+  Read-only status check for Realm. Reads .realm/realm-state.json and prints the vault path, project slug, and live vault node counts by type. No writes. Use to quickly assess what the vault knows vs what's pending.
 ---
 
 # realm-status
@@ -41,7 +41,7 @@ Run /realm-forge to bootstrap.
 ```
 STOP.
 
-Extract: `vaultPath`, `projectSlug`, `projectDir`, `docs`.
+Extract: `vaultPath`, `projectSlug`, `projectDir`.
 
 ### Step 2 — Count nodes by type
 
@@ -50,24 +50,15 @@ Read the live vault tree with one bounded command:
 find <projectDir> -name "*.md" -not -path "*/_templates/*" | sort
 ```
 
-Derive node list from `docs` registry (loaded in Step 1):
-- Group `docs` keys by leading path segment (`decisions/foo.md` → `decisions/`)
-- Strip `.md` suffix for `[[id]]` display
-- Use `docs[path].updated` for date display
+Group results by leading path segment (`decisions/foo.md` → `decisions/`). Strip `.md`
+suffix for `[[id]]` display. Use file mtime for date display.
 
 Tag frequency (run once):
 ```bash
 grep -rh "^  - " <projectDir> --include="*.md" 2>/dev/null | sort | uniq -c | sort -rn | head 20
 ```
 
-### Step 3 — Identify planned and stale docs
-
-From `docs` registry in realm-state.json:
-- `status: "planned"` → planned list
-- `status: "stale"` → stale list
-- `status: "committed"` → committed count
-
-### Step 4 — Print status (caveman-compressed)
+### Step 3 — Print status (caveman-compressed)
 
 ```
 realm:<projectSlug>
@@ -77,8 +68,6 @@ NODES <total>
 decisions/<N>:   [[id]] <date>  [[id2]] <date>
 discoveries/<N>: [[id]] <date>
 sessions/<N>:    <filename>
-planned/<N>:     <path>
-stale/<N>:       <path>
 
 TAGS #<tag>:<N>  #<tag>:<N>  #<tag>:<N>  (top 10)
 
