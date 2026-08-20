@@ -36,6 +36,15 @@ LEGACY_AGENT_FILES = {
     "code-architect.toml",
     "plan-implementor.toml",
 }
+CURSOR_AGENT_FILES = {
+    "realm-agent-architect.md",
+    "realm-agent-code-architect.md",
+    "realm-agent-plan-implementor.md",
+    "realm-agent-planning.md",
+    "realm-agent-fathom.md",
+    "realm-agent-forge.md",
+    "realm-agent-concise.md",
+}
 
 
 def run_installer(*args, env=None):
@@ -213,6 +222,47 @@ printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
             self.assertFalse((project / ".codex" / "skills").exists())
             for filename in AGENT_MODELS:
                 self.assertTrue((project / ".codex" / "agents" / filename).is_file())
+
+    def test_local_cursor_install_uses_portable_skills_and_native_agents(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project = Path(temp_dir) / "project"
+            project.mkdir()
+            run_installer("--agent", "cursor", "--local", str(project))
+            for name in PUBLIC_SKILLS:
+                self.assertTrue(
+                    (project / ".agents" / "skills" / name / "SKILL.md").is_file()
+                )
+            self.assertFalse((project / ".cursor" / "skills").exists())
+            agent_dir = project / ".cursor" / "agents"
+            self.assertEqual(
+                {path.name for path in agent_dir.glob("*.md")},
+                CURSOR_AGENT_FILES,
+            )
+            for path in agent_dir.glob("*.md"):
+                content = path.read_text(encoding="utf-8")
+                self.assertIn("model: inherit", content)
+                self.assertNotRegex(content, r"(?m)^tools:")
+
+    def test_forge_accepts_cursor_and_writes_portable_anchor(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            project = root / "project"
+            vault = root / "vault"
+            project.mkdir()
+            subprocess.run(
+                [
+                    "python3",
+                    str(ROOT / "skills" / "realm-forge" / "scripts" / "forge_init.py"),
+                    "--project-root", str(project),
+                    "--vault-path", str(vault),
+                    "--project-slug", "sample",
+                    "--host", "cursor",
+                ],
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+            self.assertTrue((project / "AGENTS.md").is_file())
 
     def test_forge_migrates_retired_pipeline_state(self):
         with tempfile.TemporaryDirectory() as temp_dir:

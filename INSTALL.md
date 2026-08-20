@@ -50,7 +50,8 @@ npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
 ```
 
-The direct `npx` command installs skills only and does not install Gemini agent adapters.
+The direct `npx` command installs skills only. The recommended installer also installs
+Cursor or Gemini native agent adapters.
 
 What it does:
 
@@ -115,7 +116,8 @@ node bin/install.js --agent codex --local /path/to/my-project
 ### What Local Install Does:
 - **Gemini / Antigravity**: Copies skills into `<project>/.agents/skills/` and agent definitions into `<project>/.gemini/agents/`.
 - **Codex**: Copies skills into `<project>/.agents/skills/` and agent definitions into `<project>/.codex/agents/`.
-- **Cursor**: Copies skills into `<project>/.cursor/skills/` & `<project>/.agents/skills/`.
+- **Cursor**: Copies portable skills into `<project>/.agents/skills/` and native
+  subagents into `<project>/.cursor/agents/`.
 - **Claude Code**: Copies skills into `<project>/.claude/skills/` and agent definitions into `<project>/.claude/agents/`.
 - **Zero Global State**: Leaves your `~` user home directory completely untouched.
 

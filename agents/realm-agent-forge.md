@@ -19,7 +19,7 @@ Received in prompt:
 - `projectRoot` — absolute path to project directory
 - `vaultPath` — absolute path to Obsidian vault root
 - `projectSlug` — kebab-case project slug
-- `host` — `claude`, `codex`, or `gemini`
+- `host` — `claude`, `cursor`, `codex`, or `gemini`
 - `realmForgeSkillDir` — absolute directory containing the installed realm-forge `SKILL.md`
 
 Derived: `projectDir` = `<vaultPath>/projects/<projectSlug>`

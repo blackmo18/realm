@@ -27,6 +27,7 @@ const LEGACY_CODEX_AGENT_FILES = [
   'code-architect.toml',
   'plan-implementor.toml',
 ];
+const LEGACY_CURSOR_AGENT_FILES = LEGACY_SHARED_AGENT_FILES;
 
 function main() {
   const options = parseArgs(process.argv.slice(2));
@@ -206,8 +207,10 @@ function installLocal(options, repoRoot) {
       warn('Realm now uses .agents/skills for project-scoped Codex skills; remove old Realm copies after verifying this install.');
     }
   } else if (agent === 'cursor') {
-    targetSkillsDirs.push(path.join(targetDir, '.cursor', 'skills'));
     targetSkillsDirs.push(path.join(targetDir, '.agents', 'skills'));
+    agentsSrc = path.join(repoRoot, '.cursor', 'agents');
+    targetAgentsDir = path.join(targetDir, '.cursor', 'agents');
+    agentExt = '.md';
   } else if (agent === 'claude') {
     targetSkillsDirs.push(path.join(targetDir, '.claude', 'skills'));
     agentsSrc = path.join(repoRoot, 'agents');
@@ -254,7 +257,11 @@ function installLocal(options, repoRoot) {
     }
     removeLegacyAgentFiles(
       targetAgentsDir,
-      agentExt === '.toml' ? LEGACY_CODEX_AGENT_FILES : LEGACY_SHARED_AGENT_FILES
+      agentExt === '.toml'
+        ? LEGACY_CODEX_AGENT_FILES
+        : agent === 'cursor'
+          ? LEGACY_CURSOR_AGENT_FILES
+          : LEGACY_SHARED_AGENT_FILES
     );
   }
 
@@ -357,6 +364,8 @@ function installForSkillsCli(options, repoRoot) {
     info(`Codex agents dir: ${defaultCodexAgentsDir()}`);
   } else if (options.agent === 'gemini') {
     info(`Gemini agents dir: ${defaultGeminiAgentsDir()}`);
+  } else if (options.agent === 'cursor') {
+    info(`Cursor agents dir: ${defaultCursorAgentsDir()}`);
   }
 
   if (options.dryRun) {
@@ -366,6 +375,9 @@ function installForSkillsCli(options, repoRoot) {
     } else if (options.agent === 'gemini') {
       process.stdout.write('Planned Gemini native agent install:\n');
       process.stdout.write(`- Copy agents/*.md into ${defaultGeminiAgentsDir()}\n`);
+    } else if (options.agent === 'cursor') {
+      process.stdout.write('Planned Cursor native agent install:\n');
+      process.stdout.write(`- Copy .cursor/agents/*.md into ${defaultCursorAgentsDir()}\n`);
     }
     success('Dry run complete.');
     return;
@@ -387,6 +399,8 @@ function installForSkillsCli(options, repoRoot) {
     installCodexAgents(repoRoot);
   } else if (options.agent === 'gemini') {
     installGeminiAgents(repoRoot);
+  } else if (options.agent === 'cursor') {
+    installCursorAgents(repoRoot);
   }
 
   process.stdout.write('\n');
@@ -553,6 +567,25 @@ function installGeminiAgents(repoRoot) {
   removeLegacyAgentFiles(destinationDir, LEGACY_SHARED_AGENT_FILES);
 }
 
+function installCursorAgents(repoRoot) {
+  const sourceDir = path.join(repoRoot, '.cursor', 'agents');
+  const destinationDir = defaultCursorAgentsDir();
+
+  if (!fs.existsSync(sourceDir)) {
+    warn(`Cursor native agents not found at ${sourceDir}`);
+    warn('Realm skills were installed, but Cursor subagent definitions were not copied.');
+    return;
+  }
+
+  ensureDir(destinationDir);
+  copyAgentFiles(sourceDir, destinationDir);
+  for (const entry of fs.readdirSync(sourceDir, { withFileTypes: true })) {
+    if (entry.isFile() && path.extname(entry.name) === '.md') {
+      info(`Installed Cursor agent: ${path.join(destinationDir, entry.name)}`);
+    }
+  }
+}
+
 function removeLegacyAgentFiles(destinationDir, filenames) {
   for (const filename of filenames) {
     const legacyPath = path.join(destinationDir, filename);
@@ -632,6 +665,10 @@ function defaultCodexBaseDir() {
 
 function defaultGeminiAgentsDir() {
   return path.join(os.homedir(), '.gemini', 'agents');
+}
+
+function defaultCursorAgentsDir() {
+  return path.join(os.homedir(), '.cursor', 'agents');
 }
 
 function agentLabel(agent) {

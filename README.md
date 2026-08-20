@@ -156,7 +156,7 @@ curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | b
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent cursor
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent gemini
 
-# Skills-only direct installs
+# Skills-only direct installs (native agents require the recommended installer)
 npx skills add blackmo18/realm -a cursor
 npx skills add blackmo18/realm -a gemini
 ```
