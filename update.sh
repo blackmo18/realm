@@ -110,9 +110,11 @@ if [ -d "$CODEX_AGENTS_SRC" ]; then
   done
 fi
 
-# Step 5: Sync Gemini native agents to ~/.gemini/agents/ (generated from agents/, not a separate source)
+# Step 5: Sync Gemini native agents and Plugin Bundle
 GEMINI_AGENTS_SRC="${SCRIPT_DIR}/agents"
 GEMINI_AGENTS_DST="$HOME/.gemini/agents"
+GEMINI_PLUGIN_DST="$HOME/.gemini/config/plugins/realm"
+
 if [ -d "$GEMINI_AGENTS_SRC" ]; then
   mkdir -p "$GEMINI_AGENTS_DST"
   echo "Syncing Gemini realm agents to $GEMINI_AGENTS_DST..."
@@ -132,6 +134,17 @@ if [ -d "$GEMINI_AGENTS_SRC" ]; then
       echo -e "${YELLOW}  removed obsolete gemini agent: ${obsolete}.md${NC}"
     fi
   done
+fi
+
+# Sync Gemini Plugin Bundle
+if [ -d "$SCRIPT_DIR/skills" ]; then
+  mkdir -p "$GEMINI_PLUGIN_DST"
+  if [ -f "$SCRIPT_DIR/.gemini-plugin/plugin.json" ]; then
+    cp "$SCRIPT_DIR/.gemini-plugin/plugin.json" "$GEMINI_PLUGIN_DST/plugin.json"
+  fi
+  mkdir -p "$GEMINI_PLUGIN_DST/skills"
+  rsync -a --delete --exclude='.git' --exclude='.DS_Store' "$SCRIPT_DIR/skills/" "$GEMINI_PLUGIN_DST/skills/"
+  echo -e "${GREEN}✓ Gemini Plugin Bundle synced to $GEMINI_PLUGIN_DST${NC}"
 fi
 
 echo ""

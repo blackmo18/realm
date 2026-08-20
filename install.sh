@@ -1,14 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
-# Local clones and remote curl|bash installs both delegate to bin/install.js so
+# Local clones and remote curl|bash installs both delegate to bin/install.mjs so
 # installation behavior has one authoritative implementation.
 SCRIPT_DIR=""
 if [ -n "${BASH_SOURCE[0]-}" ]; then
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)"
 fi
-if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/bin/install.js" ]; then
-  exec node "$SCRIPT_DIR/bin/install.js" "$@"
+if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/bin/install.mjs" ]; then
+  exec node "$SCRIPT_DIR/bin/install.mjs" "$@"
 fi
 
 REPO_SLUG="blackmo18/realm"
@@ -31,4 +31,4 @@ fi
 BOOTSTRAP_DIR="$(mktemp -d)"
 trap 'rm -rf "$BOOTSTRAP_DIR"' EXIT
 git clone --depth 1 "https://github.com/${REPO_SLUG}.git" "$BOOTSTRAP_DIR/realm" >/dev/null 2>&1
-node "$BOOTSTRAP_DIR/realm/bin/install.js" "${ARGS[@]}"
+node "$BOOTSTRAP_DIR/realm/bin/install.mjs" "${ARGS[@]}"

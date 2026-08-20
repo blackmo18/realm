@@ -21,8 +21,8 @@ For Codex skills and agents, or Gemini native agents, use the installer:
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent codex
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent gemini
 # or from a local clone:
-node bin/install.js --agent codex
-node bin/install.js --agent gemini
+node bin/install.mjs --agent codex
+node bin/install.mjs --agent gemini
 ```
 
 ### Python 3.9+

@@ -29,7 +29,7 @@ If you installed Realm with `npx skills add`, remove it with:
 npx skills remove realm
 ```
 
-If you installed Realm for Gemini with `install.sh` or `node bin/install.js`, also remove its host-native Realm agents:
+If you installed Realm for Gemini with `install.sh` or `node bin/install.mjs`, also remove its host-native Realm agents:
 
 ```bash
 rm -f ~/.gemini/agents/realm-agent-*.md

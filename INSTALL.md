@@ -24,8 +24,8 @@ third-party Skills CLI.
 From a local clone:
 
 ```bash
-node bin/install.js --agent codex
-node bin/install.js --agent codex --dry-run
+node bin/install.mjs --agent codex
+node bin/install.mjs --agent codex --dry-run
 ```
 
 ## Cursor and Gemini
@@ -77,13 +77,13 @@ After installing:
 From a local Realm clone, this installs both Skills CLI entries and host-native agents globally to your machine:
 
 ```bash
-node bin/install.js --agent gemini
+node bin/install.mjs --agent gemini
 ```
 
 Preview first:
 
 ```bash
-node bin/install.js --agent gemini --dry-run
+node bin/install.mjs --agent gemini --dry-run
 ```
 
 ---
@@ -110,7 +110,7 @@ If you prefer **not** to install Realm globally on your machine, you can install
 ### 2. Into a specific project directory
 ```bash
 ./install.sh --agent gemini --local /path/to/my-project
-node bin/install.js --agent codex --local /path/to/my-project
+node bin/install.mjs --agent codex --local /path/to/my-project
 ```
 
 ### What Local Install Does:
@@ -133,7 +133,7 @@ Claude Code installs Realm as a local or remote plugin. From a local clone of th
 /plugin marketplace add ~/.claude/plugins/marketplaces/caveman
 
 # 2. Copy Realm into the Claude plugin marketplace path
-node bin/install.js --agent claude --force
+node bin/install.mjs --agent claude --force
 
 # 3. Install realm inside Claude Code
 /plugin marketplace add ~/.claude/plugins/marketplaces/realm

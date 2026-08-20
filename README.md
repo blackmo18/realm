@@ -165,8 +165,8 @@ From a local clone:
 
 ```bash
 # Global install
-node bin/install.js --agent codex
-node bin/install.js --agent gemini
+node bin/install.mjs --agent codex
+node bin/install.mjs --agent gemini
 
 # Local project-only install (does not touch ~)
 ./install.sh --agent gemini --local
@@ -181,7 +181,7 @@ node bin/install.js --agent gemini
 /plugin marketplace add ~/.claude/plugins/marketplaces/caveman
 
 # 2. Copy Realm into the Claude plugin marketplace path from a local clone
-node bin/install.js --agent claude --force
+node bin/install.mjs --agent claude --force
 
 # 3. Install realm inside Claude Code
 /plugin marketplace add ~/.claude/plugins/marketplaces/realm

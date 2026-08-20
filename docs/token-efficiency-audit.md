@@ -149,10 +149,10 @@ hosts had. `.claude/agents/*.md` already avoided this — it's gitignored and ge
 install/update time from `agents/*.md`, never committed.
 
 **Fixed 2026-08-14**: `.gemini/agents/*.md` removed from git, `.gemini/` added to `.gitignore`,
-and `bin/install.js` / `install.sh` / `update.sh` now copy Gemini's native agent files straight
+and `bin/install.mjs` / `install.sh` / `update.sh` now copy Gemini's native agent files straight
 from `agents/*.md` (mirroring the existing Claude branch), so `agents/` is the single source of
 truth and this class of drift is now structurally impossible. Verified: a scratch local install
-(`node bin/install.js --agent gemini --local <dir>`) derives every agent from `agents/` and changes
+(`node bin/install.mjs --agent gemini --local <dir>`) derives every agent from `agents/` and changes
 only the host-specific model identifier while removing Claude-only tool names so Gemini inherits
 its registered host tools. Also fixed adjacent doc/uninstall bugs where `INSTALL.md`/`UNINSTALL.md`/`REQUIREMENTS.md`
 told users to `rm -f ~/.gemini/agents/*.toml` — Gemini agents are `.md`, not `.toml`; that glob

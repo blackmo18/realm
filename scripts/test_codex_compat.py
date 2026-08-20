@@ -49,7 +49,7 @@ CURSOR_AGENT_FILES = {
 
 def run_installer(*args, env=None):
     return subprocess.run(
-        ["node", str(ROOT / "bin" / "install.js"), *args],
+        ["node", str(ROOT / "bin" / "install.mjs"), *args],
         cwd=str(ROOT),
         env=env,
         check=True,
@@ -75,7 +75,7 @@ test "$1" = "clone"
 test "$2" = "--depth"
 test "$3" = "1"
 mkdir -p "$5/bin"
-: > "$5/bin/install.js"
+: > "$5/bin/install.mjs"
 printf '%s\\n' "$4" > "$REALM_TEST_LOG/git-url"
 printf '%s\\n' "$5" > "$REALM_TEST_LOG/clone-dir"
 """,
@@ -116,8 +116,8 @@ printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
                 (log_dir / "git-url").read_text(encoding="utf-8").strip(),
                 "https://github.com/blackmo18/realm.git",
             )
-            self.assertEqual(node_script, clone_dir / "bin" / "install.js")
-            self.assertNotEqual(node_script, ROOT / "bin" / "install.js")
+            self.assertEqual(node_script, clone_dir / "bin" / "install.mjs")
+            self.assertNotEqual(node_script, ROOT / "bin" / "install.mjs")
             self.assertNotIn("BASH_SOURCE", result.stderr)
 
     def test_only_public_skills_are_discoverable(self):
