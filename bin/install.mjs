@@ -86,7 +86,7 @@ function requireValue(argv, index, flag) {
   return value;
 }
 
-async function main() {
+function main() {
   const options = parseArgs(process.argv.slice(2));
 
   if (options.help) {
@@ -145,7 +145,9 @@ Examples:
   }
 }
 
-main().catch((err) => {
+try {
+  main();
+} catch (err) {
   console.error(err);
   process.exit(1);
-});
+}
