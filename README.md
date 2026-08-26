@@ -148,6 +148,17 @@ See [docs/realm-facts-workflow.md](docs/realm-facts-workflow.md) for full team w
 
 See [REQUIREMENTS.md](REQUIREMENTS.md) for prerequisites.
 
+### Cursor (plugin)
+
+Install from the repository URL via **Settings → Plugins**:
+
+```
+https://github.com/blackmo18/realm
+```
+
+Cursor reads `.cursor-plugin/plugin.json` and registers Realm's skills plus the Cursor-native
+agent adapters. Reload Cursor afterwards, then run `/realm-forge`.
+
 ### Codex, Cursor, and Gemini
 
 ```bash
