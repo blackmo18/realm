@@ -28,7 +28,32 @@ node bin/install.mjs --agent codex
 node bin/install.mjs --agent codex --dry-run
 ```
 
+## Cursor plugin install
+
+Realm ships a Cursor plugin manifest at `.cursor-plugin/plugin.json`, so Cursor can install it
+straight from the repository URL. In Cursor, open **Settings → Plugins**, choose to install from a
+Git repository, and enter:
+
+```
+https://github.com/blackmo18/realm
+```
+
+This registers Realm's skills (`skills/`) and the Cursor-native agent adapters
+(`.cursor/agents/`) in one step. Restart Cursor or run **Developer: Reload Window**, then run
+`/realm-forge` in your project.
+
+To test an unpublished change before pushing, load the plugin locally instead:
+
+```bash
+mkdir -p ~/.cursor/plugins/local
+cp -R /path/to/realm ~/.cursor/plugins/local/realm
+```
+
+Restart Cursor and confirm the Realm skills and agents appear.
+
 ## Cursor and Gemini
+
+The script installer remains available and is still the path for Gemini:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/blackmo18/realm/main/install.sh | bash -s -- --agent cursor

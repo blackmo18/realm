@@ -1,5 +1,23 @@
 # Contributing to Realm
 
+## Host Plugin Manifests
+
+Each supported host discovers Realm through its own manifest, all at the repository root:
+
+| Host | Manifest | Components it registers |
+|------|----------|-------------------------|
+| Claude Code | `.claude-plugin/plugin.json` | skills, agents |
+| Cursor | `.cursor-plugin/plugin.json` | `skills/`, `.cursor/agents/` |
+| Codex | `.codex-plugin/plugin.json` | skills |
+| Gemini | `.gemini-plugin/plugin.json` | skills |
+
+Cursor requires the manifest to declare `agents` explicitly. Cursor's default agent discovery
+path is `agents/`, which holds the Claude-flavored adapters, so the manifest points at
+`.cursor/agents/` instead.
+
+When cutting a release, bump `version` in every manifest so hosts do not report different
+versions for the same commit.
+
 ## Uploading & Publishing to Claude Plugins
 
 To upload, publish, or update Realm on the Claude Code plugin marketplace:

@@ -1,0 +1,24 @@
+{
+  "name": "realm",
+  "version": "0.1.12",
+  "description": "Obsidian project-knowledge & decision memory pipeline. Seven-skill system: realm-forge (bootstrap), realm-fathom (investigate), realm-recall (query), realm-status (health), realm-planning (two-phase architecture plan), realm-concise (god-file concierge), realm-facts (team facts: GitLab MR review + Microsoft Teams notifications, agent-ingestable).",
+  "author": {
+    "name": "blackmo"
+  },
+  "homepage": "https://github.com/blackmo18/realm#readme",
+  "repository": "https://github.com/blackmo18/realm",
+  "license": "MIT",
+  "keywords": [
+    "obsidian",
+    "knowledge-graph",
+    "architecture",
+    "documentation",
+    "cursor",
+    "claude-code",
+    "codex",
+    "gemini"
+  ],
+  "logo": "images/realm_icon.png",
+  "skills": "./skills/",
+  "agents": "./.cursor/agents/"
+}
