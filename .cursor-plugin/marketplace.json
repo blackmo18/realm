@@ -1,0 +1,20 @@
+{
+  "name": "realm",
+  "description": "Obsidian project-knowledge & decision memory pipeline for continuous learning, ADRs, architecture planning, and god-file triage.",
+  "owner": {
+    "name": "blackmo",
+    "url": "https://github.com/blackmo18"
+  },
+  "plugins": [
+    {
+      "name": "realm",
+      "source": ".",
+      "description": "Living Obsidian vault for project decisions & architecture memory. Core: forge, fathom, recall, status, planning, concise.",
+      "category": "productivity",
+      "license": "MIT",
+      "logo": "images/realm_icon.png",
+      "homepage": "https://github.com/blackmo18/realm",
+      "repository": "https://github.com/blackmo18/realm"
+    }
+  ]
+}
