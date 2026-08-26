@@ -41,6 +41,38 @@ class TestCountLoc:
         f.write_text("")
         assert concise.count_loc(f) == 0
 
+    def test_excludes_jsdoc_and_comment_only_lines(self, tmp_path: Path) -> None:
+        f = tmp_path / "a.ts"
+        f.write_text(
+            "/**\n"
+            " * Explains the public API.\n"
+            " * @example callThing()\n"
+            " */\n"
+            "// Architectural rationale only.\n"
+            "export function callThing() {}\n"
+        )
+        assert concise.count_loc(f) == 1
+
+    def test_handles_block_comments_mixed_with_code(self, tmp_path: Path) -> None:
+        f = tmp_path / "a.ts"
+        f.write_text(
+            "const a = 1; /* rationale starts\n"
+            "and continues as documentation\n"
+            "*/ const b = 2;\n"
+            "/* inline docs */\n"
+        )
+        assert concise.count_loc(f) == 2
+
+    def test_comment_markers_in_strings_are_code(self, tmp_path: Path) -> None:
+        f = tmp_path / "a.ts"
+        f.write_text('const url = "https://example.com/a/*b*/";\n')
+        assert concise.count_loc(f) == 1
+
+    def test_trailing_comments_do_not_add_loc(self, tmp_path: Path) -> None:
+        f = tmp_path / "a.ts"
+        f.write_text("const a = 1; // explanation\n// explanation only\n")
+        assert concise.count_loc(f) == 1
+
 
 class TestIsTestFile:
     def test_matches_dot_test(self) -> None:

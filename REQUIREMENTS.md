@@ -11,7 +11,7 @@
 Install commands:
 
 ```bash
-npx skills add blackmo18/realm -a cursor
+npx --yes skills add blackmo18/realm -a cursor --global --yes
 npx skills add blackmo18/realm -a gemini
 ```
 

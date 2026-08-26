@@ -21,7 +21,17 @@ export function installForCursor(options, repoRoot) {
     return;
   }
 
-  const command = ['npx', 'skills', 'add', options.repo, '-a', options.agent];
+  const command = [
+    'npx',
+    '--yes',
+    'skills',
+    'add',
+    options.repo,
+    '-a',
+    options.agent,
+    '--global',
+    '--yes',
+  ];
   if (options.force) {
     warn('--force is only used by the Claude Code local plugin installer; ignoring it for Skills CLI install.');
   }

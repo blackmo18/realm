@@ -31,6 +31,11 @@ AGENT_MODELS = {
     "realm-agent-forge.toml": ("gpt-5.6-terra", "medium"),
     "realm-agent-concise.toml": ("gpt-5.6-luna", "low"),
 }
+SHARED_TO_CODEX_MODELS = {
+    "opus": "gpt-5.6-sol",
+    "sonnet": "gpt-5.6-terra",
+    "haiku": "gpt-5.6-luna",
+}
 LEGACY_AGENT_FILES = {
     "architect.toml",
     "code-architect.toml",
@@ -59,6 +64,12 @@ def run_installer(*args, env=None):
 
 
 class CodexCompatibilityTests(unittest.TestCase):
+    def assert_codex_agent_models(self, agent_dir):
+        for filename, (model, effort) in AGENT_MODELS.items():
+            content = (agent_dir / filename).read_text(encoding="utf-8")
+            self.assertIn(f'model = "{model}"', content)
+            self.assertIn(f'model_reasoning_effort = "{effort}"', content)
+
     def test_piped_bootstrap_uses_github_clone_not_current_checkout(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -157,15 +168,26 @@ printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
         agent_dir = ROOT / ".codex" / "agents"
         actual = {path.name for path in agent_dir.glob("*.toml")}
         self.assertEqual(actual, set(AGENT_MODELS))
-        for filename, (model, effort) in AGENT_MODELS.items():
+        self.assert_codex_agent_models(agent_dir)
+        for filename in AGENT_MODELS:
             path = agent_dir / filename
             content = path.read_text(encoding="utf-8")
             self.assertIn(f'name = "{path.stem}"', content)
-            self.assertIn(f'model = "{model}"', content)
-            self.assertIn(f'model_reasoning_effort = "{effort}"', content)
             self.assertRegex(content, r'(?m)^developer_instructions = """')
             self.assertNotIn("/realm-", content)
             self.assertNotIn("skills/realm-", content)
+
+    def test_codex_models_map_from_shared_agent_tiers(self):
+        for filename, (codex_model, _effort) in AGENT_MODELS.items():
+            shared_agent = ROOT / "agents" / filename.replace(".toml", ".md")
+            content = shared_agent.read_text(encoding="utf-8")
+            source_model = re.search(r"(?m)^model:\s*(opus|sonnet|haiku)\s*$", content)
+            self.assertIsNotNone(source_model, shared_agent.name)
+            self.assertEqual(
+                codex_model,
+                SHARED_TO_CODEX_MODELS[source_model.group(1)],
+                shared_agent.name,
+            )
 
     def test_shared_agents_use_realm_agent_namespace(self):
         for path in (ROOT / "agents").glob("*.md"):
@@ -204,6 +226,7 @@ printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
                 self.assertTrue((codex_home / "skills" / name / "SKILL.md").is_file())
             for filename in AGENT_MODELS:
                 self.assertTrue((codex_home / "agents" / filename).is_file())
+            self.assert_codex_agent_models(codex_home / "agents")
             for filename in LEGACY_AGENT_FILES:
                 self.assertFalse((codex_home / "agents" / filename).exists())
             self.assertFalse(stale_helper.exists())
@@ -222,6 +245,7 @@ printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
             self.assertFalse((project / ".codex" / "skills").exists())
             for filename in AGENT_MODELS:
                 self.assertTrue((project / ".codex" / "agents" / filename).is_file())
+            self.assert_codex_agent_models(project / ".codex" / "agents")
 
     def test_local_cursor_install_uses_portable_skills_and_native_agents(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -242,6 +266,47 @@ printf '%s\\n' "$@" > "$REALM_TEST_LOG/node-args"
                 content = path.read_text(encoding="utf-8")
                 self.assertIn("model: inherit", content)
                 self.assertNotRegex(content, r"(?m)^tools:")
+
+    def test_global_cursor_install_selects_all_skills_non_interactively(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            mock_bin = root / "bin"
+            cursor_home = root / "home"
+            log_path = root / "npx-args"
+            mock_bin.mkdir()
+
+            npx_mock = mock_bin / "npx"
+            npx_mock.write_text(
+                "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$REALM_TEST_NPX_LOG\"\n",
+                encoding="utf-8",
+            )
+            npx_mock.chmod(npx_mock.stat().st_mode | stat.S_IXUSR)
+
+            env = os.environ.copy()
+            env["PATH"] = f"{mock_bin}{os.pathsep}{env['PATH']}"
+            env["HOME"] = str(cursor_home)
+            env["REALM_TEST_NPX_LOG"] = str(log_path)
+            result = run_installer("--agent", "cursor", env=env)
+
+            self.assertIn("installed globally for Cursor", result.stdout)
+            self.assertEqual(
+                log_path.read_text(encoding="utf-8").splitlines(),
+                [
+                    "--yes",
+                    "skills",
+                    "add",
+                    "blackmo18/realm",
+                    "-a",
+                    "cursor",
+                    "--global",
+                    "--yes",
+                ],
+            )
+            agent_dir = cursor_home / ".cursor" / "agents"
+            self.assertEqual(
+                {path.name for path in agent_dir.glob("*.md")},
+                CURSOR_AGENT_FILES,
+            )
 
     def test_forge_accepts_cursor_and_writes_portable_anchor(self):
         with tempfile.TemporaryDirectory() as temp_dir:

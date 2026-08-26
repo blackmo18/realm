@@ -39,7 +39,7 @@ Resolve `realmConciseSkillDir` to the directory containing this `SKILL.md`; use
 
 ## Ground rules (apply across every subskill)
 
-1. **Script does the counting.** Every LOC count, fan-in resolution, churn lookup, and state mutation goes through `scripts/concise.py`. Never hand-count lines or hand-edit `.realm/concise-state.json`.
+1. **Script does the counting.** Every LOC count, fan-in resolution, churn lookup, and state mutation goes through `scripts/concise.py`. LOC means physical source lines containing code; blank lines, comments, and documentation comments (including JSDoc) are excluded. Never hand-count lines or hand-edit `.realm/concise-state.json`.
 2. **Two active projects, always pass `--root`.** Default targets are `knowledge-craft` and `backoffice-main` (per workspace `CLAUDE.md`). A subcommand naming a file infers the project from the path prefix.
 3. **Gate keeping is not optional.** `approve`, `plan`, and `done` all require the user to explicitly name the file and the action in the same turn — enforced in detail by `lifecycle/PROCEDURE.md`.
 4. **`plan` never implements.** It hands off to `/realm-planning` and stops once a plan returns. Implementation is a separate, later, separately-approved action.

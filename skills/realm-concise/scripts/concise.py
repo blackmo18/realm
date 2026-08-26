@@ -58,23 +58,68 @@ def is_ignored(rel_path: str, patterns: list[str]) -> bool:
 
 
 def count_loc(path: Path) -> int:
+    """Count physical source lines containing code, excluding comments/docs.
+
+    This is deliberately a lightweight lexer rather than a line-prefix check:
+    documentation blocks can begin after code, and code can resume after a block
+    comment closes. Comment markers inside string literals are treated as code.
+    """
     loc = 0
     in_block_comment = False
+    quote: str | None = None
+    escaped = False
+
     for raw_line in path.read_text(errors="replace").splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-        if in_block_comment:
-            if "*/" in line:
-                in_block_comment = False
-            continue
-        if line.startswith("/*"):
-            if "*/" not in line:
+        has_code = False
+        i = 0
+        while i < len(raw_line):
+            char = raw_line[i]
+            following = raw_line[i + 1] if i + 1 < len(raw_line) else ""
+
+            if in_block_comment:
+                if char == "*" and following == "/":
+                    in_block_comment = False
+                    i += 2
+                else:
+                    i += 1
+                continue
+
+            if quote is not None:
+                if not char.isspace():
+                    has_code = True
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == quote:
+                    quote = None
+                i += 1
+                continue
+
+            if char == "/" and following == "/":
+                break
+            if char == "/" and following == "*":
                 in_block_comment = True
-            continue
-        if line.startswith("//"):
-            continue
-        loc += 1
+                i += 2
+                continue
+            if char in {'"', "'", "`"}:
+                quote = char
+                has_code = True
+                i += 1
+                continue
+            if not char.isspace():
+                has_code = True
+            i += 1
+
+        if has_code:
+            loc += 1
+
+        # Single- and double-quoted JavaScript strings cannot continue across a
+        # physical line without an escape. Template literals can.
+        if quote in {'"', "'"}:
+            quote = None
+            escaped = False
+
     return loc
 
 

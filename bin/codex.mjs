@@ -13,6 +13,12 @@ import {
   LEGACY_CODEX_AGENT_FILES,
 } from './utils.mjs';
 
+const CODEX_MODEL_BY_SHARED_MODEL = {
+  opus: 'gpt-5.6-sol',
+  sonnet: 'gpt-5.6-terra',
+  haiku: 'gpt-5.6-luna',
+};
+
 export function installForCodex(options, repoRoot) {
   if (options.isLocal) {
     installLocalForCodex(options, repoRoot);
@@ -89,16 +95,7 @@ function installLocalForCodex(options, repoRoot) {
   info(`Installed skills to ${targetSkillsDir}`);
 
   if (fs.existsSync(agentsSrc)) {
-    ensureDir(targetAgentsDir);
-    for (const entry of fs.readdirSync(agentsSrc, { withFileTypes: true })) {
-      if (entry.isFile() && entry.name.endsWith('.toml')) {
-        const sourcePath = path.join(agentsSrc, entry.name);
-        const targetPath = path.join(targetAgentsDir, entry.name);
-        fs.copyFileSync(sourcePath, targetPath);
-        info(`Installed agent: ${path.join(targetAgentsDir, entry.name)}`);
-      }
-    }
-    removeLegacyAgentFiles(targetAgentsDir, LEGACY_CODEX_AGENT_FILES);
+    installCodexAgents(repoRoot, targetAgentsDir, 'Installed agent');
   }
 
   process.stdout.write('\n');
@@ -111,7 +108,11 @@ function installLocalForCodex(options, repoRoot) {
   );
 }
 
-export function installCodexAgents(repoRoot, agentsDir = defaultCodexAgentsDir()) {
+export function installCodexAgents(
+  repoRoot,
+  agentsDir = defaultCodexAgentsDir(),
+  label = 'Installed Codex agent'
+) {
   const sourceDir = path.join(repoRoot, '.codex', 'agents');
   const destinationDir = agentsDir;
 
@@ -128,12 +129,36 @@ export function installCodexAgents(repoRoot, agentsDir = defaultCodexAgentsDir()
       continue;
     }
 
-    fs.copyFileSync(
+    writeCodexAgent(
       path.join(sourceDir, entry.name),
+      path.join(repoRoot, 'agents', `${path.basename(entry.name, '.toml')}.md`),
       path.join(destinationDir, entry.name)
     );
-    info(`Installed Codex agent: ${path.join(destinationDir, entry.name)}`);
+    info(`${label}: ${path.join(destinationDir, entry.name)}`);
   }
 
   removeLegacyAgentFiles(destinationDir, LEGACY_CODEX_AGENT_FILES);
+}
+
+function writeCodexAgent(templatePath, sharedAgentPath, destinationPath) {
+  const sharedAgent = fs.readFileSync(sharedAgentPath, 'utf8');
+  const sourceModel = sharedAgent.match(/^model:\s*(opus|sonnet|haiku)\s*$/m)?.[1];
+  const codexModel = CODEX_MODEL_BY_SHARED_MODEL[sourceModel];
+
+  if (!codexModel) {
+    throw new Error(
+      `Cannot map the model for ${path.basename(sharedAgentPath)} to a Codex equivalent.`
+    );
+  }
+
+  const template = fs.readFileSync(templatePath, 'utf8');
+  if (!/^model = "[^"]+"$/m.test(template)) {
+    throw new Error(`Missing Codex model field in ${path.basename(templatePath)}.`);
+  }
+  const adapted = template.replace(
+    /^model = "[^"]+"$/m,
+    `model = "${codexModel}"`
+  );
+
+  fs.writeFileSync(destinationPath, adapted);
 }

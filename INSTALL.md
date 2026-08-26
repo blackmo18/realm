@@ -71,7 +71,7 @@ Gemini adapters omit Claude-specific tool names and inherit the Gemini session's
 ### Skills CLI install for Cursor and Gemini
 
 ```bash
-npx skills add blackmo18/realm -a cursor
+npx --yes skills add blackmo18/realm -a cursor --global --yes
 npx skills add blackmo18/realm -a gemini
 ```
 
