@@ -82,7 +82,7 @@ def project_dir_for(project_root: Path) -> Path:
 
 
 def execution_root(project_dir: Path) -> Path:
-    return project_dir / "orchestration" / "execution"
+    return project_dir / "orchestration"
 
 
 # ---------------------------------------------------------------------------

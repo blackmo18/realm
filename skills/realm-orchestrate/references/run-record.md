@@ -25,7 +25,7 @@ releases.
 ## `<runDir>/run.json` — single source of truth
 
 Lives in the vault under
-`<projectDir>/orchestration/execution/ADR-<NNN>-<plan-slug>/run.json`. Survives a
+`<projectDir>/orchestration/ADR-<NNN>-<plan-slug>/run.json`. Survives a
 `.realm/` wipe or fresh clone; `orchestrate-state.json` is only a pointer to it.
 
 ```json

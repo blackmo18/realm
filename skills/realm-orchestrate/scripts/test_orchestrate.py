@@ -66,7 +66,7 @@ class TestState:
 class TestStart:
     def test_creates_run_dir_and_files(self, project_root: Path, tmp_path: Path) -> None:
         _start(project_root, tmp_path)
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "execution" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
         assert (run_dir / "run.json").exists()
         assert (run_dir / "index.md").exists()
         run = json.loads((run_dir / "run.json").read_text())
@@ -91,7 +91,7 @@ class TestStart:
         project_dir = tmp_path / "vault" / "projects" / "demo"
         (project_dir / "decisions" / "ADR-007-unrelated").mkdir(parents=True)
         _start(project_root, tmp_path)
-        run_dir = project_dir / "orchestration" / "execution" / "ADR-001-plan-index"
+        run_dir = project_dir / "orchestration" / "ADR-001-plan-index"
         assert run_dir.exists()
 
     def test_second_run_after_finish_gets_next_index(self, project_root: Path, tmp_path: Path) -> None:
@@ -103,7 +103,7 @@ class TestStart:
 
         _start(project_root, tmp_path, plan="plan2.md", plan_slug="plan2",
                bundles=[{"id": "B1", "wave": 1, "class": "MECHANICAL"}])
-        run_dir = (tmp_path / "vault" / "projects" / "demo" / "orchestration" / "execution"
+        run_dir = (tmp_path / "vault" / "projects" / "demo" / "orchestration"
                    / "ADR-002-plan2")
         assert run_dir.exists()
 
@@ -117,7 +117,7 @@ class TestBundleAndWaveLifecycle:
             "--status", "DONE", "--attempt", "1", "--plan-check", "pass", "--review", "CLEAN",
             "--files", "a.ts,a.test.ts",
         ])
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "execution" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
         run = json.loads((run_dir / "run.json").read_text())
         b1 = next(b for b in run["bundles"] if b["id"] == "B1")
         assert b1["status"] == "DONE"
@@ -141,7 +141,7 @@ class TestBundleAndWaveLifecycle:
                                "--plan-check", "pass", "--review", "CLEAN"])
         orchestrate.main(["wave-done", "--project-root", str(project_root), "--wave", "1", "--note", "shipped B1/B2"])
 
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "execution" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
         assert (run_dir / "wave-1.md").exists()
         content = (run_dir / "wave-1.md").read_text()
         assert "shipped B1/B2" in content
@@ -200,7 +200,7 @@ class TestResume:
         out = capsys.readouterr().out
         assert "B1:IN_PROGRESS" in out
         assert "B1:DONE" not in out
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "execution" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
         assert f"RUN_DIR={run_dir}" in out
 
     def test_resume_without_active_run_fails(self, project_root: Path) -> None:
@@ -230,13 +230,13 @@ class TestAbort:
         assert orch_state["activeRun"] is None
         assert orch_state["history"][-1]["status"] == "ABORTED"
         assert orch_state["history"][-1]["runDir"] == str(
-            tmp_path / "vault" / "projects" / "demo" / "orchestration" / "execution" / "ADR-001-plan-index"
+            tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
         )
 
         realm_state_after = (project_root / ".realm" / "realm-state.json").read_text()
         assert realm_state_before == realm_state_after
 
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "execution" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
         run = json.loads((run_dir / "run.json").read_text())
         assert run["status"] == "ABORTED"
 
@@ -260,7 +260,7 @@ class TestFinish:
         orch_state = json.loads((project_root / ".realm" / "orchestrate-state.json").read_text())
         assert orch_state["activeRun"] is None
 
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "execution" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
         run = json.loads((run_dir / "run.json").read_text())
         assert run["status"] == "COMPLETE"
         assert orch_state["history"][-1]["runDir"] == str(run_dir)
@@ -269,7 +269,7 @@ class TestFinish:
 class TestRender:
     def test_render_is_idempotent(self, project_root: Path, tmp_path: Path) -> None:
         _start(project_root, tmp_path)
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "execution" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
         first = (run_dir / "index.md").read_text()
         orchestrate.main(["render", "--project-root", str(project_root)])
         second = (run_dir / "index.md").read_text()

@@ -7,7 +7,7 @@ description: >
   when independent, sequential when dependent), checks plan satisfaction inline,
   spawns a fresh cavecrew-reviewer per bundle for code quality, consolidates every
   result, then emits one execution report. Every run is persisted to the vault under
-  orchestration/execution/ADR-<N>-<slug>/, resumable after an interruption, guarded
+  orchestration/ADR-<N>-<slug>/, resumable after an interruption, guarded
   by a one-active-run-per-project lock, and abortable with confirmation. Use when the
   user says "orchestrate the plan", "execute the plan", "distribute these tasks",
   "run the plan with agents", "orchestration status", "resume orchestration", "abort

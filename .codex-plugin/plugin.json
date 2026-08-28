@@ -1,6 +1,6 @@
 {
   "name": "realm",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Obsidian project-knowledge & decision memory pipeline for Claude Code, Cursor, Codex, and Gemini.",
   "author": {
     "name": "blackmo",
