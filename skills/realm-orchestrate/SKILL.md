@@ -6,32 +6,45 @@ description: >
   single-agent units, dispatches realm-agent-plan-implementor coding agents with TDD (parallel
   when independent, sequential when dependent), checks plan satisfaction inline,
   spawns a fresh cavecrew-reviewer per bundle for code quality, consolidates every
-  result, then emits one execution report. Use when the user says "orchestrate the
-  plan", "execute the plan", "distribute these tasks", "run the plan with agents",
-  or wants tasks managed and shipped end-to-end.
+  result, then emits one execution report. Every run is persisted to the vault under
+  orchestration/execution/ADR-<N>-<slug>/, resumable after an interruption, guarded
+  by a one-active-run-per-project lock, and abortable with confirmation. Use when the
+  user says "orchestrate the plan", "execute the plan", "distribute these tasks",
+  "run the plan with agents", "orchestration status", "resume orchestration", "abort
+  orchestration", or wants tasks managed and shipped end-to-end.
 ---
 
 # realm-orchestrate
 
 You are the software project manager — the **hub**. You do not write feature code
 yourself. You analyze, bundle, dispatch, check plan satisfaction, relay code-quality
-results, consolidate, and report.
+results, consolidate, and report. Every run is a durable vault record — a script
+owns it, you never hand-edit it.
+
+Host invocation: Claude Code and Gemini use `/realm-orchestrate`; Codex uses
+`$realm-orchestrate`. Resolve `realmOrchestrateSkillDir` to the directory containing
+this `SKILL.md`; every fragment uses `<realmOrchestrateSkillDir>/scripts/orchestrate.py`
+and never assumes a host-specific install root.
 
 | Role | Answers |
 |------|---------|
 | `realm-agent-plan-implementor` | "Did I build my assigned slice with TDD and passing tests?" |
 | `cavecrew-reviewer` | "Is the code quality acceptable?" (cold spawn, code quality only) |
 | You (orchestrator) | "Does this implementation satisfy the plan? Can the next wave start?" |
-
-Coding agents implement with TDD and return a `---RESULT---` block **to you** — never
-directly to a reviewer. You check plan satisfaction inline from the structured RESULT —
-zero agent cost. Then spawn a fresh `cavecrew-reviewer` per bundle for code quality
-only. Reviewer is always cold, reads only changed files — context cost stays fixed at
-~200-300 tokens regardless of N bundles.
+| `orchestrate.py` | "What's the run's persisted state — waves, bundles, lock, anchor?" |
 
 Caveman mode active (`/caveman full`). Compress your prose — fragments OK, no filler.
-Drop caveman only for P3 confirmation, security warnings, and the P7 report.
-Code, commands, and error strings stay verbatim.
+Drop caveman only for P3 confirmation, abort confirmation, security warnings, and the
+P7 report. Code, commands, and error strings stay verbatim.
+
+## Syntax
+
+```bash
+/realm-orchestrate <plan|section|task list>   # start a new run
+/realm-orchestrate status                     # active run + wave ledger
+/realm-orchestrate resume                     # continue an interrupted run
+/realm-orchestrate abort                      # drop the active run (confirm required)
+```
 
 ## When to use
 
@@ -41,37 +54,48 @@ Code, commands, and error strings stay verbatim.
 
 Skip for a single trivial edit — just do it inline or spawn one `cavecrew-builder`.
 
-## Inputs
+## Routing — load only the matching fragment
 
-Accept any of:
-- A plan file path (`plan-index.md`, `plan-knowledge-craft.md`, etc.).
-- A day/phase section ("Day 2", "Phase 1").
-- A freeform list of tasks pasted by the user.
+```bash
+python3 "<realmOrchestrateSkillDir>/scripts/orchestrate.py" state --project-root .
+```
 
-If no plan given → ask which plan/section. Do not guess scope.
+| Trigger | Guard result | Load |
+|---|---|---|
+| plan path / section / task list, "orchestrate", "execute the plan" | `ORCH_ACTIVE=false` | `analyze/PROCEDURE.md` |
+| plan path / section / task list | `ORCH_ACTIVE=true`, `ALL_DONE=false` | print the active anchor (from `state` output) + "Run already active. `/realm-orchestrate resume` or `/realm-orchestrate abort`." STOP. |
+| plan path / section / task list | `ORCH_ACTIVE=true`, `ALL_DONE=true` | print: "<RUN_ID> finished all waves but was never closed. `/realm-orchestrate resume` will call `finish` and release the lock." STOP. |
+| `status`, "what's running", "orchestration status" | `ORCH_ACTIVE=false` | print "No active orchestration." STOP. |
+| `status` | `ORCH_ACTIVE=true` | `status/PROCEDURE.md` |
+| `resume`, "continue orchestration" | `ORCH_ACTIVE=false` | print "No active orchestration to resume." STOP. |
+| `resume` | `ORCH_ACTIVE=true` | `resume/PROCEDURE.md` |
+| `abort`, "drop orchestration", "cancel the run" | `ORCH_ACTIVE=false` | print "No active orchestration to abort." STOP. |
+| `abort` | `ORCH_ACTIVE=true` | `abort/PROCEDURE.md` |
 
-## Workflow — routing
+Missing `.realm/realm-state.json` → "Run /realm-forge first." STOP (the guard call
+itself reports this).
 
-Copy this checklist and track it. Each phase file is self-contained; load it only when
-you reach that phase.
+Once routed into `analyze/PROCEDURE.md`, the phase checklist is:
 
 ```
 - [ ] P1 Analyze plan            → analyze/PROCEDURE.md
-- [ ] P2 Bundle tasks            → analyze/PROCEDURE.md
+- [ ] P2 Bundle tasks + persist  → analyze/PROCEDURE.md
 - [ ] P3 Recommend + confirm     → dispatch/PROCEDURE.md
 - [ ] P4 Dispatch (TDD, waves)   → dispatch/PROCEDURE.md
 - [ ] P5 Check each RESULT       → verify/PROCEDURE.md
-- [ ] P6 Consolidate             → verify/PROCEDURE.md
-- [ ] P7 Execution report        → references/report-template.md
+- [ ] P6 Consolidate + wave-done → verify/PROCEDURE.md
+- [ ] P7 Execution report + finish → references/report-template.md
 ```
 
-Block schemas (DISPATCH, FIX_DISPATCH, RESULT, REVIEW_REQUEST, WAVE LEDGER) all live in
-`references/contracts.md` — the single source of truth. Do not re-derive a template
-from memory; read it from there.
+Each phase file is self-contained; load it only when you reach that phase. Block
+schemas (DISPATCH, FIX_DISPATCH, RESULT, REVIEW_REQUEST, RUN RECORD) all live in
+`references/contracts.md` — the single source of truth. Run-record file shapes
+(`run.json`, `index.md`, `wave-<n>.md`, `RESUME_ANCHOR`) live in
+`references/run-record.md`. Do not re-derive a template from memory; read it there.
 
-Track state (manager memory) as the WAVE LEDGER, `references/contracts.md` §5 — richer
-than a bare bundle-id list, carries class/model/attempt/status/plan/review/exports per
-bundle across the whole run.
+Track state (manager memory, mirrored to disk by the script) as the WAVE LEDGER,
+`references/contracts.md` §5 — richer than a bare bundle-id list, carries
+class/model/attempt/status/plan/review/exports per bundle across the whole run.
 
 ## Coding standards (ECC)
 
@@ -91,6 +115,10 @@ TDD is mandatory: tests written, RED confirmed, code, GREEN confirmed.
 
 - Manager never writes feature code. Bundling, dispatch, inline plan-satisfaction
   check, relay code-quality results, consolidation, report only.
+- Manager never hand-edits `run.json`, `index.md`, a wave summary, or
+  `orchestrate-state.json` — every mutation goes through `orchestrate.py`.
+- **One active orchestration per project.** The guard above is checked before any
+  start/status/resume/abort action. No `--force`, no exceptions.
 - Never spawn parallel agents that share a file (data race / merge conflict).
 - Always get user confirmation in P3 before spawning implementors.
 - No pre-warmed validator. No resume chains — implementor and reviewer spawns are
@@ -103,7 +131,10 @@ TDD is mandatory: tests written, RED confirmed, code, GREEN confirmed.
   inheritance, so this is intended behavior, not an override to fight (detail:
   `references/classification.md`).
 - A bundle is complete only when: implementor `DONE` + plan satisfaction ✓ +
-  reviewer `VERDICT` not `BLOCKING`.
+  reviewer `VERDICT` not `BLOCKING`. Only then does `bundle-status` record `DONE`.
+- A wave is complete only when every one of its bundles is recorded `DONE` —
+  `orchestrate.py wave-done` refuses otherwise.
+- Abort never touches git or the working tree — detach only (`abort/PROCEDURE.md`).
 - One execution report at the very end — no per-bundle spam in chat.
 - Default 3 parallel agents max unless user raises it in P3.
 
@@ -121,3 +152,5 @@ TDD is mandatory: tests written, RED confirmed, code, GREEN confirmed.
 - Pass each implementor only its `PLAN_SLICE` + `UPSTREAM_EXPORTS` — never the whole plan.
 - Fresh reviewers read only `FILES_CHANGED` paths — not the full codebase.
 - Do not re-read files an implementor already reported on.
+- `status` and `abort` never load `analyze/`, `dispatch/`, or `verify/` — routing
+  keeps their token cost to one script call + one PROCEDURE.md fragment.

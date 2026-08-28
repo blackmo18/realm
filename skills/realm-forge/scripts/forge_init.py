@@ -21,6 +21,7 @@ import sys
 
 VAULT_SUBDIRS = [
     "decisions", "functions", "classes", "systems", "discoveries", "sessions",
+    "orchestration/execution",
 ]
 
 

@@ -43,6 +43,18 @@ STOP.
 
 Extract: `vaultPath`, `projectSlug`, `projectDir`.
 
+### Step 1.5 — Check orchestration lock
+
+```bash
+python3 "<realmOrchestrateSkillDir>/scripts/orchestrate.py" state --project-root .
+```
+
+(Resolve `realmOrchestrateSkillDir` the same way `realm-orchestrate/SKILL.md` does —
+sibling skill directory, not a relative path.) If `ORCH_ACTIVE=true`, remember
+`RUN_ID` and `WAVE` for the print in Step 3. If the orchestrate skill isn't
+installed or the call errors, skip this step silently — orchestration status is
+supplementary, not required for `/realm-status` to work.
+
 ### Step 2 — Count nodes by type
 
 Read the live vault tree with one bounded command:
@@ -63,6 +75,8 @@ grep -rh "^  - " <projectDir> --include="*.md" 2>/dev/null | sort | uniq -c | so
 ```
 realm:<projectSlug>
 vault:<vaultPath>  proj:<projectDir>
+
+⚡ ORCHESTRATION ACTIVE <RUN_ID> — wave <WAVE>   (only when ORCH_ACTIVE=true from Step 1.5)
 
 NODES <total>
 decisions/<N>:   [[id]] <date>  [[id2]] <date>

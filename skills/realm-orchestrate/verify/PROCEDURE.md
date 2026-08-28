@@ -43,10 +43,26 @@ stays fixed at ~200-300 tokens per bundle regardless of how many bundles have ru
 
 For trivial single-file bundles: same one-shot `cavecrew-reviewer`, same pattern.
 
+**Persist the outcome** — one call per bundle, right after Step B (or right after Step A
+for a bundle that stopped there):
+
+```bash
+python3 "<realmOrchestrateSkillDir>/scripts/orchestrate.py" bundle-status --project-root . \
+  --bundle <id> --status <DONE|PARTIAL|BLOCKED> --attempt <n> \
+  --plan-check <pass|fail> --review <CLEAN|SHOULD_FIX|BLOCKING> \
+  --files <comma-separated FILES_CHANGED> [--exports-file <scratch file, one EXPORTS line each>] \
+  [--blocker "<BLOCKER_NEEDS verbatim>"]
+```
+
+A bundle is `DONE` in the run record only when: implementor `DONE` + plan satisfaction
+✓ + `VERDICT` not `BLOCKING` — the same completion rule as `SKILL.md`'s hard rules.
+
 ## P6 — Consolidate
 
-Collect every `---RESULT---` and `---REVIEW---`, updating the WAVE LEDGER
-(`../references/contracts.md` §5) per bundle. Then:
+Collect every `---RESULT---` and `---REVIEW---` — each already persisted via the
+`bundle-status` call above, so the WAVE LEDGER (`../references/contracts.md` §5) is
+the same data already on disk in `run.json`, not a separate in-memory copy to keep in
+sync. Then:
 
 - `BLOCKED` / `PARTIAL` → surface `BLOCKER_NEEDS`. Do not mark done. Re-dispatch or pause.
 - Plan satisfaction fail (Step A) → re-dispatch as FIX_DISPATCH. Never amend silently.
@@ -56,4 +72,16 @@ Collect every `---RESULT---` and `---REVIEW---`, updating the WAVE LEDGER
 - If a `plan-*.md` / `plan-index.md` exists, run the `validate-plan` skill once as a
   final cross-check (complements per-bundle checks, does not replace).
 
-Return to hub → P7 (`../references/report-template.md`).
+**Once every bundle in the current wave is `DONE`** (never before — the script
+refuses otherwise), close the wave:
+
+```bash
+python3 "<realmOrchestrateSkillDir>/scripts/orchestrate.py" wave-done --project-root . \
+  --wave <n> [--note "<one-line human summary of what this wave shipped>"]
+```
+
+This writes `wave-<n>.md` (the durable wave summary — auto-rendered table plus your
+note) and advances the run to the next wave. If any bundle in the wave isn't `DONE`
+yet, do not call `wave-done` — go back to Step A/B for the outstanding bundle(s) first.
+
+Return to hub → next wave (P4) if bundles remain, else P7 (`../references/report-template.md`).

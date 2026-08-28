@@ -120,7 +120,7 @@ totals: N🔴 N🟡 N🔵
 `BLOCKING` (any 🔴), `SHOULD_FIX` (🟡 only), `CLEAN` (🔵 only or none). No eyeballing
 emoji counts.
 
-## 5. WAVE LEDGER — orchestrator state (manager memory, not a file)
+## 5. WAVE LEDGER — orchestrator state, script-owned and persisted
 
 ```
 WAVE: <n>
@@ -130,5 +130,29 @@ WAVE: <n>
 | B2     | COMPLEX | inherit | 2   | DONE   | ✓    | SHOULD_FIX | 0     |
 ```
 
-Replaces the bare `LAST_WAVE: <ids>` line — tracks class/model/attempt/status/plan/review
-per bundle across the whole run, not just the current wave's id list.
+Tracks class/model/attempt/status/plan/review/exports per bundle across the whole
+run. This table is a view over `<runDir>/run.json` — `scripts/orchestrate.py` is the
+only writer (`start`, `wave-start`, `bundle-status`, `wave-done`). The orchestrator
+never hand-edits it; every mutation is one script call
+(`../dispatch/PROCEDURE.md`, `../verify/PROCEDURE.md`). Full schema:
+`run-record.md`.
+
+## 6. RESUME_ANCHOR — `orchestrate.py resume` stdout
+
+```
+RESUME_ANCHOR
+RUN_ID=<id>
+RUN_DIR=<abs path>
+PLAN=<path>
+STATUS=IN_PROGRESS
+FINISHED=B1:DONE,B2:DONE
+CURRENT_WAVE=<n>
+CURRENT=B3:IN_PROGRESS,B4:DONE
+NEXT_WAVE=<n+1>
+NEXT=B5,B6
+UPDATED=<iso>
+```
+
+A bundle in `CURRENT` marked `IN_PROGRESS` never returned a RESULT — treat it as
+unverified and re-dispatch from scratch at its stored attempt number. Consumed by
+`../resume/PROCEDURE.md`. Full schema: `run-record.md`.

@@ -40,6 +40,20 @@ Step B — check (P5):      plan satisfaction + code review for each returned bu
 Step C — next wave:       only after Step B clears every bundle in this wave
 ```
 
+**Before spawning, mark the wave started:**
+
+```bash
+python3 "<realmOrchestrateSkillDir>/scripts/orchestrate.py" wave-start --project-root . --wave <n>
+```
+
+For each bundle about to be spawned, record it `IN_PROGRESS` first — this is what
+makes resume correct if the run is interrupted mid-wave:
+
+```bash
+python3 "<realmOrchestrateSkillDir>/scripts/orchestrate.py" bundle-status --project-root . \
+  --bundle <id> --status IN_PROGRESS --attempt <n>
+```
+
 For each bundle, spawn a `realm-agent-plan-implementor` agent via the Task tool using the DISPATCH
 block from `../references/contracts.md` §1 (fill every field, including
 `UPSTREAM_EXPORTS` from prerequisite bundles' `RESULT.EXPORTS`). Run independent
@@ -67,10 +81,12 @@ For a trivial single-file bundle, use `cavecrew-builder` directly (cheaper). Use
   P3's classification — no other self-escalation.
 - Re-dispatch uses the FIX_DISPATCH block (`../references/contracts.md` §2) — carries
   `UNSATISFIED_TASKS`, `REVIEW_FINDINGS` (verbatim 🔴 lines), and `DO_NOT_REDO` so the
-  implementor never blindly redoes tasks that already passed.
+  implementor never blindly redoes tasks that already passed. Record the retry before
+  spawning: `bundle-status --bundle <id> --status IN_PROGRESS --attempt 2`.
 - `STATUS: BLOCKED` → surface `BLOCKER_NEEDS` verbatim, wait for user. **Never**
   re-dispatch a BLOCKED bundle with a guessed answer — only re-dispatch once the user
-  supplies the missing detail.
+  supplies the missing detail. Record it: `bundle-status --bundle <id> --status BLOCKED
+  --attempt <n> --blocker "<BLOCKER_NEEDS verbatim>"`.
 
 Never mix reviewer Task calls and implementor Task calls in the same message. Never
 launch the next implementor wave until every bundle in the current wave passes P5.

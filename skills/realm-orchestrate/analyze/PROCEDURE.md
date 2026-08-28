@@ -45,4 +45,33 @@ table and model routing: `../references/classification.md`.
 Store classification + service info in the WAVE LEDGER (`../references/contracts.md` §5)
 — this feeds P3 confirmation and every P4 dispatch.
 
+## Persist the run — before P3 confirmation
+
+Assign each bundle a wave number (1-indexed, by its dependency/parallelizability
+column). Write the bundle table to a scratch JSON file, one object per bundle:
+
+```json
+[
+  { "id": "B1", "name": "<short label>", "wave": 1, "class": "MECHANICAL",
+    "tasks": ["T1", "T2"], "files": ["a.ts"], "dependsOn": [] },
+  { "id": "B2", "wave": 2, "class": "COMPLEX", "tasks": ["T3"], "files": ["b.ts"], "dependsOn": ["B1"] }
+]
+```
+
+Then create the run record:
+
+```bash
+python3 "<realmOrchestrateSkillDir>/scripts/orchestrate.py" start \
+  --project-root . --plan <plan path> --plan-slug <kebab-case plan slug> \
+  --bundles-file <scratch json path>
+```
+
+Exit code `2` means another run is already active (the guard should have caught
+this before P1 — treat it as a bug and surface the printed anchor to the user
+instead of retrying). Exit `0` prints the new `RUN_ID` and `RUN_DIR`
+(`references/run-record.md` for the shape written).
+
+**Lock is acquired here, before P3.** The user is never asked to confirm dispatch
+for a run that could still fail to start.
+
 Return to hub → P3.
