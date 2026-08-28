@@ -66,10 +66,18 @@ python3 "<realmOrchestrateSkillDir>/scripts/orchestrate.py" start \
   --bundles-file <scratch json path>
 ```
 
+Run index matches the source plan: `<plan path>`'s leading `NNN-` (e.g.
+`execution/007-exct-foo.md`) becomes `ADR-007-task-orchestration`, keeping the
+run tied to that same planning/decisions/execution trio. A freeform `--plan`
+with no numeric prefix (`plan-index.md`, a typed-out task list) falls back to
+the next free index under `orchestration/`.
+
 Exit code `2` means another run is already active (the guard should have caught
 this before P1 — treat it as a bug and surface the printed anchor to the user
-instead of retrying). Exit `0` prints the new `RUN_ID` and `RUN_DIR`
-(`references/run-record.md` for the shape written).
+instead of retrying). Exit `1` with an index-collision message means a prior
+orchestration run already used this plan's index — surface it to the user
+instead of retrying (resume or abort the prior run first). Exit `0` prints the
+new `RUN_ID` and `RUN_DIR` (`references/run-record.md` for the shape written).
 
 **Lock is acquired here, before P3.** The user is never asked to confirm dispatch
 for a run that could still fail to start.

@@ -11,9 +11,9 @@ progress.
 ```json
 {
   "version": 1,
-  "activeRun": { "runId": "ADR-003-plan-index", "runDir": "<abs path>", "planPath": "plan-index.md", "startedAt": "<iso>" },
+  "activeRun": { "runId": "ADR-003-task-orchestration", "runDir": "<abs path>", "planPath": "plan-index.md", "startedAt": "<iso>" },
   "history": [
-    { "runId": "ADR-002-plan-x", "runDir": "<abs path>", "status": "COMPLETE", "endedAt": "<iso>" }
+    { "runId": "ADR-002-task-orchestration", "runDir": "<abs path>", "status": "COMPLETE", "endedAt": "<iso>" }
   ]
 }
 ```
@@ -25,12 +25,12 @@ releases.
 ## `<runDir>/run.json` — single source of truth
 
 Lives in the vault under
-`<projectDir>/orchestration/ADR-<NNN>-<plan-slug>/run.json`. Survives a
+`<projectDir>/orchestration/ADR-<NNN>-task-orchestration/run.json`. Survives a
 `.realm/` wipe or fresh clone; `orchestrate-state.json` is only a pointer to it.
 
 ```json
 {
-  "runId": "ADR-003-plan-index",
+  "runId": "ADR-003-task-orchestration",
   "index": 3,
   "planPath": "plan-index.md",
   "planSlug": "plan-index",
@@ -79,7 +79,7 @@ passed through as free prose. This is the durable "wave summary" record.
 
 ```
 RESUME_ANCHOR
-RUN_ID=ADR-003-plan-index
+RUN_ID=ADR-003-task-orchestration
 RUN_DIR=<abs path>
 PLAN=plan-index.md
 STATUS=IN_PROGRESS

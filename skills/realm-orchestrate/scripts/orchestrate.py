@@ -24,6 +24,7 @@ from pathlib import Path
 
 SLUG_RE = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$")
 RUN_DIR_RE = re.compile(r"^ADR-(\d+)-")
+PLAN_INDEX_RE = re.compile(r"^(\d+)-")
 BUNDLE_STATUSES = {"PENDING", "IN_PROGRESS", "DONE", "PARTIAL", "BLOCKED", "ABORTED"}
 WAVE_STATUSES = {"PENDING", "IN_PROGRESS", "DONE"}
 RUN_STATUSES = {"IN_PROGRESS", "COMPLETE", "ABORTED"}
@@ -83,6 +84,24 @@ def project_dir_for(project_root: Path) -> Path:
 
 def execution_root(project_dir: Path) -> Path:
     return project_dir / "orchestration"
+
+
+def resolve_index(plan_path: str, exec_root: Path) -> int:
+    """Reuse the source plan's own NNN prefix (execution/003-exct-foo.md ->
+    3) so the orchestration run stays numbered with its plan/ADR/execution
+    trio. Freeform plans with no numeric prefix (plan-index.md, a typed-out
+    task list) fall back to the next free index in exec_root."""
+    m = PLAN_INDEX_RE.match(Path(plan_path).name)
+    if m:
+        return int(m.group(1))
+    existing_indices = [0]
+    if exec_root.is_dir():
+        for child in exec_root.iterdir():
+            if child.is_dir():
+                rm = RUN_DIR_RE.match(child.name)
+                if rm:
+                    existing_indices.append(int(rm.group(1)))
+    return max(existing_indices) + 1
 
 
 # ---------------------------------------------------------------------------
@@ -333,15 +352,15 @@ def cmd_start(args: argparse.Namespace) -> None:
     exec_root = execution_root(project_dir)
     exec_root.mkdir(parents=True, exist_ok=True)
 
-    existing_indices = [0]
-    for child in exec_root.iterdir():
-        if child.is_dir():
-            m = RUN_DIR_RE.match(child.name)
-            if m:
-                existing_indices.append(int(m.group(1)))
-    index = max(existing_indices) + 1
-    run_id = f"ADR-{index:03d}-{args.plan_slug}"
+    index = resolve_index(args.plan, exec_root)
+    run_id = f"ADR-{index:03d}-task-orchestration"
     run_dir = exec_root / run_id
+    if run_dir.exists():
+        die(
+            f"start: run dir already exists for index {index:03d} ({run_dir}). "
+            "A prior orchestration run already used this plan's index -- "
+            "resume or abort it, or confirm the --plan path is correct."
+        )
 
     bundles_raw = json.loads(Path(args.bundles_file).read_text())
     if not bundles_raw:

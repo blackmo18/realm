@@ -60,17 +60,17 @@ class TestState:
         orchestrate.main(["state", "--project-root", str(project_root)])
         out = capsys.readouterr().out
         assert "ORCH_ACTIVE=true" in out
-        assert "RUN_ID=ADR-001-plan-index" in out
+        assert "RUN_ID=ADR-001-task-orchestration" in out
 
 
 class TestStart:
     def test_creates_run_dir_and_files(self, project_root: Path, tmp_path: Path) -> None:
         _start(project_root, tmp_path)
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
         assert (run_dir / "run.json").exists()
         assert (run_dir / "index.md").exists()
         run = json.loads((run_dir / "run.json").read_text())
-        assert run["runId"] == "ADR-001-plan-index"
+        assert run["runId"] == "ADR-001-task-orchestration"
         assert run["status"] == "IN_PROGRESS"
         assert len(run["bundles"]) == 3
         assert len(run["waves"]) == 2
@@ -78,7 +78,7 @@ class TestStart:
     def test_sets_lock(self, project_root: Path, tmp_path: Path) -> None:
         _start(project_root, tmp_path)
         orch_state = json.loads((project_root / ".realm" / "orchestrate-state.json").read_text())
-        assert orch_state["activeRun"]["runId"] == "ADR-001-plan-index"
+        assert orch_state["activeRun"]["runId"] == "ADR-001-task-orchestration"
 
     def test_second_start_blocked(self, project_root: Path, tmp_path: Path) -> None:
         _start(project_root, tmp_path)
@@ -91,7 +91,7 @@ class TestStart:
         project_dir = tmp_path / "vault" / "projects" / "demo"
         (project_dir / "decisions" / "ADR-007-unrelated").mkdir(parents=True)
         _start(project_root, tmp_path)
-        run_dir = project_dir / "orchestration" / "ADR-001-plan-index"
+        run_dir = project_dir / "orchestration" / "ADR-001-task-orchestration"
         assert run_dir.exists()
 
     def test_second_run_after_finish_gets_next_index(self, project_root: Path, tmp_path: Path) -> None:
@@ -104,8 +104,27 @@ class TestStart:
         _start(project_root, tmp_path, plan="plan2.md", plan_slug="plan2",
                bundles=[{"id": "B1", "wave": 1, "class": "MECHANICAL"}])
         run_dir = (tmp_path / "vault" / "projects" / "demo" / "orchestration"
-                   / "ADR-002-plan2")
+                   / "ADR-002-task-orchestration")
         assert run_dir.exists()
+
+    def test_index_reuses_source_plan_prefix(self, project_root: Path, tmp_path: Path) -> None:
+        # execution/007-exct-foo.md -> run index 007, matching its planning/
+        # decisions/execution trio instead of an independent counter.
+        _start(project_root, tmp_path, plan="execution/007-exct-foo.md", plan_slug="foo")
+        run_dir = (tmp_path / "vault" / "projects" / "demo" / "orchestration"
+                   / "ADR-007-task-orchestration")
+        assert run_dir.exists()
+        run = json.loads((run_dir / "run.json").read_text())
+        assert run["runId"] == "ADR-007-task-orchestration"
+        assert run["index"] == 7
+
+    def test_index_collision_blocked(self, project_root: Path, tmp_path: Path) -> None:
+        _start(project_root, tmp_path, plan="execution/007-exct-foo.md", plan_slug="foo")
+        orchestrate.main(["abort", "--project-root", str(project_root),
+                           "--confirm", "ADR-007-task-orchestration"])
+        with pytest.raises(SystemExit) as exc:
+            _start(project_root, tmp_path, plan="execution/007-exct-foo.md", plan_slug="foo")
+        assert exc.value.code == 1
 
 
 class TestBundleAndWaveLifecycle:
@@ -117,7 +136,7 @@ class TestBundleAndWaveLifecycle:
             "--status", "DONE", "--attempt", "1", "--plan-check", "pass", "--review", "CLEAN",
             "--files", "a.ts,a.test.ts",
         ])
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
         run = json.loads((run_dir / "run.json").read_text())
         b1 = next(b for b in run["bundles"] if b["id"] == "B1")
         assert b1["status"] == "DONE"
@@ -141,7 +160,7 @@ class TestBundleAndWaveLifecycle:
                                "--plan-check", "pass", "--review", "CLEAN"])
         orchestrate.main(["wave-done", "--project-root", str(project_root), "--wave", "1", "--note", "shipped B1/B2"])
 
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
         assert (run_dir / "wave-1.md").exists()
         content = (run_dir / "wave-1.md").read_text()
         assert "shipped B1/B2" in content
@@ -200,7 +219,7 @@ class TestResume:
         out = capsys.readouterr().out
         assert "B1:IN_PROGRESS" in out
         assert "B1:DONE" not in out
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
         assert f"RUN_DIR={run_dir}" in out
 
     def test_resume_without_active_run_fails(self, project_root: Path) -> None:
@@ -224,19 +243,19 @@ class TestAbort:
 
         realm_state_before = (project_root / ".realm" / "realm-state.json").read_text()
 
-        orchestrate.main(["abort", "--project-root", str(project_root), "--confirm", "ADR-001-plan-index"])
+        orchestrate.main(["abort", "--project-root", str(project_root), "--confirm", "ADR-001-task-orchestration"])
 
         orch_state = json.loads((project_root / ".realm" / "orchestrate-state.json").read_text())
         assert orch_state["activeRun"] is None
         assert orch_state["history"][-1]["status"] == "ABORTED"
         assert orch_state["history"][-1]["runDir"] == str(
-            tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
+            tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
         )
 
         realm_state_after = (project_root / ".realm" / "realm-state.json").read_text()
         assert realm_state_before == realm_state_after
 
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
         run = json.loads((run_dir / "run.json").read_text())
         assert run["status"] == "ABORTED"
 
@@ -260,7 +279,7 @@ class TestFinish:
         orch_state = json.loads((project_root / ".realm" / "orchestrate-state.json").read_text())
         assert orch_state["activeRun"] is None
 
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
         run = json.loads((run_dir / "run.json").read_text())
         assert run["status"] == "COMPLETE"
         assert orch_state["history"][-1]["runDir"] == str(run_dir)
@@ -269,7 +288,7 @@ class TestFinish:
 class TestRender:
     def test_render_is_idempotent(self, project_root: Path, tmp_path: Path) -> None:
         _start(project_root, tmp_path)
-        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-plan-index"
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
         first = (run_dir / "index.md").read_text()
         orchestrate.main(["render", "--project-root", str(project_root)])
         second = (run_dir / "index.md").read_text()
