@@ -168,6 +168,59 @@ class TestBundleAndWaveLifecycle:
         assert run["currentWave"] == 2
 
 
+class TestPlanSliceAndEscalation:
+    def test_plan_slice_persisted_from_bundles_file(self, project_root: Path, tmp_path: Path) -> None:
+        _start(project_root, tmp_path, bundles=[
+            {"id": "B1", "wave": 1, "class": "MECHANICAL", "planSlice": "- T1: do the thing"},
+        ])
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
+        run = json.loads((run_dir / "run.json").read_text())
+        b1 = next(b for b in run["bundles"] if b["id"] == "B1")
+        assert b1["planSlice"] == "- T1: do the thing"
+
+    def test_plan_slice_defaults_empty_when_omitted(self, project_root: Path, tmp_path: Path) -> None:
+        _start(project_root, tmp_path, bundles=[{"id": "B1", "wave": 1, "class": "MECHANICAL"}])
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
+        run = json.loads((run_dir / "run.json").read_text())
+        b1 = next(b for b in run["bundles"] if b["id"] == "B1")
+        assert b1["planSlice"] == ""
+
+    def test_mechanical_attempt_two_escalates_model_to_inherit(
+        self, project_root: Path, tmp_path: Path,
+    ) -> None:
+        _start(project_root, tmp_path, bundles=[
+            {"id": "B1", "wave": 1, "class": "MECHANICAL", "model": "haiku"},
+        ])
+        orchestrate.main(["bundle-status", "--project-root", str(project_root),
+                           "--bundle", "B1", "--status", "IN_PROGRESS", "--attempt", "2"])
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
+        run = json.loads((run_dir / "run.json").read_text())
+        b1 = next(b for b in run["bundles"] if b["id"] == "B1")
+        assert b1["model"] == "inherit"
+
+    def test_complex_attempt_two_does_not_touch_model(self, project_root: Path, tmp_path: Path) -> None:
+        _start(project_root, tmp_path, bundles=[
+            {"id": "B2", "wave": 1, "class": "COMPLEX", "model": "inherit"},
+        ])
+        orchestrate.main(["bundle-status", "--project-root", str(project_root),
+                           "--bundle", "B2", "--status", "IN_PROGRESS", "--attempt", "2"])
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
+        run = json.loads((run_dir / "run.json").read_text())
+        b2 = next(b for b in run["bundles"] if b["id"] == "B2")
+        assert b2["model"] == "inherit"
+
+    def test_mechanical_attempt_one_does_not_escalate(self, project_root: Path, tmp_path: Path) -> None:
+        _start(project_root, tmp_path, bundles=[
+            {"id": "B1", "wave": 1, "class": "MECHANICAL", "model": "haiku"},
+        ])
+        orchestrate.main(["bundle-status", "--project-root", str(project_root),
+                           "--bundle", "B1", "--status", "IN_PROGRESS", "--attempt", "1"])
+        run_dir = tmp_path / "vault" / "projects" / "demo" / "orchestration" / "ADR-001-task-orchestration"
+        run = json.loads((run_dir / "run.json").read_text())
+        b1 = next(b for b in run["bundles"] if b["id"] == "B1")
+        assert b1["model"] == "haiku"
+
+
 class TestAllDoneUnfinished:
     """A run whose waves are all DONE but `finish` was never called."""
 

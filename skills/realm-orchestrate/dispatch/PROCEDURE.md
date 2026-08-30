@@ -66,8 +66,10 @@ dependent bundles **after** their prerequisite returns DONE.
 overrides Task inheritance — `realm-agent-plan-implementor.md` must **not** set `model:`. Table:
 `../references/classification.md`. User override from P3 takes precedence.
 
-The slice is the spec; the agent executes it. Expected output: RESULT block,
-`../references/contracts.md` §3.
+`PLAN_SLICE` is read verbatim from the bundle's `planSlice` field in `run.json`
+(captured once at P2, `../analyze/PROCEDURE.md`) — never re-derived from the
+plan file at dispatch time. The slice is the spec; the agent executes it.
+Expected output: RESULT block, `../references/contracts.md` §3.
 
 For a trivial single-file bundle, use `cavecrew-builder` directly (cheaper). Use
 `realm-agent-plan-implementor` whenever tests must run.
@@ -78,7 +80,10 @@ For a trivial single-file bundle, use `cavecrew-builder` directly (cheaper). Use
   of re-dispatching.
 - **Escalation exception:** attempt 2 of a bundle classified MECHANICAL drops the Haiku
   override and inherits the chat model. This is the *only* sanctioned deviation from
-  P3's classification — no other self-escalation.
+  P3's classification — no other self-escalation. `bundle-status` applies this
+  automatically the moment attempt ≥2 is recorded for a MECHANICAL bundle — the
+  bundle's `model` field in `run.json` already reads `inherit` by the time you
+  dispatch; nothing to compute by hand, and resume reads the same field.
 - Re-dispatch uses the FIX_DISPATCH block (`../references/contracts.md` §2) — carries
   `UNSATISFIED_TASKS`, `REVIEW_FINDINGS` (verbatim 🔴 lines), and `DO_NOT_REDO` so the
   implementor never blindly redoes tasks that already passed. Record the retry before

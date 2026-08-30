@@ -48,13 +48,18 @@ Store classification + service info in the WAVE LEDGER (`../references/contracts
 ## Persist the run — before P3 confirmation
 
 Assign each bundle a wave number (1-indexed, by its dependency/parallelizability
-column). Write the bundle table to a scratch JSON file, one object per bundle:
+column). For each bundle, capture `planSlice` now — the exact plan lines for its
+tasks, already in hand from P1's extraction — so it is written once and never
+re-derived (`references/run-record.md`). Write the bundle table to a scratch
+JSON file, one object per bundle:
 
 ```json
 [
   { "id": "B1", "name": "<short label>", "wave": 1, "class": "MECHANICAL",
-    "tasks": ["T1", "T2"], "files": ["a.ts"], "dependsOn": [] },
-  { "id": "B2", "wave": 2, "class": "COMPLEX", "tasks": ["T3"], "files": ["b.ts"], "dependsOn": ["B1"] }
+    "tasks": ["T1", "T2"], "files": ["a.ts"], "dependsOn": [],
+    "planSlice": "<exact plan lines for T1, T2>" },
+  { "id": "B2", "wave": 2, "class": "COMPLEX", "tasks": ["T3"], "files": ["b.ts"], "dependsOn": ["B1"],
+    "planSlice": "<exact plan lines for T3>" }
 ]
 ```
 

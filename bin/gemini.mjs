@@ -96,9 +96,9 @@ export function installGeminiAgents(repoRoot, destinationDir) {
 
 function writeGeminiAgent(sourcePath, destinationPath) {
   const modelMap = {
-    opus: 'gemini-3.1-pro-preview',
-    sonnet: 'gemini-3.1-pro-preview',
-    haiku: 'gemini-3.6-flash',
+    opus: 'gemini-3.7-flash',
+    sonnet: 'gemini-3.7-flash',
+    haiku: 'gemini-3.7-flash',
   };
   const source = fs.readFileSync(sourcePath, 'utf8');
   const adapted = source.replace(/^tools:\s*\[[^\n]*\]\s*\n/m, '').replace(

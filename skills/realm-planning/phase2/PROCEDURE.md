@@ -46,7 +46,7 @@ Document selected rules + skills before Step 3.
 
 ## Step 3 — Codebase Validation
 
-Spawn `realm-agent-code-architect` with: Phase 1 plan, active rules/skills, **Phase 1 Anchor Set table verbatim** — pass as-is, do not re-derive.
+Resolve the exact agent name against the host's available-agent list first: bare `realm-agent-code-architect` if listed, else `realm:realm-agent-code-architect` (plugin install namespaces it). Spawn it with: Phase 1 plan, active rules/skills, **Phase 1 Anchor Set table verbatim** — pass as-is, do not re-derive.
 
 Gap-fill escape: an anchor's 1-hop cell is empty (fallback investigator path didn't collect it) → `realm-agent-code-architect` has Bash, may run `graphify affected "<file>" --depth 1` to fill it. Cap **3** graphify calls. Never grep.
 

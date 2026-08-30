@@ -74,8 +74,8 @@ Phase 1 discovery defaults to the `graphify` CLI when `graphify-out/graph.json` 
 
 | Component | Role |
 |-----------|------|
-| `realm-agent-architect` | High-level architecture analysis (Phase 1) |
-| `realm-agent-code-architect` | Codebase-aware impl blueprint + logging plan (Phase 2) |
+| `realm-agent-architect` (or `realm:realm-agent-architect` under the plugin install) | High-level architecture analysis (Phase 1) |
+| `realm-agent-code-architect` (or `realm:realm-agent-code-architect` under the plugin install) | Codebase-aware impl blueprint + logging plan (Phase 2) |
 | `graphify` CLI | Primary code discovery — mode detect, anchor resolution, 1-hop (Phase 1) |
 | `cavecrew-investigator` agent | Fallback code search when graphify misses or graph absent (Phase 1) |
 | `realm-recall` skill | Pull vault ADRs and prior decisions |
@@ -85,6 +85,8 @@ Phase 1 discovery defaults to the `graphify` CLI when `graphify-out/graph.json` 
 | `tdd-workflow` skill | Test plan generation |
 | `contract/PROCEDURE.md` fragment | Draft + write API contract file — Phase 1 Step 7 embed (`Contract Delta`), `write contract` trigger |
 | `write-adr/PROCEDURE.md` fragment | Commit decision to vault — ADR + planning file + index update, `write adr` trigger |
+
+**Agent name resolution:** installed as a plugin, `realm-agent-architect`/`realm-agent-code-architect` register under the `realm:` namespace instead of bare. Before spawning either, check the host's available-agent list; use the bare name if listed, else the `realm:`-prefixed name. Never guess — an unlisted name errors out instead of falling back silently.
 
 ## Flow
 

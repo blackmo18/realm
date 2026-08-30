@@ -46,6 +46,7 @@ Lives in the vault under
     {
       "id": "B1", "name": "", "wave": 1, "class": "MECHANICAL", "model": "haiku",
       "tasks": ["T1", "T2"], "files": ["a.ts"], "dependsOn": [],
+      "planSlice": "<exact plan lines for T1/T2, captured at P2>",
       "attempt": 1, "status": "DONE", "planCheck": "pass", "review": "CLEAN",
       "filesChanged": ["a.ts"], "exports": ["fn — a.ts — (x:number)=>string"],
       "blockerNeeds": null, "updatedAt": "<iso>"
@@ -57,6 +58,16 @@ Lives in the vault under
 - Run `status`: `IN_PROGRESS | COMPLETE | ABORTED`.
 - Wave `status`: `PENDING | IN_PROGRESS | DONE`.
 - Bundle `status`: `PENDING | IN_PROGRESS | DONE | PARTIAL | BLOCKED | ABORTED`.
+- `planSlice` is captured once at P2 (`analyze/PROCEDURE.md`) and never
+  re-derived — every DISPATCH/FIX_DISPATCH `PLAN_SLICE` field, including on
+  resume, is read verbatim from here. Empty string only for a bundle whose
+  bundles-file entry omitted it (legacy/manual bundles-file) — dispatch falls
+  back to re-reading the plan in that case only.
+- `model` is set once at `start` from P2 classification, but `bundle-status`
+  auto-escalates it MECHANICAL `haiku` → `inherit` the moment attempt ≥2 is
+  recorded for a MECHANICAL bundle (`dispatch/PROCEDURE.md` escalation rule)
+  — the field always reflects the model the *next* dispatch must use, no
+  separate rule lookup required on resume.
 - `exports` is `RESULT.EXPORTS` relayed verbatim (contracts.md §3) — the next
   wave's `UPSTREAM_EXPORTS` comes straight from here, no re-derivation.
 

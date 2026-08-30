@@ -121,9 +121,9 @@ if [ -d "$GEMINI_AGENTS_SRC" ]; then
   for agent_file in "$GEMINI_AGENTS_SRC"/*.md; do
     [ -f "$agent_file" ] || continue
     sed -e '/^tools: \[/d' \
-        -e 's/^model: opus$/model: gemini-3.1-pro-preview/' \
-        -e 's/^model: sonnet$/model: gemini-3.1-pro-preview/' \
-        -e 's/^model: haiku$/model: gemini-3.6-flash/' \
+        -e 's/^model: opus$/model: gemini-3.7-flash/' \
+        -e 's/^model: sonnet$/model: gemini-3.7-flash/' \
+        -e 's/^model: haiku$/model: gemini-3.7-flash/' \
         "$agent_file" > "$GEMINI_AGENTS_DST/$(basename "$agent_file")"
     echo -e "${GREEN}✓ $(basename "$agent_file")${NC}"
   done

@@ -381,6 +381,7 @@ def cmd_start(args: argparse.Namespace) -> None:
             "tasks": b.get("tasks", []),
             "files": b.get("files", []),
             "dependsOn": b.get("dependsOn", []),
+            "planSlice": b.get("planSlice", ""),
             "attempt": 0,
             "status": "PENDING",
             "planCheck": None,
@@ -447,6 +448,11 @@ def cmd_bundle_status(args: argparse.Namespace) -> None:
 
     bundle["status"] = args.status
     bundle["attempt"] = args.attempt
+    escalated = False
+    if args.status == "IN_PROGRESS" and args.attempt >= 2 and bundle["class"] == "MECHANICAL" \
+            and bundle["model"] != "inherit":
+        bundle["model"] = "inherit"
+        escalated = True
     if args.plan_check is not None:
         bundle["planCheck"] = args.plan_check
     if args.review is not None:
@@ -462,6 +468,8 @@ def cmd_bundle_status(args: argparse.Namespace) -> None:
 
     save_run(run_dir, run)
     print(f"bundle-status: {args.bundle} -> {args.status} (attempt {args.attempt})")
+    if escalated:
+        print(f"bundle-status: {args.bundle} model escalated haiku -> inherit (attempt {args.attempt}, MECHANICAL retry)")
 
 
 def cmd_wave_done(args: argparse.Namespace) -> None:

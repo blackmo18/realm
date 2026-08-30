@@ -88,7 +88,7 @@ Skip when topic already in codebase. Otherwise:
 
 ## Step 5 — Architect Analysis
 
-`realm-agent-architect` has no Bash — it cannot run graphify itself. Spawn `realm-agent-architect` with: topic + requirements, vault context, research findings, and the resolved discovery table (graphify anchor table + `affected` output when graph present, investigator `file:line` table when it ran as fallback or graph absent) fed in by the main thread.
+`realm-agent-architect` has no Bash — it cannot run graphify itself. Resolve the exact agent name against the host's available-agent list first: bare `realm-agent-architect` if listed, else `realm:realm-agent-architect` (plugin install namespaces it). Spawn it with: topic + requirements, vault context, research findings, and the resolved discovery table (graphify anchor table + `affected` output when graph present, investigator `file:line` table when it ran as fallback or graph absent) fed in by the main thread.
 
 Returns: approach, alternatives, constraints, risks.
 
